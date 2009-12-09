@@ -1,0 +1,11 @@
+.deps
+.libs
+SQLHeavy.gir
+SQLHeavy.h
+*-internal.*
+*.c
+*.la
+*.lo
+*.o
+*.stamp
+*.vapi
