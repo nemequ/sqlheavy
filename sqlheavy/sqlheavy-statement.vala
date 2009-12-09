@@ -104,6 +104,11 @@ namespace SQLHeavy {
       sqlite3_finalize (this.stmt);
     }
 
+    public Statement.full (SQLHeavy.Database db, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
+      this.db = db;
+      error_if_not_ok (sqlite3_prepare (db.db, sql, max_len, out this.stmt, out tail));
+    }
+
     /**
      * Create a prepared statement.
      *
@@ -112,9 +117,9 @@ namespace SQLHeavy {
      * @param tail, Where to store the any unprocessed part of the query.
      * @see SQLHeavy.Database.prepare
      */
-    public Statement (SQLHeavy.Database db, string sql, out unowned string? tail = null) throws SQLHeavy.Error {
+    public Statement (SQLHeavy.Database db, string sql) throws SQLHeavy.Error {
       this.db = db;
-      error_if_not_ok (sqlite3_prepare (db.db, sql, (int) sql.size (), out this.stmt, out tail));
+      error_if_not_ok (sqlite3_prepare (db.db, sql, -1, out this.stmt, null));
     }
   }
 }

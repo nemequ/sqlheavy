@@ -13,7 +13,7 @@ namespace SQLHeavy {
       case Sqlite.NOMEM:      throw new Error.NO_MEMORY    (SQLHeavy.ErrorMessage.NO_MEMORY);
       case Sqlite.READONLY:   throw new Error.READ_ONLY    (SQLHeavy.ErrorMessage.READ_ONLY);
       case Sqlite.INTERRUPT:  throw new Error.INTERRUPTED  (SQLHeavy.ErrorMessage.INTERRUPTED);
-      case Sqlite.IOERR:      throw new Error.IO_ERROR     (SQLHeavy.ErrorMessage.IO_ERROR);
+      case Sqlite.IOERR:      throw new Error.IO           (SQLHeavy.ErrorMessage.IO);
       case Sqlite.CORRUPT:    throw new Error.CORRUPT      (SQLHeavy.ErrorMessage.CORRUPT);
       case Sqlite.FULL:       throw new Error.FULL         (SQLHeavy.ErrorMessage.FULL);
       case Sqlite.CANTOPEN:   throw new Error.CAN_NOT_OPEN (SQLHeavy.ErrorMessage.CAN_NOT_OPEN);
@@ -45,7 +45,7 @@ namespace SQLHeavy {
     NO_MEMORY,
     READ_ONLY,
     INTERRUPTED,
-    IO_ERROR,
+    IO,
     CORRUPT,
     NOT_FOUND,
     FULL,
@@ -76,10 +76,10 @@ namespace SQLHeavy {
     internal const string ABORTED       = "Callback routine requested an abort";
     internal const string BUSY          = "The database file is locked";
     internal const string LOCKED        = "A table in the database is locked";
-    internal const string NO_MEMORY     = "A malloc =  failed";
+    internal const string NO_MEMORY     = "A malloc failed";
     internal const string READ_ONLY     = "Attempt to write a readonly database";
     internal const string INTERRUPTED   = "Operation terminated by sqlite3_interrupt = ";
-    internal const string IO_ERROR      = "Some kind of disk I/O error occurred";
+    internal const string IO            = "Some kind of disk I/O error occurred";
     internal const string CORRUPT       = "The database disk image is malformed";
     internal const string FULL          = "Insertion failed because database is full";
     internal const string CAN_NOT_OPEN  = "Unable to open the database file";

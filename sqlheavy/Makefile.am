@@ -1,16 +1,18 @@
 NULL = 
 
 lib_LTLIBRARIES = \
-	libsqlheavy.la \
+	libsqlheavy-@SQLHEAVY_API_VERSION@.la \
 	$(NULL)
 
-libsqlheavy_la_SOURCES = \
+libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-database.vala \
 	sqlheavy-enums.vala \
 	sqlheavy-error.vala \
-	sqlheavy-statement.vala
+	sqlheavy-statement.vala \
+	sqlheavy-versioned-database.vala \
+	$(NULL)
 
-libsqlheavy_la_VALAFLAGS = \
+libsqlheavy_@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	--gir SQLHeavy-@SQLHEAVY_API_VERSION@.gir \
 	-H SQLHeavy.h \
@@ -24,14 +26,14 @@ libsqlheavy_la_VALAFLAGS = \
 	--pkg sqlite3 \
 	$(NULL)
 
-libsqlheavy_la_CFLAGS = \
+libsqlheavy_@SQLHEAVY_API_VERSION@_la_CFLAGS = \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(SQLITE3_CFLAGS) \
 	$(NULL)
 
-sqlheavyincludedir = $(includedir)/sqlheavy-$(SQLHEAVY_API_VERSION)
+sqlheavyincludedir = $(includedir)/sqlheavy/sqlheavy-$(SQLHEAVY_API_VERSION)
 sqlheavyinclude_HEADERS = \
 	SQLHeavy.h \
 	$(NULL)

@@ -31,7 +31,20 @@ namespace SQLHeavy {
      * that no other thread or process will be able to read or write
      * the database until the transaction is complete.
      */
-    EXCLUSIVE
+    EXCLUSIVE;
+
+    public weak string? to_string () {
+      switch ( this ) {
+        case DEFERRED:
+          return "DEFERRED";
+        case IMMEDIATE:
+          return "IMMEDIATE";
+        case EXCLUSIVE:
+          return "EXCLUSIVE";
+        default:
+          return null;
+      }
+    }
   }
 
   /**
