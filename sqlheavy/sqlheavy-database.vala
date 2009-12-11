@@ -34,7 +34,7 @@ namespace SQLHeavy {
 
       // Could probably use a bit of work.
       for ( size_t current_max = (max_len < 0) ? s.size () : max_len ;
-            (s != null) && (current_max == 0) ; ) {
+            (s != null) && (current_max > 0) ; ) {
         unowned char * os = (char *)s;
         {
           SQLHeavy.Statement stmt = new SQLHeavy.Statement.full (this, (!) s, (int)current_max, out s);
