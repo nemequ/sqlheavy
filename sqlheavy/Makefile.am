@@ -1,5 +1,7 @@
 NULL = 
 
+CLEANFILES =
+
 lib_LTLIBRARIES = \
 	libsqlheavy-@SQLHEAVY_API_VERSION@.la \
 	$(NULL)
@@ -12,13 +14,21 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-versioned-database.vala \
 	$(NULL)
 
+if HAVE_INTROSPECTION
+GIR_VALAFLAGS = \
+	--gir sqlheavy-@SQLHEAVY_API_VERSION@.gir \
+	--library sqlheavy-1.0 \
+	$(NULL)
+else
+GIR_VALAFLAGS =
+endif
+
 libsqlheavy_@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
+	$(GIR_VALAFLAGS) \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
-	--gir SQLHeavy-@SQLHEAVY_API_VERSION@.gir \
 	-H SQLHeavy.h \
 	--use-header \
-	--internal-header sqlheavy-internal.h \
-	--internal-vapi sqlheavy-internal.vapi \
+	--internal-header sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
 	--thread \
 	--pkg gio-2.0 \
 	--pkg glib-2.0 \
@@ -43,8 +53,25 @@ vapi_DATA = \
 	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	$(NULL)
 
-# For some reason valac isn't generating SQLHeavy-1.0.gir
-#girdir = $(datadir)/gir-1.0
-#gir_DATA = \
-#	SQLHeavy-$(SQLHEAVY_API_VERSION).gir \
-#	$(NULL)
+if HAVE_INTROSPECTION
+
+girdir = $(INTROSPECTION_GIRDIR)
+gir_DATA = \
+	sqlheavy-$(SQLHEAVY_API_VERSION).gir \
+	$(NULL)
+
+typelibsdir = $(INTROSPECTION_TYPELIBDIR)
+typelibs_DATA = $(gir_DATA:.gir=.typelib)
+
+%.typelib: %.gir $(INTROSPECTION_COMPILER)
+	LD_LIBRARY_PATH=.libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} \
+	$(INTROSPECTION_COMPILER) \
+		--includedir=$(srcdir) \
+		--includedir=. \
+		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+
+CLEANFILES += \
+	$(typelibs_DATA) \
+	$(NULL)
+
+endif # HAVE_INTROSPECTION

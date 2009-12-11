@@ -10,9 +10,8 @@ m4_define([sqlheavy_api_version], [1.0])
 
 AC_PREREQ([2.65])
 AC_INIT([SQLHeavy], [sqlheavy_version], [evan@coeus-group.com]. [sqlheavy])
-AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE([dist-bzip2])
 AC_CONFIG_MACRO_DIR([m4])
+AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
 SQLHEAVY_MAJOR_VERSION=sqlheavy_major
@@ -32,8 +31,10 @@ AC_SUBST(SQLHEAVY_API_VERSION)
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
-
 AM_PROG_VALAC([0.7.9])
+
+dnl GOBJECT_INTROSPECTION_CHECK([0.6.4])
+AM_CONDITIONAL(HAVE_INTROSPECTION, false)
 
 # Checks for libraries.
 GLIB_REQUIRED=2.12.0
