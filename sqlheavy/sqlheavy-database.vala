@@ -282,6 +282,12 @@ namespace SQLHeavy {
       if ( filename == null )
         filename = ":memory:";
 
+      if ( filename != ":memory:" ) {
+        string dirname = GLib.Path.get_dirname (filename);
+        if ( !GLib.FileUtils.test (dirname, GLib.FileTest.EXISTS) )
+          GLib.DirUtils.create_with_parents (dirname, 0700);
+      }
+
       int flags = 0;
       if ( (mode & SQLHeavy.FileMode.READ) == SQLHeavy.FileMode.READ )
         flags = Sqlite.OPEN_READONLY;
