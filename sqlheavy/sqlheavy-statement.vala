@@ -10,6 +10,8 @@ namespace SQLHeavy {
   public class Statement : GLib.Object {
     private int error_code = Sqlite.OK;
 
+    public bool auto_clear { get; set; default = false; }
+
     /**
      * Emitted when the step method receives a row.
      */
@@ -25,6 +27,8 @@ namespace SQLHeavy {
 
     public string sql { get { return this.stmt.sql(); } }
     public int parameter_count { get { return this.stmt.bind_parameter_count (); } }
+    public int column_count { get { return this.stmt.column_count (); } }
+    public int data_count { get { return this.stmt.data_count (); } }
 
     /**
      * Step (asynchronous variant)
@@ -53,6 +57,12 @@ namespace SQLHeavy {
       GLib.Idle.add (() => { (!) this.step_async_cb (); return false; });
     }
 
+    public void reset () {
+      this.stmt.reset ();
+      if ( this.auto_clear )
+        this.stmt.clear_bindings ();
+    }
+
     private bool step_handle () throws Error {
       int ec = this.error_code;
       this.error_code = Sqlite.OK;
@@ -61,8 +71,10 @@ namespace SQLHeavy {
         this.received_row ();
         return true;
       }
-      else if ( ec == Sqlite.DONE )
+      else if ( ec == Sqlite.DONE ) {
+        this.reset ();
         return false;
+      }
       else
         error_if_not_ok (ec);
 
@@ -78,30 +90,187 @@ namespace SQLHeavy {
       while ( this.step () ) { }
     }
 
+    public int64 execute_insert () throws SQLHeavy.Error {
+      /* Might want to call the sqlite functions directly here, to
+       * limit the race condition. */
+      this.execute ();
+      return this.db.last_insert_id;
+    }
+
+    private int fetch_check_index (int col) throws SQLHeavy.Error {
+      if (col < 0 || col > this.column_count)
+        throw new SQLHeavy.Error.RANGE (SQLHeavy.ErrorMessage.RANGE);
+      return col;
+    }
+
+    public GLib.Type get_column_type (int col) throws SQLHeavy.Error {
+      switch ( this.stmt.column_type (col) ) {
+        case Sqlite.INTEGER:
+          return typeof (int64);
+        case Sqlite.TEXT:
+          return typeof (string);
+        case Sqlite.NULL:
+          return typeof (void*);
+        case Sqlite.FLOAT:
+          return typeof (double);
+        default:
+          throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
+      }
+    }
+
     /**
      * Return a field from result.
      *
      * @param col, the offset of the column to return.
      */
-    public T fetch <T> (int col) throws Error {
-      if ( typeof(T) == typeof(string) )
-        return this.stmt.column_text (col);
-      // else if ( typeof(T) == typeof(int) )
-      //   return this.stmt.column_int (col);
-      // else if ( typeof(T) == typeof(int64) )
-      //   return this.stmt.column_int64 (col);
+    public GLib.Value fetch (int col) throws SQLHeavy.Error {
+      GLib.Value res;
 
-      throw new SQLHeavy.Error.DATA_TYPE("SQLHeavy.Statement.fetch() not implemented for data type (%s)", typeof(T).name());
+      this.fetch_check_index (col);
+
+      var col_type = this.get_column_type (col);
+      if ( col_type == typeof (int64) ) {
+        var i64v = this.fetch_int64 (col);
+        if ( i64v > int.MAX ) {
+          res = GLib.Value (typeof (int64));
+          res.set_int64 (i64v);
+        }
+        else {
+          res = GLib.Value (typeof (int));
+          res.set_int ((int)i64v);
+        }
+      }
+      else if ( col_type == typeof (string) ) {
+        res = GLib.Value (typeof (string));
+        res.take_string (this.fetch_string (col));
+      }
+      else if ( col_type == typeof (void*) ) {
+        res = GLib.Value (typeof (void*));
+        res.set_pointer (null);
+      }
+      else if ( col_type == typeof (double) ) {
+        res = GLib.Value (typeof (double));
+        res.set_double (this.fetch_double (col));
+      }
+      else
+        GLib.assert_not_reached ();
+
+      return res;
     }
 
-    private void bind_int (int col, int value) throws SQLHeavy.Error {
+    public string? fetch_string (int col) throws SQLHeavy.Error {
+      return this.stmt.column_text (this.fetch_check_index (col));
+    }
+
+    public int fetch_int (int col) throws SQLHeavy.Error {
+      return this.stmt.column_int (this.fetch_check_index (col));
+    }
+
+    public int64 fetch_int64 (int col) throws SQLHeavy.Error {
+      return this.stmt.column_int64 (this.fetch_check_index (col));
+    }
+
+    public double fetch_double (int col = 0) throws SQLHeavy.Error {
+      this.step ();
+      return this.stmt.column_double (this.fetch_check_index (col));
+    }
+
+    public GLib.Value fetch_result (int col = 0) throws SQLHeavy.Error {
+      this.step ();
+      return this.fetch (col);
+    }
+
+    public string? fetch_result_string (int col = 0) throws SQLHeavy.Error {
+      this.step ();
+      return this.fetch_string (col);
+    }
+
+    public int fetch_result_int (int col = 0) throws SQLHeavy.Error {
+      this.step ();
+      return this.fetch_int (col);
+    }
+
+    public int64 fetch_result_int64 (int col = 0) throws SQLHeavy.Error {
+      this.step ();
+      return this.fetch_int64 (col);
+    }
+
+    public double fetch_result_double (int col = 0) throws SQLHeavy.Error {
+      this.step ();
+      return this.fetch_double (col);
+    }
+
+    private int bind_check_index (int col) throws SQLHeavy.Error {
       if (col < 0 || col > this.parameter_count)
         throw new SQLHeavy.Error.RANGE (SQLHeavy.ErrorMessage.RANGE);
-      error_if_not_ok (this.stmt.bind_int (col, value));
+      return col;
+    }
+
+    public int bind_get_index (string col) throws SQLHeavy.Error {
+      var idx = this.stmt.bind_parameter_index (col);
+      if ( idx == 0 )
+        throw new SQLHeavy.Error.RANGE ("Could not find parameter '%s'.", col);
+      return idx;
+    }
+
+    public unowned string bind_get_name (int col) throws SQLHeavy.Error {
+      return this.stmt.bind_parameter_name (this.bind_check_index (col));
+    }
+
+    public void bind_int (int col, int value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_int (this.bind_check_index (col), value));
+    }
+
+    public void bind_named_int (string col, int value) throws SQLHeavy.Error {
+      this.bind_int (this.bind_get_index (col), value);
+    }
+
+    public void bind_int64 (int col, int64 value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_int64 (this.bind_check_index (col), value));
+    }
+
+    public void bind_named_int64 (string col, int64 value) throws SQLHeavy.Error {
+      this.bind_int64 (this.bind_get_index (col), value);
+    }
+
+    public void bind_string (int col, string value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_text (this.bind_check_index (col), value));
+    }
+
+    public void bind_named_string (string col, string value) throws SQLHeavy.Error {
+      this.bind_string (this.bind_get_index (col), value);
+    }
+
+    public void bind_null (int col) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_null (this.bind_check_index (col)));
+    }
+
+    public void bind_named_null (string col) throws SQLHeavy.Error {
+      this.bind_null (this.bind_get_index (col));
+    }
+
+    public void bind_double (int col, double value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_double (this.bind_check_index (col), value));
+    }
+
+    public void bind_named_double (string col, double value) throws SQLHeavy.Error {
+      this.bind_double (this.bind_get_index (col), value);
     }
 
     ~ Statement () {
       sqlite3_finalize (this.stmt);
+    }
+
+    public GLib.ValueArray get_column (int col) throws SQLHeavy.Error {
+      var valid = this.step ();
+      var data = new GLib.ValueArray (this.data_count);
+
+      while ( valid ) {
+        data.append (this.fetch (col));
+        valid = this.step ();
+      }
+
+      return data;
     }
 
     public Statement.full (SQLHeavy.Database db, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
