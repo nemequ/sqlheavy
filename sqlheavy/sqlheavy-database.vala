@@ -10,10 +10,19 @@ namespace SQLHeavy {
   public class Database : GLib.Object {
     internal unowned Sqlite.Database db;
 
+    public string filename { get; construct; default = ":memory:"; }
+    public SQLHeavy.FileMode mode {
+      get;
+      construct;
+      default = SQLHeavy.FileMode.READ | SQLHeavy.FileMode.WRITE | SQLHeavy.FileMode.CREATE;
+    }
+
     private void thread_cb (void * stmt) {
       (stmt as SQLHeavy.Statement).step_threaded ();
     }
     public GLib.ThreadPool thread_pool;
+
+    public int64 last_insert_id { get { return this.db.last_insert_rowid (); } }
 
     /**
      * Create a prepared statement.
@@ -63,7 +72,7 @@ namespace SQLHeavy {
       try {
         var stmt = new SQLHeavy.Statement (this, "PRAGMA %s;".printf (pragma));
         stmt.step ();
-        return stmt.fetch<string> (0);
+        return stmt.fetch_string (0);
       }
       catch ( SQLHeavy.Error e ) {
         GLib.critical ("Unable to retrieve pragma value: %s", e.message);
@@ -278,31 +287,31 @@ namespace SQLHeavy {
       set { this.pragma_set_bool ("vdbe_listing", value); }
     }
 
-    protected void open (string? filename, SQLHeavy.FileMode mode) throws SQLHeavy.Error {
-      if ( filename == null )
-        filename = ":memory:";
-
-      if ( filename != ":memory:" ) {
+    construct {
+      if ( this.filename != ":memory:" ) {
         string dirname = GLib.Path.get_dirname (filename);
         if ( !GLib.FileUtils.test (dirname, GLib.FileTest.EXISTS) )
           GLib.DirUtils.create_with_parents (dirname, 0700);
       }
 
       int flags = 0;
-      if ( (mode & SQLHeavy.FileMode.READ) == SQLHeavy.FileMode.READ )
+      if ( (this.mode & SQLHeavy.FileMode.READ) == SQLHeavy.FileMode.READ )
         flags = Sqlite.OPEN_READONLY;
-      if ( (mode & SQLHeavy.FileMode.WRITE) == SQLHeavy.FileMode.WRITE )
+      if ( (this.mode & SQLHeavy.FileMode.WRITE) == SQLHeavy.FileMode.WRITE )
         flags = Sqlite.OPEN_READWRITE;
-      if ( (mode & SQLHeavy.FileMode.CREATE) == SQLHeavy.FileMode.CREATE )
+      if ( (this.mode & SQLHeavy.FileMode.CREATE) == SQLHeavy.FileMode.CREATE )
         flags |= Sqlite.OPEN_CREATE;
 
-      error_if_not_ok (sqlite3_open ((!) filename, out this.db, flags, null));
+      if ( sqlite3_open ((!) filename, out this.db, flags, null) != Sqlite.OK ) {
+        this.db = null;
+        GLib.critical ("Unable to open database.");
+      }
 
       try {
         this.thread_pool = new GLib.ThreadPool (thread_cb, 4, false);
       }
       catch ( GLib.ThreadError e ) {
-        throw new SQLHeavy.Error.THREAD ("%s (%d)", e.message, e.code);
+        GLib.warning ("Unable to create thread pool.");
       }
     }
 
@@ -317,8 +326,8 @@ namespace SQLHeavy {
                        SQLHeavy.FileMode.READ |
                        SQLHeavy.FileMode.WRITE |
                        SQLHeavy.FileMode.CREATE) throws SQLHeavy.Error {
-      //error_if_not_ok (Sqlite.Config.config (Sqlite.Config.SERIALIZED));
-      this.open (filename, mode);
+      if ( filename == null ) filename = ":memory:";
+      Object (filename: filename, mode: mode);
     }
 
     ~ Database () {
