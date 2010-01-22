@@ -150,7 +150,7 @@ namespace SQLHeavy {
         res = GLib.Value (typeof (void));
       }
       else if ( col_type == typeof (GLib.Array) ) {
-        res = GLib.Value (GLib.Type.ARRAY);
+        res = GLib.Value (typeof (GLib.Array));
         var blob_size = this.stmt.column_bytes(col);
         //var arr = new GLib.Array.sized<uint8> (false, false, sizeof (uint8), blob_size);
         var arr = new GLib.Array <uint8> (false, false, 1);
@@ -252,11 +252,14 @@ namespace SQLHeavy {
       this.bind_int64 (this.bind_get_index (col), value);
     }
 
-    public void bind_string (int col, string value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_text (this.bind_check_index (col), value));
+    public void bind_string (int col, string? value) throws SQLHeavy.Error {
+      if ( value == null )
+        this.bind_null (col);
+      else
+        error_if_not_ok (this.stmt.bind_text (this.bind_check_index (col), value));
     }
 
-    public void bind_named_string (string col, string value) throws SQLHeavy.Error {
+    public void bind_named_string (string col, string? value) throws SQLHeavy.Error {
       this.bind_string (this.bind_get_index (col), value);
     }
 
