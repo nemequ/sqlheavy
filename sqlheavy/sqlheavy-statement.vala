@@ -109,10 +109,12 @@ namespace SQLHeavy {
           return typeof (int64);
         case Sqlite.TEXT:
           return typeof (string);
-        case Sqlite.NULL:
-          return typeof (void*);
         case Sqlite.FLOAT:
           return typeof (double);
+        case Sqlite.NULL:
+          return typeof (void);
+        case Sqlite.BLOB:
+          return typeof (GLib.Array);
         default:
           throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
       }
@@ -123,8 +125,8 @@ namespace SQLHeavy {
      *
      * @param col, the offset of the column to return.
      */
-    public GLib.Value fetch (int col) throws SQLHeavy.Error {
-      GLib.Value res;
+    public GLib.Value? fetch (int col) throws SQLHeavy.Error {
+      GLib.Value? res = null;
 
       this.fetch_check_index (col);
 
@@ -144,9 +146,16 @@ namespace SQLHeavy {
         res = GLib.Value (typeof (string));
         res.take_string (this.fetch_string (col));
       }
-      else if ( col_type == typeof (void*) ) {
-        res = GLib.Value (typeof (void*));
-        res.set_pointer (null);
+      else if ( col_type == typeof (void) ) {
+        res = GLib.Value (typeof (void));
+      }
+      else if ( col_type == typeof (GLib.Array) ) {
+        res = GLib.Value (GLib.Type.ARRAY);
+        var blob_size = this.stmt.column_bytes(col);
+        //var arr = new GLib.Array.sized<uint8> (false, false, sizeof (uint8), blob_size);
+        var arr = new GLib.Array <uint8> (false, false, 1);
+        arr.append_vals (this.stmt.column_blob (col), blob_size);
+        res.set_boxed (arr);
       }
       else if ( col_type == typeof (double) ) {
         res = GLib.Value (typeof (double));
@@ -158,21 +167,26 @@ namespace SQLHeavy {
       return res;
     }
 
-    public string? fetch_string (int col) throws SQLHeavy.Error {
+    public string? fetch_string (int col = 0) throws SQLHeavy.Error {
       return this.stmt.column_text (this.fetch_check_index (col));
     }
 
-    public int fetch_int (int col) throws SQLHeavy.Error {
+    public int fetch_int (int col = 0) throws SQLHeavy.Error {
       return this.stmt.column_int (this.fetch_check_index (col));
     }
 
-    public int64 fetch_int64 (int col) throws SQLHeavy.Error {
+    public int64 fetch_int64 (int col = 0) throws SQLHeavy.Error {
       return this.stmt.column_int64 (this.fetch_check_index (col));
     }
 
     public double fetch_double (int col = 0) throws SQLHeavy.Error {
-      this.step ();
       return this.stmt.column_double (this.fetch_check_index (col));
+    }
+
+    public uint8[] fetch_blob (int col = 0) throws SQLHeavy.Error {
+      var res = new uint8[this.stmt.column_bytes(this.fetch_check_index (col))];
+      GLib.Memory.copy (res, this.stmt.column_blob (col), res.length);
+      return res;
     }
 
     public GLib.Value fetch_result (int col = 0) throws SQLHeavy.Error {
@@ -198,6 +212,11 @@ namespace SQLHeavy {
     public double fetch_result_double (int col = 0) throws SQLHeavy.Error {
       this.step ();
       return this.fetch_double (col);
+    }
+
+    public uint8[] fetch_result_blob (int col = 0) throws SQLHeavy.Error {
+      this.step ();
+      return this.fetch_blob (col);
     }
 
     private int bind_check_index (int col) throws SQLHeavy.Error {
@@ -255,6 +274,14 @@ namespace SQLHeavy {
 
     public void bind_named_double (string col, double value) throws SQLHeavy.Error {
       this.bind_double (this.bind_get_index (col), value);
+    }
+
+    public void bind_blob (int col, uint8[] value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_blob (col, GLib.Memory.dup (value, value.length), value.length, GLib.g_free));
+    }
+
+    public void bind_named_blob (string col, uint8[] value) throws SQLHeavy.Error {
+      this.bind_blob (this.bind_get_index (col), value);
     }
 
     ~ Statement () {
