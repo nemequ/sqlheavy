@@ -29,6 +29,7 @@ namespace SQLHeavy {
     public int parameter_count { get { return this.stmt.bind_parameter_count (); } }
     public int column_count { get { return this.stmt.column_count (); } }
     public int data_count { get { return this.stmt.data_count (); } }
+    public bool finished { get; private set; default = false; }
 
     /**
      * Step (asynchronous variant)
@@ -58,9 +59,10 @@ namespace SQLHeavy {
     }
 
     public void reset () {
-      this.stmt.reset ();
       if ( this.auto_clear )
         this.stmt.clear_bindings ();
+      this.stmt.reset ();
+      this.finished = false;
     }
 
     private bool step_handle () throws Error {
@@ -72,7 +74,7 @@ namespace SQLHeavy {
         return true;
       }
       else if ( ec == Sqlite.DONE ) {
-        this.reset ();
+        this.finished = true;
         return false;
       }
       else
@@ -82,6 +84,8 @@ namespace SQLHeavy {
     }
 
     public bool step () throws Error {
+      if ( this.finished )
+        return false;
       this.error_code = this.stmt.step ();
       return this.step_handle ();
     }
