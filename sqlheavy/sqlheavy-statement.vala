@@ -151,7 +151,7 @@ namespace SQLHeavy {
         res.take_string (this.fetch_string (col));
       }
       else if ( col_type == typeof (void) ) {
-        res = GLib.Value (typeof (void));
+        res = null;
       }
       else if ( col_type == typeof (GLib.Array) ) {
         res = GLib.Value (typeof (GLib.Array));
