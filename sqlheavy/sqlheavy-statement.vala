@@ -144,10 +144,6 @@ namespace SQLHeavy {
       }
     }
 
-    public GLib.Type get_column_declared_type (int col) throws SQLHeavy.Error {
-      return sqlite_type_to_g_type (this.stmt.column_decltype (this.fetch_check_index (col)));
-    }
-
     /**
      * Return a field from result.
      *
