@@ -13,7 +13,7 @@ namespace SQLHeavy {
     internal unowned Sqlite.Database db;
 
     private SQLHeavy.Statement? profiling_insert_stmt = null;
-    public void profiling_cb (string sql, uint64 time) {
+    private void profiling_cb (string sql, uint64 time) {
       try {
         if ( this.profiling_insert_stmt == null )
           this.profiling_insert_stmt = this.profiling_data.prepare ("INSERT INTO `queries` (`sql`, `clock`) VALUES (:sql, :clock);");
@@ -32,6 +32,9 @@ namespace SQLHeavy {
 
     /**
      * Database to store profiling data in.
+     *
+     * Enabling profiling while this is null will cause the database
+     * to be created in :memory:
      */
     public SQLHeavy.Database? profiling_data = null;
 
@@ -81,13 +84,25 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       }
     }
 
+    /**
+     * The location of the database
+     */
     public string filename { get; construct; default = ":memory:"; }
+
+    /**
+     * The mode used when opening the database.
+     */
     public SQLHeavy.FileMode mode {
       get;
       construct;
       default = SQLHeavy.FileMode.READ | SQLHeavy.FileMode.WRITE | SQLHeavy.FileMode.CREATE;
     }
 
+    /**
+     * The last inserted row ID
+     *
+     * See SQLite documentation at [[http://sqlite.org/c3ref/last_insert_rowid.html]]
+     */
     public int64 last_insert_id { get { return this.db.last_insert_rowid (); } }
 
     private string? pragma_get_string (string pragma) {
@@ -130,6 +145,10 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
 
     /**
      * Auto-Vacuum mode
+     *
+     * Auto-vacuum status in the database.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_auto_vacuum]]
      */
     public SQLHeavy.AutoVacuum auto_vacuum {
       get { return (SQLHeavy.AutoVacuum) this.pragma_get_int("auto_vacuum"); }
@@ -138,52 +157,124 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
 
     /**
      * Cache size
+     *
+     * Suggested maximum number of database disk pages that SQLite
+     * will hold in memory at once per open database file.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_cache_size]]
      */
     public int cache_size {
       get { return this.pragma_get_int ("cache_size"); }
       set { this.pragma_set_int ("cache_size", value); }
     }
 
+    /**
+     * Case-sensitive like
+     *
+     * Whether the LIKE operator is to take case into account for
+     * ASCII characters.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_case_sensitive_like]]
+     */
     public bool case_sensitive_like {
       get { return this.pragma_get_bool ("case_sensitive_like"); }
       set { this.pragma_set_bool ("case_sensitive_like", value); }
     }
 
+    /**
+     * Count changes
+     *
+     * Whether INSERT, UPDATE, and DELETE queries should return the
+     * number of rows changed.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_count_changes]]
+     */
     public bool count_changes {
       get { return this.pragma_get_bool ("count_changes"); }
       set { this.pragma_set_bool ("count_changes", value); }
     }
 
+    /**
+     * Default cache size
+     *
+     * Suggested maximum number of pages of disk cache that will be
+     * allocated per open database file.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_default_cache_size]]
+     */
     public int default_cache_size {
       get { return this.pragma_get_int ("default_cache_size"); }
       set { this.pragma_set_int ("default_cache_size", value); }
     }
 
+    /**
+     * Empty result callbacks
+     *
+     * This pragma does not affect SQLHeavy
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_empty_result_callbacks]]
+     */
     public bool empty_result_callbacks {
       get { return this.pragma_get_bool ("empty_result_callbacks"); }
       set { this.pragma_set_bool ("empty_result_callbacks", value); }
     }
 
+    /**
+     * Encoding
+     *
+     * Encoding of the database
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_encoding]]
+     */
     public SQLHeavy.Encoding encoding {
       get { return SQLHeavy.Encoding.from_string (this.pragma_get_string ("encoding")); }
       set { this.pragma_set_string ("encoding", value.to_string ()); }
     }
 
+    /**
+     * Foreign keys
+     *
+     * Enforcement of [[http://sqlite.org/foreignkeys.html|foreign key constraints]]
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_foreign_keys]]
+     */
     public bool foreign_keys {
       get { return this.pragma_get_bool ("foreign_keys"); }
       set { this.pragma_set_bool ("foreign_keys", value); }
     }
 
+    /**
+     * Full column names
+     *
+     * Determine the way SQLite assigns names to result columns of
+     * SELECT statements. 
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_full_column_names]]
+     */
     public bool full_column_names {
       get { return this.pragma_get_bool ("full_column_names"); }
       set { this.pragma_set_bool ("full_column_names", value); }
     }
 
+    /**
+     * Full fsync
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_fullfsync]]
+     */
     public bool full_fsync {
       get { return this.pragma_get_bool ("fullfsync"); }
       set { this.pragma_set_bool ("fullfsync", value); }
     }
 
+    /**
+     * Incremental vacuum
+     *
+     * Causes up to N pages to be removed from the freelist.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_incremental_vacuum]]
+     *
+     * @param pages, the number of pages to remove
+     */
     public void incremental_vacuum (int pages) {
       try {
         this.execute ("PRAGMA incremental_vacuum(%d);".printf(pages));
@@ -193,26 +284,64 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       }
     }
 
+    /**
+     * Journal mode
+     *
+     * Set the journal mode
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_journal_mode]]
+     */
     public SQLHeavy.JournalMode journal_mode {
       get { return SQLHeavy.JournalMode.from_string (this.pragma_get_string ("journal_mode")); }
       set { this.pragma_set_string ("journal_mode", value.to_string ()); }
     }
 
+    /**
+     * Journal size limit
+     *
+     * Limit the size of journal files left in the file-system after
+     * transactions are committed on a per database basis.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_journal_size_limit]]
+     */
     public int journal_size_limit {
       get { return this.pragma_get_int ("journal_size_limit"); }
       set { this.pragma_set_int ("journal_size_limit", value); }
     }
 
+    /**
+     * Legacy file format
+     *
+     * When this flag is on, new SQLite databases are created in a
+     * file format that is readable and writable by all versions of
+     * SQLite going back to 3.0.0.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_legacy_file_format]]
+     */
     public bool legacy_file_format {
       get { return this.pragma_get_bool ("legacy_file_format"); }
       set { this.pragma_set_bool ("legacy_file_format", value); }
     }
 
+    /**
+     * Locking mode
+     *
+     * Database connection locking-mode
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_locking_mode]]
+     */
     public SQLHeavy.LockingMode locking_mode {
       get { return SQLHeavy.LockingMode.from_string (this.pragma_get_string ("locking_mode")); }
       set { this.pragma_set_string ("locking_mode", value.to_string ()); }
     }
 
+    /**
+     * Page size
+     *
+     * Page size of the database
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_page_size]]
+     */
     public int page_size {
       get { return this.pragma_get_int ("page_size"); }
       set {
@@ -222,41 +351,103 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       }
     }
 
+    /**
+     * Max page count
+     *
+     * Maximum number of pages in the database file.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_max_page_count]]
+     */
     public int max_page_count {
       get { return this.pragma_get_int ("max_page_count"); }
       set { this.pragma_set_int ("max_page_count", value); }
     }
 
+    /**
+     * Read uncommitted
+     *
+     * Read uncommitted isolation
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_read_uncommitted]]
+     */
     public bool read_uncommitted {
       get { return this.pragma_get_bool ("read_uncommitted"); }
       set { this.pragma_set_bool ("read_uncommitted", value); }
     }
 
+    /**
+     * Recursive triggers
+     *
+     * Recursive trigger capability
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_recursive_triggers]]
+     */
     public bool recursive_triggers {
       get { return this.pragma_get_bool ("recursive_triggers"); }
       set { this.pragma_set_bool ("recursive_triggers", value); }
     }
 
+    /**
+     * Reverse unordered selects
+     *
+     * When enabled, this PRAGMA causes SELECT statements without a an
+     * ORDER BY clause to emit their results in the reverse order of
+     * what they normally would. This can help debug applications that
+     * are making invalid assumptions about the result order.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_reverse_unordered_selects]]
+     */
     public bool reverse_unordered_selects {
       get { return this.pragma_get_bool ("reverse_unordered_selects"); }
       set { this.pragma_set_bool ("reverse_unordered_selects", value); }
     }
 
+    /**
+     * Short column names
+     *
+     * Short column names flag
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_short_column_names]]
+     * 
+     * @see full_column_names
+     */
     public bool short_column_names {
       get { return this.pragma_get_bool ("short_column_names"); }
       set { this.pragma_set_bool ("short_column_names", value); }
     }
 
+    /**
+     * Synchronous mode
+     *
+     * Synchronous flag
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_synchronous]]
+     */
     public SQLHeavy.SynchronousMode synchronous {
       get { return SQLHeavy.SynchronousMode.from_string (this.pragma_get_string ("synchronous")); }
       set { this.pragma_set_string ("synchronous", value.to_string ()); }
     }
 
+    /**
+     * Temporary store mode
+     *
+     * Temporary store mode
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_temp_store]]
+     */
     public SQLHeavy.TempStoreMode temp_store {
       get { return SQLHeavy.TempStoreMode.from_string (this.pragma_get_string ("temp_store")); }
       set { this.pragma_set_string ("temp_store", value.to_string ()); }
     }
 
+    /**
+     * Temporary store directory
+     *
+     * The directory where files used for storing temporary tables and
+     * indices are kept.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_temp_store_directory]]
+     */
     public string temp_store_directory {
       owned get { return this.pragma_get_string ("temp_store_directory"); }
       set { this.pragma_set_string ("temp_store_directory", value); }
@@ -266,14 +457,27 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
     //public ?? database_list { get; }
     //public ?? get_foreign_key_list (string table_name);
 
+    /**
+     * Free list count
+     *
+     * Number of unused pages in the database file.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_freelist_count]]
+     */
     public int free_list_count {
       get { return this.pragma_get_int ("freelist_count"); }
-      set { this.pragma_set_int ("freelist_count", value); }
     }
 
     //public ?? get_index_info (string index_name);
     //public ?? get_index_list (string table_name);
 
+    /**
+     * Page count
+     *
+     * Total number of pages in the database file.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_page_count]]
+     */
     public int page_count {
       get { return this.pragma_get_int ("page_count"); }
       set { this.pragma_set_int ("page_count", value); }
@@ -281,11 +485,27 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
 
     //public ?? get_table_info (string table_name);
 
+    /**
+     * Schema version
+     *
+     * The schema-version is usually only manipulated internally by SQLite.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_schema_version]]
+     *
+     * @see user_version
+     */
     public int schema_version {
       get { return this.pragma_get_int ("schema_version"); }
       set { this.pragma_set_int ("schema_version", value); }
     }
 
+    /**
+     * User version
+     *
+     * User-defined schema version
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_user_version]]
+     */
     public int user_version {
       get { return this.pragma_get_int ("user_version"); }
       set { this.pragma_set_int ("user_version", value); }
@@ -294,16 +514,37 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
     //public GLib.SList<string> integrity_check (int max_errors = 100);
     //public GLib.SList<string> quick_check (int max_errors = 100);
 
+    /**
+     * Parser trace
+     *
+     * Turn tracing of the SQL parser inside of the SQLite library on and off.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_parser_trace]]
+     */
     public bool parser_trace {
       get { return this.pragma_get_bool ("parser_trace"); }
       set { this.pragma_set_bool ("parser_trace", value); }
     }
 
+    /**
+     * VDBE trace
+     *
+     * Turn tracing of the virtual database engine inside of the SQLite library on and off.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_vdbe_trace]]
+     */
     public bool vdbe_trace {
       get { return this.pragma_get_bool ("vdbe_trace"); }
       set { this.pragma_set_bool ("vdbe_trace", value); }
     }
 
+    /**
+     * VDBE listing
+     *
+     * Turn listings of virtual machine programs on and off.
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_vdbe_listing]]
+     */
     public bool vdbe_listing {
       get { return this.pragma_get_bool ("vdbe_listing"); }
       set { this.pragma_set_bool ("vdbe_listing", value); }
