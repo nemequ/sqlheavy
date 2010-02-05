@@ -11,7 +11,9 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-enums.vala \
 	sqlheavy-error.vala \
 	sqlheavy-statement.vala \
+	sqlheavy-user-functions.vala \
 	sqlheavy-versioned-database.vala \
+	sqlheavy-value.vala \
 	$(NULL)
 
 if HAVE_INTROSPECTION
@@ -27,7 +29,6 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	$(GIR_VALAFLAGS) \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	-H SQLHeavy.h \
-	--use-header \
 	--internal-header sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
 	--thread \
 	--pkg gio-2.0 \

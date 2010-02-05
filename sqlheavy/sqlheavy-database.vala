@@ -8,6 +8,8 @@ namespace SQLHeavy {
    * A database.
    */
   public class Database : GLib.Object {
+    private GLib.HashTable <string, UserFunction.UserFuncData> user_functions =
+      new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
     internal unowned Sqlite.Database db;
 
     public string filename { get; construct; default = ":memory:"; }
@@ -315,6 +317,37 @@ namespace SQLHeavy {
       }
     }
 
+    public void register_aggregate_function (string name,
+                                             int argc,
+                                             owned UserFunction.UserFunc func,
+                                             owned UserFunction.FinalizeFunc final) {
+      this.unregister_function (name);
+      var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, func);
+      this.user_functions.insert (name, ufc);
+      this.db.create_function (name, argc, Sqlite.UTF8, ufc, null,
+                               UserFunction.on_user_function_called,
+                               UserFunction.on_user_finalize_called);
+    }
+
+    public void register_scalar_function (string name,
+                                          int argc,
+                                          owned UserFunction.UserFunc func) {
+      this.unregister_function (name);
+      var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, func);
+      this.user_functions.insert (name, ufc);
+      this.db.create_function (name, argc, Sqlite.UTF8, ufc, UserFunction.on_user_function_called, null, null);
+    }
+
+    private void unregister_function_context (UserFunction.UserFuncData ufc) {
+      this.db.create_function (ufc.name, ufc.argc, Sqlite.UTF8, ufc, null, null, null);
+    }
+
+    public void unregister_function (string name) {
+      var ufc = this.user_functions.lookup (name);
+      if ( ufc != null )
+        this.unregister_function_context (ufc);
+    }
+
     /**
      * Open a database.
      *
@@ -331,6 +364,9 @@ namespace SQLHeavy {
     }
 
     ~ Database () {
+      foreach ( unowned UserFunction.UserFuncData udf in this.user_functions.get_values () )
+        this.unregister_function_context (udf);
+
       if ( this.db != null )
         sqlite3_close (this.db);
     }

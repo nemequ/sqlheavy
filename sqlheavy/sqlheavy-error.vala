@@ -69,6 +69,40 @@ namespace SQLHeavy {
     DATA_TYPE
   }
 
+  internal int sqlite_code_from_error (SQLHeavy.Error e) {
+    if ( e is Error.INTERNAL )
+      return Sqlite.INTERNAL;
+    else if ( e is Error.ACCESS_DENIED )
+      return Sqlite.PERM;
+    else
+      return Sqlite.ERROR;
+      // case Sqlite.ERROR:      throw new Error.ERROR        (SQLHeavy.ErrorMessage.ERROR);
+      // case Sqlite.ABORT:      throw new Error.ABORTED      (SQLHeavy.ErrorMessage.ABORTED);
+      // case Sqlite.BUSY:       throw new Error.BUSY         (SQLHeavy.ErrorMessage.BUSY);
+      // case Sqlite.LOCKED:     throw new Error.LOCKED       (SQLHeavy.ErrorMessage.LOCKED);
+      // case Sqlite.NOMEM:      throw new Error.NO_MEMORY    (SQLHeavy.ErrorMessage.NO_MEMORY);
+      // case Sqlite.READONLY:   throw new Error.READ_ONLY    (SQLHeavy.ErrorMessage.READ_ONLY);
+      // case Sqlite.INTERRUPT:  throw new Error.INTERRUPTED  (SQLHeavy.ErrorMessage.INTERRUPTED);
+      // case Sqlite.IOERR:      throw new Error.IO           (SQLHeavy.ErrorMessage.IO);
+      // case Sqlite.CORRUPT:    throw new Error.CORRUPT      (SQLHeavy.ErrorMessage.CORRUPT);
+      // case Sqlite.FULL:       throw new Error.FULL         (SQLHeavy.ErrorMessage.FULL);
+      // case Sqlite.CANTOPEN:   throw new Error.CAN_NOT_OPEN (SQLHeavy.ErrorMessage.CAN_NOT_OPEN);
+      // case Sqlite.EMPTY:      throw new Error.EMPTY        (SQLHeavy.ErrorMessage.EMPTY);
+      // case Sqlite.SCHEMA:     throw new Error.SCHEMA       (SQLHeavy.ErrorMessage.SCHEMA);
+      // case Sqlite.TOOBIG:     throw new Error.TOO_BIG      (SQLHeavy.ErrorMessage.TOO_BIG);
+      // case Sqlite.CONSTRAINT: throw new Error.CONSTRAINT   (SQLHeavy.ErrorMessage.CONSTRAINT);
+      // case Sqlite.MISMATCH:   throw new Error.MISMATCH     (SQLHeavy.ErrorMessage.MISMATCH);
+      // case Sqlite.MISUSE:     throw new Error.MISUSE       (SQLHeavy.ErrorMessage.MISUSE);
+      // case Sqlite.NOLFS:      throw new Error.NOLFS        (SQLHeavy.ErrorMessage.NOLFS);
+      // case Sqlite.AUTH:       throw new Error.AUTH         (SQLHeavy.ErrorMessage.AUTH);
+      // case Sqlite.FORMAT:     throw new Error.FORMAT       (SQLHeavy.ErrorMessage.FORMAT);
+      // case Sqlite.RANGE:      throw new Error.RANGE        (SQLHeavy.ErrorMessage.RANGE);
+      // case Sqlite.NOTADB:     throw new Error.NOTADB       (SQLHeavy.ErrorMessage.NOTADB);
+      // case Sqlite.ROW:        throw new Error.ROW          (SQLHeavy.ErrorMessage.ROW);
+      // case Sqlite.DONE:       throw new Error.DONE         (SQLHeavy.ErrorMessage.DONE);
+      // default:                throw new Error.UNKNOWN      (SQLHeavy.ErrorMessage.UNKNOWN);
+  }
+
   namespace ErrorMessage {
     internal const string ERROR         = "SQL error or missing database";
     internal const string INTERNAL      = "Internal logic error in SQLite";
