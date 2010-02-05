@@ -13,6 +13,7 @@ sqlheavy-@SQLHEAVY_API_VERSION@:
 		$(top_srcdir)/sqlheavy/sqlheavy-error.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-queryable.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-statement.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-transaction.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-user-functions.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-versioned-database.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-value.vala \

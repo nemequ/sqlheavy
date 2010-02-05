@@ -242,4 +242,10 @@ namespace SQLHeavy {
       }
     }
   }
+
+  public enum TransactionStatus {
+    UNRESOLVED = 0,
+    COMMITTED,
+    ROLLED_BACK
+  }
 }

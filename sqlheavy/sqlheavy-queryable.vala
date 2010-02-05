@@ -1,4 +1,7 @@
 namespace SQLHeavy {
+  /**
+   * Object on which queries may be run
+   */
   public abstract class Queryable : GLib.Object {
     public SQLHeavy.Queryable? parent { get; construct; }
     public SQLHeavy.Database database {
@@ -8,12 +11,25 @@ namespace SQLHeavy {
     }
     private Sqlite.Mutex? transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
 
+    /**
+     * Lock the queryable and refuse to run any queries against it.
+     */
     public void @lock () {
       this.transaction_lock.enter ();
     }
 
+    /**
+     * Unlock the queryable and allow queries to be run against it.
+     */
     public void @unlock () {
       this.transaction_lock.leave ();
+    }
+
+    /**
+     * Begin a transaction. Will lock the queryable until the transaction is resolved.
+     */
+    public Transaction begin_transaction () {
+      return new Transaction (this);
     }
 
     /**
