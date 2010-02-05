@@ -23,40 +23,11 @@ namespace SQLHeavy {
     public weak SQLHeavy.Database db { get; construct set; }
     private unowned Sqlite.Statement stmt;
 
-    private SourceFunc? step_async_cb = null;
-
     public string sql { get { return this.stmt.sql(); } }
     public int parameter_count { get { return this.stmt.bind_parameter_count (); } }
     public int column_count { get { return this.stmt.column_count (); } }
     public int data_count { get { return this.stmt.data_count (); } }
     public bool finished { get; private set; default = false; }
-
-    /**
-     * Step (asynchronous variant)
-     */
-    public async bool step_async () throws Error {
-      // TODO this should probably lock something...
-      GLib.debug ("Starting (%s)...", this.sql);
-      this.step_async_cb = step_async.callback;
-      try {
-        this.db.thread_pool.push (this);
-      }
-      catch ( GLib.ThreadError e ) {
-        throw new SQLHeavy.Error.THREAD ("%s (%d)", e.message, e.code);
-      }
-      yield;
-
-      GLib.debug ("Finishing (%s)...", this.sql);
-      this.step_async_cb = null;
-      return this.step_handle ();
-    }
-
-    internal void step_threaded ()
-      requires (this.step_async_cb != null)
-    {
-      this.error_code = this.stmt.step ();
-      GLib.Idle.add (() => { (!) this.step_async_cb (); return false; });
-    }
 
     public void reset () {
       if ( this.auto_clear )

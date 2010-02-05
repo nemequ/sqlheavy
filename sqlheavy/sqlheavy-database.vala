@@ -19,11 +19,6 @@ namespace SQLHeavy {
       default = SQLHeavy.FileMode.READ | SQLHeavy.FileMode.WRITE | SQLHeavy.FileMode.CREATE;
     }
 
-    private void thread_cb (void * stmt) {
-      (stmt as SQLHeavy.Statement).step_threaded ();
-    }
-    public GLib.ThreadPool thread_pool;
-
     public int64 last_insert_id { get { return this.db.last_insert_rowid (); } }
 
     /**
@@ -307,13 +302,6 @@ namespace SQLHeavy {
       if ( sqlite3_open ((!) filename, out this.db, flags, null) != Sqlite.OK ) {
         this.db = null;
         GLib.critical ("Unable to open database.");
-      }
-
-      try {
-        this.thread_pool = new GLib.ThreadPool (thread_cb, 4, false);
-      }
-      catch ( GLib.ThreadError e ) {
-        GLib.warning ("Unable to create thread pool.");
       }
     }
 
