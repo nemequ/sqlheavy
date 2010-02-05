@@ -1,8 +1,17 @@
 namespace SQLHeavy {
+  /**
+   * Container which is placed in a GValue to represent a blob
+   */
   [Compact]
   public class Blob {
+    /**
+     * The data in the blob.
+     */
     public uint8[] data;
 
+    /**
+     * Create a blob.
+     */
     public Blob (uint8[] data) {
       this.data = data;
     }
