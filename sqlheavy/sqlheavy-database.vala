@@ -12,6 +12,75 @@ namespace SQLHeavy {
       new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
     internal unowned Sqlite.Database db;
 
+    private SQLHeavy.Statement? profiling_insert_stmt = null;
+    public void profiling_cb (string sql, uint64 time) {
+      try {
+        if ( this.profiling_insert_stmt == null )
+          this.profiling_insert_stmt = this.profiling_data.prepare ("INSERT INTO `queries` (`sql`, `clock`) VALUES (:sql, :clock);");
+
+        unowned SQLHeavy.Statement stmt = this.profiling_insert_stmt;
+        stmt.auto_clear = true;
+        stmt.bind_named_string (":sql", sql);
+        stmt.bind_named_int64 (":clock", (int64)time);
+        stmt.execute ();
+        stmt.reset ();
+      }
+      catch ( SQLHeavy.Error e ) {
+        GLib.warning ("Unable to insert profiling information: %s (%d)", e.message, e.code);
+      }
+    }
+
+    /**
+     * Database to store profiling data in.
+     */
+    public SQLHeavy.Database? profiling_data = null;
+
+    /**
+     * Whether profiling is enabled.
+     */
+    public bool enable_profiling {
+      get { return this.profiling_data != null; }
+      set {
+        this.profiling_insert_stmt = null;
+
+        if ( value == false ) {
+          this.profiling_data = null;
+          this.db.profile (null);
+        }
+        else {
+          try {
+            if ( this.profiling_data == null )
+              this.profiling_data = new SQLHeavy.Database ();
+
+            this.profiling_data.execute ("""
+CREATE TABLE IF NOT EXISTS `queries` (
+  `sql` TEXT UNIQUE NOT NULL,
+  `executions` INTEGER DEFAULT 1,
+  `clock` INTEGER UNSIGNED NOT NULL
+);
+
+CREATE TRIGGER IF NOT EXISTS `queries_insert`
+  BEFORE INSERT ON `queries`
+  WHEN (SELECT COUNT(*) FROM `queries` WHERE `sql` = NEW.`sql`) > 0
+  BEGIN
+    UPDATE `queries`
+      SET
+        `executions` = `executions` + 1,
+        `clock` = `clock` + NEW.`clock`
+      WHERE `sql` = NEW.`sql`;
+    SELECT RAISE(IGNORE);
+  END;""");
+          }
+          catch ( SQLHeavy.Error e ) {
+            GLib.warning ("Unable to enable profiling: %s (%d)", e.message, e.code);
+            return;
+          }
+
+          this.db.profile (this.profiling_cb);
+        }
+      }
+    }
+
     public string filename { get; construct; default = ":memory:"; }
     public SQLHeavy.FileMode mode {
       get;
