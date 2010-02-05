@@ -236,6 +236,21 @@ namespace SQLHeavy {
       return idx;
     }
 
+    public void bind (int col, GLib.Value? value) {
+      if ( value == null )
+        this.bind_null (col);
+      else if ( value.holds (typeof (int)) )
+        this.bind_int (col, value.get_int ());
+      else if ( value.holds (typeof (int64)) )
+        this.bind_int64 (col, value.get_int64 ());
+      else if ( value.holds (typeof (string)) )
+        this.bind_string (col, value.get_string ());
+      else if ( value.holds (typeof (double)) )
+        this.bind_double (col, value.get_double ());
+      else if ( value.holds (typeof (float)) )
+        this.bind_double (col, value.get_float ());
+    }
+
     public unowned string bind_get_name (int col) throws SQLHeavy.Error {
       return this.stmt.bind_parameter_name (this.bind_check_index (col));
     }
