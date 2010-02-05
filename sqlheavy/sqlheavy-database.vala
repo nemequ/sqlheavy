@@ -571,6 +571,18 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       }
     }
 
+    /**
+     * Register aggregate function for use within SQLite
+     *
+     * 
+     *
+     * See SQLite documentation at [[http://sqlite.org/c3ref/create_function.html]]
+     *
+     * @param name name of the function
+     * @param argc number of arguments the function accepts, or -1 for any
+     * @param func callback for the user defined function
+     * @param final callback to finalize the user defined function
+     */
     public void register_aggregate_function (string name,
                                              int argc,
                                              owned UserFunction.UserFunc func,
@@ -583,6 +595,13 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
                                UserFunction.on_user_finalize_called);
     }
 
+    /**
+     * Register a scalar function for use within SQLite
+     *
+     * @param name name of the function to use
+     * @param argc number of arguments the function accepts, or -1 for any
+     * @param func callback for the user defined function
+     */
     public void register_scalar_function (string name,
                                           int argc,
                                           owned UserFunction.UserFunc func) {
@@ -596,6 +615,13 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       this.db.create_function (ufc.name, ufc.argc, Sqlite.UTF8, ufc, null, null, null);
     }
 
+    /**
+     * Unregister a function
+     *
+     * Unregister a user defined function
+     *
+     * @param name name of the function
+     */
     public void unregister_function (string name) {
       var ufc = this.user_functions.lookup (name);
       if ( ufc != null )

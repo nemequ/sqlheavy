@@ -59,6 +59,9 @@ namespace SQLHeavy {
     [CCode (cname = "g_hash_table_ref", cheader_filename = "glib.h")]
     private extern weak GLib.HashTable g_hash_table_ref (GLib.HashTable ht);
 
+    /**
+     * Context used to manage a call to a user defined function
+     */
     public class Context {
       private unowned Sqlite.Context ctx = null;
       private unowned UserFuncData user_func_data = null;
@@ -85,10 +88,40 @@ namespace SQLHeavy {
         }
       }
 
+      /**
+       * Set user data
+       *
+       * SQLHeavy user defined functions can store data in a hash
+       * table.
+       *
+       * For scalar functions, this is uses the Function Auxillary Data
+       * (see [[http://sqlite.org/c3ref/get_auxdata.html]])
+       * feature of SQLite, meaning that, "If the same value is passed
+       * to multiple invocations of the same SQL function during query
+       * execution, under some circumstances the associated metadata
+       * may be preserved."
+       *
+       * For aggregate functions, it uses the Aggregate Function Context
+       * (see [[http://sqlite.org/c3ref/aggregate_context.html]])
+       * feature of SQLite, allowing user data to be shared accross an
+       * entire aggregate operation.
+       *
+       * This function is meant to be similar to
+       * GLib.Object.set_data_full
+       *
+       * @see get_user_data
+       */
       public void set_user_data (string key, void* value, GLib.DestroyNotify destroy_notify = GLib.g_free) {
         this.data.replace (key, new Value (value, destroy_notify));
       }
 
+      /**
+       * Get user data
+       *
+       * This function is meant to be similar to GLib.Object.get_data
+       *
+       * @see set_user_data
+       */
       public unowned void* get_user_data (string key) {
         unowned Value v = this.data.lookup (key);
         return (v != null) ? v.value : null;
