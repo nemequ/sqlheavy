@@ -10,6 +10,9 @@ namespace SQLHeavy {
   public class Statement : GLib.Object {
     private int error_code = Sqlite.OK;
 
+    /**
+     * When set, reset() will automatically clear the bindings.
+     */
     public bool auto_clear { get; set; default = false; }
 
     /**
@@ -23,12 +26,29 @@ namespace SQLHeavy {
     public weak SQLHeavy.Database db { get; construct set; }
     private unowned Sqlite.Statement stmt;
 
+    /**
+     * The SQL query used to create this statement.
+     */
     public string sql { get { return this.stmt.sql(); } }
+
+    /**
+     * The number of parameters in the statement.
+     */
     public int parameter_count { get { return this.stmt.bind_parameter_count (); } }
+
+    /**
+     * The number of columns in the result set.
+     */
     public int column_count { get { return this.stmt.column_count (); } }
-    public int data_count { get { return this.stmt.data_count (); } }
+
+    /**
+     * Whether we have finished iterating through the result set.
+     */
     public bool finished { get; private set; default = false; }
 
+    /**
+     * Reset the statement, allowing for another execution.
+     */
     public void reset () {
       if ( this.auto_clear )
         this.stmt.clear_bindings ();
@@ -54,6 +74,9 @@ namespace SQLHeavy {
       GLib.assert_not_reached ();
     }
 
+    /**
+     * Evaluate the statement.
+     */
     public bool step () throws Error {
       if ( this.finished )
         return false;
@@ -61,10 +84,16 @@ namespace SQLHeavy {
       return this.step_handle ();
     }
 
+    /**
+     * Completely evaluate the statement, calling step () until it returns false.
+     */
     public void execute () throws SQLHeavy.Error {
       while ( this.step () ) { }
     }
 
+    /**
+     * Execute the statement, and return the last insert ID.
+     */
     public int64 execute_insert () throws SQLHeavy.Error {
       /* Might want to call the sqlite functions directly here, to
        * limit the race condition. */
