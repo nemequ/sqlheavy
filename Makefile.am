@@ -1,6 +1,6 @@
 NULL =
 
-SUBDIRS = sqlheavy
+SUBDIRS = sqlheavy valadoc
 
 ACLOCAL_AMFLAGS=-I m4
 
