@@ -1,35 +1,54 @@
 namespace SQLHeavy {
-  internal GLib.Value? sqlite_value_to_g_value (Sqlite.Value value) {
-    GLib.Value? gval = null;
-    var stype = value.to_type ();
+  [Compact]
+  public class Blob {
+    public uint8[] data;
 
+    public Blob (uint8[] data) {
+      this.data = data;
+    }
+  }
+
+  internal GLib.Type sqlite_type_to_g_type (int stype) throws SQLHeavy.Error {
     switch ( stype ) {
       case Sqlite.INTEGER:
-        if ( value.to_int64 () < int.MAX ) {
-          gval = GLib.Value (typeof (int));
-          gval.set_int (value.to_int ());
-        }
-        else {
-          gval = GLib.Value (typeof (int64));
-          gval.set_int64 (value.to_int64 ());
-        }
-        break;
-      case Sqlite.FLOAT:
-        gval = GLib.Value (typeof (double));
-        gval.set_double (value.to_double ());
-        break;
+        return typeof (int64);
       case Sqlite.TEXT:
-        gval = GLib.Value (typeof (string));
-        gval.set_string (value.to_text ());
-        break;
-      case Sqlite.BLOB:
-        gval = GLib.Value (typeof (void *));
-        gval.set_pointer (value.to_blob ());
-        break;
+        return typeof (string);
+      case Sqlite.FLOAT:
+        return typeof (double);
       case Sqlite.NULL:
-        break;
+        return typeof (void);
+      case Sqlite.BLOB:
+        return typeof (Blob);
       default:
-        GLib.assert_not_reached ();
+        throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
+    }
+  }
+
+  internal GLib.Value? sqlite_value_to_g_value (Sqlite.Value value) {
+    GLib.Type gtype;
+    try {
+      gtype = sqlite_type_to_g_type (value.to_type ());
+    }
+    catch ( SQLHeavy.Error e ) {
+      GLib.assert_not_reached ();
+    }
+
+    if ( gtype == typeof (void) )
+      return null;
+
+    GLib.Value gval = GLib.Value (gtype);
+
+    if ( gtype == typeof (int64) )
+      gval.set_int64 (value.to_int64 ());
+    else if ( gtype == typeof (double) )
+      gval.set_double (value.to_double ());
+    else if ( gtype == typeof (string) )
+      gval.set_string (value.to_text ());
+    else if ( gtype == typeof (Blob) ) {
+      unowned uint8[] blob = (uint8[])value.to_blob ();
+      blob.length = value.to_bytes ();
+      gval.set_boxed (new Blob (blob));
     }
 
     return gval;
