@@ -24,7 +24,7 @@ namespace SQLHeavy {
     /**
      * The database this statement operates on.
      */
-    public weak SQLHeavy.Database db { get; construct set; }
+    public weak SQLHeavy.Queryable queryable { get; construct set; }
     private unowned Sqlite.Statement stmt;
 
     /**
@@ -48,6 +48,12 @@ namespace SQLHeavy {
     public bool finished { get; private set; default = false; }
 
     /**
+     * Whether the query is currently iterating through a result set
+     * (i.e., step() has been called but not yet returned false).
+     */
+    public bool active { get; private set; default = false; }
+
+    /**
      * Reset the statement, allowing for another execution.
      */
     public void reset () {
@@ -68,6 +74,7 @@ namespace SQLHeavy {
       }
       else if ( ec == Sqlite.DONE ) {
         this.finished = true;
+        this.active = false;
         return false;
       }
       else
@@ -82,7 +89,16 @@ namespace SQLHeavy {
     public bool step () throws Error {
       if ( this.finished )
         return false;
-      this.error_code = this.stmt.step ();
+
+      if ( !this.active ) {
+        this.queryable.@lock ();
+        this.active = true;
+        this.error_code = this.stmt.step ();
+        this.queryable.@unlock ();
+      }
+      else
+        this.error_code = this.stmt.step ();
+
       return this.step_handle ();
     }
 
@@ -97,10 +113,12 @@ namespace SQLHeavy {
      * Execute the statement, and return the last insert ID.
      */
     public int64 execute_insert () throws SQLHeavy.Error {
-      /* Might want to call the sqlite functions directly here, to
-       * limit the race condition. */
+      this.queryable.@lock ();
+      this.active = true;
       this.execute ();
-      return this.db.last_insert_id;
+      var last_insert_id = this.queryable.database.last_insert_id;
+      this.queryable.@unlock ();
+      return last_insert_id;
     }
 
     private int fetch_check_index (int col) throws SQLHeavy.Error {
@@ -368,22 +386,22 @@ namespace SQLHeavy {
       return data;
     }
 
-    public Statement.full (SQLHeavy.Database db, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
-      this.db = db;
-      error_if_not_ok (sqlite3_prepare (db.db, sql, max_len, out this.stmt, out tail));
+    public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
+      this.queryable = queryable;
+      error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, max_len, out this.stmt, out tail));
     }
 
     /**
      * Create a prepared statement.
      *
-     * @param db, The database to use.
+     * @param queryable, The database to use.
      * @param sql, An SQL query.
      * @param tail, Where to store the any unprocessed part of the query.
-     * @see SQLHeavy.Database.prepare
+     * @see SQLHeavy.Queryable.prepare
      */
-    public Statement (SQLHeavy.Database db, string sql) throws SQLHeavy.Error {
-      this.db = db;
-      error_if_not_ok (sqlite3_prepare (db.db, sql, -1, out this.stmt, null));
+    public Statement (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
+      this.queryable = queryable;
+      error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, -1, out this.stmt, null));
     }
   }
 }

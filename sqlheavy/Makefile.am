@@ -10,6 +10,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-database.vala \
 	sqlheavy-enums.vala \
 	sqlheavy-error.vala \
+	sqlheavy-queryable.vala \
 	sqlheavy-statement.vala \
 	sqlheavy-user-functions.vala \
 	sqlheavy-versioned-database.vala \
