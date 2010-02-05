@@ -1,4 +1,7 @@
 namespace SQLHeavy {
+  /**
+   * A convenience class used to represent a database and script(s) for the schema
+   */
   public class VersionedDatabase : SQLHeavy.Database {
     public string schema { get; construct; }
 
@@ -34,6 +37,12 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * Create a VersionedDatabase
+     *
+     * @param file The filename of the database
+     * @param directory the directory where the schema can be found
+     */
     public VersionedDatabase (string file, string directory) throws SQLHeavy.Error {
       Object (filename: file, schema: directory);
     }
