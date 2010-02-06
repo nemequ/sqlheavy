@@ -290,34 +290,46 @@ namespace SQLHeavy {
       return this.fetch_blob (this.fetch_get_index (col));
     }
 
-    public GLib.Value fetch_result (int col = 0) throws SQLHeavy.Error {
+    public GLib.Value? fetch_result (int col = 0) throws SQLHeavy.Error {
       this.step ();
-      return this.fetch (col);
+      var ret = this.fetch (col);
+      this.reset ();
+      return ret;
     }
 
     public string? fetch_result_string (int col = 0) throws SQLHeavy.Error {
       this.step ();
-      return this.fetch_string (col);
+      var ret = this.fetch_string (col);
+      this.reset ();
+      return ret;
     }
 
     public int fetch_result_int (int col = 0) throws SQLHeavy.Error {
       this.step ();
-      return this.fetch_int (col);
+      var ret = this.fetch_int (col);
+      this.reset ();
+      return ret;
     }
 
     public int64 fetch_result_int64 (int col = 0) throws SQLHeavy.Error {
       this.step ();
-      return this.fetch_int64 (col);
+      var ret = this.fetch_int64 (col);
+      this.reset ();
+      return ret;
     }
 
     public double fetch_result_double (int col = 0) throws SQLHeavy.Error {
       this.step ();
-      return this.fetch_double (col);
+      var ret = this.fetch_double (col);
+      this.reset ();
+      return ret;
     }
 
     public uint8[] fetch_result_blob (int col = 0) throws SQLHeavy.Error {
       this.step ();
-      return this.fetch_blob (col);
+      var ret = this.fetch_blob (col);
+      this.reset ();
+      return ret;
     }
 
     private int bind_check_index (int col) throws SQLHeavy.Error {
