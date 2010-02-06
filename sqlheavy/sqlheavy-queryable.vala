@@ -12,6 +12,11 @@ namespace SQLHeavy {
     private Sqlite.Mutex? transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
 
     /**
+     * Signal which is emitted when a query finished executing.
+     */
+    public signal void query_executed (SQLHeavy.Statement stmt);
+
+    /**
      * Lock the queryable and refuse to run any queries against it.
      */
     public void @lock () {

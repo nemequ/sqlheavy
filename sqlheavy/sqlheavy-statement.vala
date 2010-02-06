@@ -12,6 +12,15 @@ namespace SQLHeavy {
     private GLib.HashTable<string, int?> result_columns = null;
 
     /**
+     * A timer for determining how much time (wall-clock) has been
+     * spent executing the statement.
+     *
+     * This clock is started and stopped each time step () is called,
+     * and reset when reset () is called.
+     */
+    public GLib.Timer execution_timer;
+
+    /**
      * When set, reset() will automatically clear the bindings.
      */
     public bool auto_clear { get; set; default = false; }
@@ -54,14 +63,33 @@ namespace SQLHeavy {
     public bool active { get; private set; default = false; }
 
     /**
+     * Number of times that SQLite has stepped forward in a table as
+     * part of a full table scan.
+     *
+     * See SQLite documentation at [[http://sqlite.org/c3ref/c_stmtstatus_fullscan_step.html]]
+     */
+    public int full_scan_steps { get { return this.stmt.status (Sqlite.STMT_STATUS_FULLSCAN_STEP, 0); } }
+
+    /**
+     * This is the number of sort operations that have occurred.
+     *
+     * See SQLite documentation at [[http://sqlite.org/c3ref/c_stmtstatus_fullscan_step.html]]
+     */
+    public int sort_operations { get { return this.stmt.status (Sqlite.STMT_STATUS_SORT, 0); } }
+
+    /**
      * Reset the statement, allowing for another execution.
      */
     public void reset () {
+      if ( this.active )
+        this.queryable.query_executed (this);
+
       if ( this.auto_clear )
         this.stmt.clear_bindings ();
       this.stmt.reset ();
       this.finished = false;
       this.result_columns = null;
+      this.execution_timer.reset ();
     }
 
     private bool step_handle () throws Error {
@@ -75,6 +103,7 @@ namespace SQLHeavy {
       else if ( ec == Sqlite.DONE ) {
         this.finished = true;
         this.active = false;
+        this.queryable.query_executed (this);
         return false;
       }
       else
@@ -93,11 +122,17 @@ namespace SQLHeavy {
       if ( !this.active ) {
         this.queryable.@lock ();
         this.active = true;
+        this.execution_timer.reset ();
+        this.execution_timer.start ();
         this.error_code = this.stmt.step ();
+        this.execution_timer.stop ();
         this.queryable.@unlock ();
       }
-      else
+      else {
+        this.execution_timer.start ();
         this.error_code = this.stmt.step ();
+        this.execution_timer.stop ();
+      }
 
       return this.step_handle ();
     }
@@ -371,6 +406,10 @@ namespace SQLHeavy {
     }
 
     ~ Statement () {
+      // GObject *really* doesn't like this. Need to figure out a way
+      // to emit the query_executed signal here...
+      //if ( this.active )
+      //  this.queryable.query_executed (this);
       sqlite3_finalize (this.stmt);
     }
 
@@ -384,6 +423,12 @@ namespace SQLHeavy {
       }
 
       return data;
+    }
+
+    construct {
+      this.execution_timer = new GLib.Timer ();
+      this.execution_timer.stop ();
+      this.execution_timer.reset ();
     }
 
     public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string? tail = null) throws Error {

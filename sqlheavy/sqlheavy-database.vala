@@ -13,17 +13,19 @@ namespace SQLHeavy {
     internal unowned Sqlite.Database db;
 
     private SQLHeavy.Statement? profiling_insert_stmt = null;
-    private void profiling_cb (string sql, uint64 time) {
+    private void profiling_cb (SQLHeavy.Statement stmt) {
       try {
         if ( this.profiling_insert_stmt == null )
-          this.profiling_insert_stmt = this.profiling_data.prepare ("INSERT INTO `queries` (`sql`, `clock`) VALUES (:sql, :clock);");
+          this.profiling_insert_stmt = this.profiling_data.prepare ("INSERT INTO `queries` (`sql`, `clock`, `fullscan_step`, `sort`) VALUES (:sql, :clock, :fullscan_step, :sort);");
 
-        unowned SQLHeavy.Statement stmt = this.profiling_insert_stmt;
-        stmt.auto_clear = true;
-        stmt.bind_named_string (":sql", sql);
-        stmt.bind_named_int64 (":clock", (int64)time);
-        stmt.execute ();
-        stmt.reset ();
+        unowned SQLHeavy.Statement pstmt = this.profiling_insert_stmt;
+        pstmt.auto_clear = true;
+        pstmt.bind_named_string (":sql", stmt.sql);
+        pstmt.bind_named_double (":clock", stmt.execution_timer.elapsed ());
+        pstmt.bind_named_int64 (":fullscan_step", stmt.full_scan_steps);
+        pstmt.bind_named_int64 (":sort", stmt.sort_operations);
+        pstmt.execute ();
+        pstmt.reset ();
       }
       catch ( SQLHeavy.Error e ) {
         GLib.warning ("Unable to insert profiling information: %s (%d)", e.message, e.code);
@@ -40,6 +42,13 @@ namespace SQLHeavy {
 
     /**
      * Whether profiling is enabled.
+     *
+     * Profiling in SQLHeavy bypasses the SQLite profiling mechanism,
+     * and instead makes use of a timer in each Statement. This is
+     * done so we can gather more information about the query than is
+     * available from and SQLite profiling callback.
+     *
+     * @see Statement.execution_timer
      */
     public bool enable_profiling {
       get { return this.profiling_data != null; }
@@ -48,7 +57,7 @@ namespace SQLHeavy {
 
         if ( value == false ) {
           this.profiling_data = null;
-          this.db.profile (null);
+          this.query_executed.disconnect (this.profiling_cb);
         }
         else {
           try {
@@ -58,8 +67,10 @@ namespace SQLHeavy {
             this.profiling_data.execute ("""
 CREATE TABLE IF NOT EXISTS `queries` (
   `sql` TEXT UNIQUE NOT NULL,
-  `executions` INTEGER DEFAULT 1,
-  `clock` INTEGER UNSIGNED NOT NULL
+  `executions` INTEGER UNSIGNED DEFAULT 1,
+  `clock` FLOAT UNSIGNED NOT NULL,
+  `fullscan_step` INTEGER UNSIGNED,
+  `sort` INTEGER UNSIGNED
 );
 
 CREATE TRIGGER IF NOT EXISTS `queries_insert`
@@ -69,7 +80,9 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
     UPDATE `queries`
       SET
         `executions` = `executions` + 1,
-        `clock` = `clock` + NEW.`clock`
+        `clock` = `clock` + NEW.`clock`,
+        `fullscan_step` = `fullscan_step` + NEW.`fullscan_step`,
+        `sort` = `sort` + NEW.`sort`
       WHERE `sql` = NEW.`sql`;
     SELECT RAISE(IGNORE);
   END;""");
@@ -79,7 +92,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
             return;
           }
 
-          this.db.profile (this.profiling_cb);
+          this.query_executed.connect (this.profiling_cb);
         }
       }
     }
