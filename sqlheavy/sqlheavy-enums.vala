@@ -1,6 +1,8 @@
 namespace SQLHeavy {
   /**
    * Transaction type.
+   *
+   * @see SQLHeavy.Transaction
    */
   public enum TransactionType {
     /**
@@ -66,18 +68,69 @@ namespace SQLHeavy {
     CREATE = 0x04
   }
 
+  /**
+   * Auto-vacuum mode
+   *
+   * See SQLite documentation at [[http://sqlite.org/pragma.html#pragma_auto_vacuum]]
+   *
+   * @see Database.auto_vacuum
+   * @see Database.free_list_count
+   * @see Database.incremental_vacuum
+   */
   public enum AutoVacuum {
+    /**
+     * Auto-vacuum is disabled.
+     */
     NONE = 0,
+    /**
+     * Freelist pages are moved to the end of the database file and
+     * the database file is truncated to remove the freelist pages at
+     * every transaction commit.
+     */
     FULL = 1,
+    /**
+     * The additional information needed to do auto-vacuuming is
+     * stored in the database file but auto-vacuuming does not occur
+     * automatically at each commit as it does with FULL. In
+     * incremental mode, the separate incremental_vacuum pragma must
+     * be invoked to cause the auto-vacuum to occur.
+     */
     INCREMENTAL = 2
   }
 
+  /**
+   * Data encoding
+   *
+   * SQLHeavy applications should generally use UTF-8, since strings
+   * are assumed to be UTF-8 encoded.
+   *
+   * See SQLite documentation at [[http://sqlite.org/pragma.html#pragma_encoding]]
+   *
+   * @see Database.encoding
+   */
   public enum Encoding {
+    /**
+     * UTF-8
+     */
     UTF_8,
+    /**
+     * UTF-16 with native encoding
+     */
     UTF_16,
+    /**
+     * UTF-16 with little-endian encoding
+     */
     UTF_16LE,
+    /**
+     * UTF-16 wiht big-endian encoding
+     */
     UTF_16BE;
 
+    /**
+     * Convert a string value to an Encoding
+     *
+     * @param encoding encoding
+     */
     public static Encoding from_string (string encoding) {
       var enc = encoding.up ();
 
@@ -110,11 +163,44 @@ namespace SQLHeavy {
     }
   }
 
+  /**
+   * Journal mode
+   *
+   * See SQLite documentation at [[http://sqlite.org/pragma.html#pragma_journal_mode]]
+   *
+   * @see Database.journal_mode
+   */
   public enum JournalMode {
+    /**
+     * The rollback journal is deleted at the conclusion of each
+     * transaction.
+     */
     DELETE,
+    /**
+     * Commits transactions by truncating the rollback journal to
+     * zero-length instead of deleting it.
+     */
     TRUNCATE,
+    /**
+     * Prevents the rollback journal from being deleted at the end of
+     * each transaction. Instead, the header of the journal is
+     * overwritten with zeros.
+     */
     PERSIST,
+    /**
+     * Stores the rollback journal in volatile RAM. This saves disk
+     * I/O but at the expense of database safety and integrity. If the
+     * application using SQLite crashes in the middle of a trans
+     * action when the MEMORY journaling mode is set, then the
+     * database file will very likely go corrupt.
+     */
     MEMORY,
+    /**
+     * Disables the rollback journal completely. If the application
+     * crashes in the middle of a transaction when the OFF journaling
+     * mode is set, then the database file will very likely go
+     * corrupt.
+     */
     OFF;
 
     public static JournalMode from_string (string journal_mode) {
@@ -152,8 +238,22 @@ namespace SQLHeavy {
     }
   }
 
+  /**
+   * Database locking mode
+   *
+   * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_locking_mode]]
+   *
+   * @see Database.locking_mode
+   */
   public enum LockingMode {
+    /**
+     * Database connection unlocks the database file at the conclusion
+     * of each read or write transaction.
+     */
     NORMAL,
+    /**
+     * Database connection never releases file-locks.
+     */
     EXCLUSIVE;
 
     public static LockingMode from_string (string locking_mode) {
@@ -179,9 +279,27 @@ namespace SQLHeavy {
     }
   }
 
+  /**
+   * Synchronous Mode
+   *
+   * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_synchronous]]
+   *
+   * @see Database.synchronous
+   */
   public enum SynchronousMode {
+    /**
+     * SQLite continues without pausing as soon as it has handed data
+     * off to the operating system
+     */
     OFF,
+    /**
+     * Database engine will still pause at the most critical moments,
+     * but less often than in FULL mode
+     */
     NORMAL,
+    /**
+     *  SQLite will block until data is safely written to disk
+     */
     FULL;
 
     public static SynchronousMode from_string (string synchronous_mode) {
@@ -211,9 +329,26 @@ namespace SQLHeavy {
     }
   }
 
+  /**
+   * Temporary store mode
+   *
+   * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_temp_store]]
+   *
+   * @see Database.temp_store
+   */
   public enum TempStoreMode {
+    /**
+     * The compile-time C preprocessor macro SQLITE_TEMP_STORE is used
+     * to determine where temporary tables and indices are stored
+     */
     DEFAULT,
+    /**
+     * Temporary tables and indices are stored in a file
+     */
     FILE,
+    /**
+     * Temporary tables and indices are stored in memory
+     */
     MEMORY;
 
     public static TempStoreMode from_string (string temp_store_mode) {
@@ -243,9 +378,23 @@ namespace SQLHeavy {
     }
   }
 
+  /**
+   * Transaction Status
+   *
+   * @see Transaction.status
+   */
   public enum TransactionStatus {
+    /**
+     * Transactino has not yet been committed or rolled back
+     */
     UNRESOLVED = 0,
+    /**
+     * Transaction has been committed
+     */
     COMMITTED,
+    /**
+     * Transaction has been rolled back
+     */
     ROLLED_BACK
   }
 }
