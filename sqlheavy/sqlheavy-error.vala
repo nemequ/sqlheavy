@@ -34,7 +34,15 @@ namespace SQLHeavy {
     }
   }
 
+  /**
+   * SQLHeavy Errors
+   *
+   * Most of these are from SQLite--see [[http://sqlite.org/c3ref/c_abort.html]] for documentation.
+   */
   public errordomain Error {
+    /**
+     * An unknown error occured
+     */
     UNKNOWN,
     ERROR,
     INTERNAL,
@@ -65,7 +73,9 @@ namespace SQLHeavy {
     ROW,
     DONE,
 
-    THREAD,
+    /**
+     * An unhandled data type was encountered.
+     */
     DATA_TYPE
   }
 
@@ -103,6 +113,9 @@ namespace SQLHeavy {
       // default:                throw new Error.UNKNOWN      (SQLHeavy.ErrorMessage.UNKNOWN);
   }
 
+  /**
+   * Namespace used internally to store description of error codes.
+   */
   namespace ErrorMessage {
     internal const string ERROR         = "SQL error or missing database";
     internal const string INTERNAL      = "Internal logic error in SQLite";
