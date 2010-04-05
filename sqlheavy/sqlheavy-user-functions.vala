@@ -71,14 +71,14 @@ namespace SQLHeavy {
         get {
           if ( this._data == null ) {
             if ( this.user_func_data.is_scalar ) {
-              this._data = (GLib.HashTable<string, Value>)this.ctx.get_auxdata (0);
+              this._data = this.ctx.get_auxdata<GLib.HashTable<string, Value>> (0);
               if ( this._data == null ) {
-                this.ctx.set_auxdata (0, new GLib.HashTable<string, Value>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref), (GLib.DestroyNotify)g_hash_table_unref);
-                this._data = (GLib.HashTable<string, Value>)this.ctx.get_auxdata (0);
+                this.ctx.set_auxdata<GLib.HashTable<string, Value>> (0, new GLib.HashTable<string, Value>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref));
+                this._data = this.ctx.get_auxdata<GLib.HashTable<string, Value>> (0);
               }
             }
             else {
-              GLib.Memory.copy (&this._data, this.ctx.aggregate_context ((int)sizeof (GLib.HashTable)), sizeof (GLib.HashTable));
+              GLib.Memory.copy (&this._data, this.ctx.aggregate ((int)sizeof (GLib.HashTable)), sizeof (GLib.HashTable));
               if ( this._data == null )
                 this._data = g_hash_table_ref (new GLib.HashTable<string, Value>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref));
             }
@@ -165,7 +165,7 @@ namespace SQLHeavy {
 
       internal Context (Sqlite.Context ctx) {
         this.ctx = ctx;
-        this.user_func_data = (UserFuncData)ctx.user_data ();
+        this.user_func_data = ctx.user_data<UserFuncData> ();
       }
     }
 
