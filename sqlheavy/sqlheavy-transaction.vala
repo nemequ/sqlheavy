@@ -9,7 +9,7 @@ namespace SQLHeavy {
     public TransactionStatus status { get; private set; default = TransactionStatus.UNRESOLVED; }
 
     private void resolve (bool commit) {
-      if ( this.status == TransactionStatus.UNRESOLVED ) {
+      if ( this.status != TransactionStatus.UNRESOLVED ) {
         GLib.warning ("Refusing to resolve an already resolved transaction.");
         return;
       }
@@ -42,7 +42,7 @@ namespace SQLHeavy {
 
     ~ Transaction () {
       if ( this.status == TransactionStatus.UNRESOLVED )
-        this.commit ();
+        GLib.warning ("Destroying an unresolved transaction.");
     }
 
     construct {

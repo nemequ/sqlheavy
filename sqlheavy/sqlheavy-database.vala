@@ -642,6 +642,13 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
     }
 
     /**
+     * Registers common functions
+     */
+    public void register_common_functions () {
+      this.register_scalar_function ("REGEXP", 2, UserFunction.regex);
+    }
+
+    /**
      * Open a database.
      *
      * @param filename, Where to store the database, or null for memory only.

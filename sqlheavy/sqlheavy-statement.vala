@@ -106,8 +106,9 @@ namespace SQLHeavy {
         this.queryable.query_executed (this);
         return false;
       }
-      else
-        error_if_not_ok (ec);
+      else {
+        error_if_not_ok (ec, this.queryable);
+      }
 
       GLib.assert_not_reached ();
     }
@@ -367,7 +368,7 @@ namespace SQLHeavy {
     }
 
     public void bind_int (int col, int value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_int (this.bind_check_index (col), value));
+      error_if_not_ok (this.stmt.bind_int (this.bind_check_index (col), value), this.queryable);
     }
 
     public void bind_named_int (string col, int value) throws SQLHeavy.Error {
@@ -375,7 +376,7 @@ namespace SQLHeavy {
     }
 
     public void bind_int64 (int col, int64 value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_int64 (this.bind_check_index (col), value));
+      error_if_not_ok (this.stmt.bind_int64 (this.bind_check_index (col), value), this.queryable);
     }
 
     public void bind_named_int64 (string col, int64 value) throws SQLHeavy.Error {
@@ -386,7 +387,7 @@ namespace SQLHeavy {
       if ( value == null )
         this.bind_null (col);
       else
-        error_if_not_ok (this.stmt.bind_text (this.bind_check_index (col), value));
+        error_if_not_ok (this.stmt.bind_text (this.bind_check_index (col), value), this.queryable);
     }
 
     public void bind_named_string (string col, string? value) throws SQLHeavy.Error {
@@ -394,7 +395,7 @@ namespace SQLHeavy {
     }
 
     public void bind_null (int col) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_null (this.bind_check_index (col)));
+      error_if_not_ok (this.stmt.bind_null (this.bind_check_index (col)), this.queryable);
     }
 
     public void bind_named_null (string col) throws SQLHeavy.Error {
@@ -402,7 +403,7 @@ namespace SQLHeavy {
     }
 
     public void bind_double (int col, double value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_double (this.bind_check_index (col), value));
+      error_if_not_ok (this.stmt.bind_double (this.bind_check_index (col), value), this.queryable);
     }
 
     public void bind_named_double (string col, double value) throws SQLHeavy.Error {
@@ -410,7 +411,7 @@ namespace SQLHeavy {
     }
 
     public void bind_blob (int col, uint8[] value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_blob (col, GLib.Memory.dup (value, value.length), value.length, GLib.g_free));
+      error_if_not_ok (this.stmt.bind_blob (col, GLib.Memory.dup (value, value.length), value.length, GLib.g_free), this.queryable);
     }
 
     public void bind_named_blob (string col, uint8[] value) throws SQLHeavy.Error {
@@ -444,8 +445,8 @@ namespace SQLHeavy {
     }
 
     public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
-      this.queryable = queryable;
-      error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, max_len, out this.stmt, out tail));
+      Object (queryable: queryable);
+      error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, max_len, out this.stmt, out tail), queryable);
     }
 
     /**
@@ -457,8 +458,8 @@ namespace SQLHeavy {
      * @see SQLHeavy.Queryable.prepare
      */
     public Statement (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
-      this.queryable = queryable;
-      error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, -1, out this.stmt, null));
+      Object (queryable: queryable);
+      error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, -1, out this.stmt, null), queryable);
     }
   }
 }

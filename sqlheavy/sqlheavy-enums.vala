@@ -35,7 +35,7 @@ namespace SQLHeavy {
      */
     EXCLUSIVE;
 
-    public weak string? to_string () {
+    public unowned string? to_string () {
       switch ( this ) {
         case DEFERRED:
           return "DEFERRED";
@@ -147,7 +147,7 @@ namespace SQLHeavy {
       return UTF_8;
     }
 
-    public weak string? to_string () {
+    public unowned string? to_string () {
       switch ( this ) {
         case UTF_8:
           return "UTF-8";
@@ -220,7 +220,7 @@ namespace SQLHeavy {
         return DELETE;
     }
 
-    public weak string? to_string () {
+    public unowned string? to_string () {
       switch ( this ) {
         case DELETE:
           return "DELETE";
@@ -267,7 +267,7 @@ namespace SQLHeavy {
         return NORMAL;
     }
 
-    public weak string? to_string () {
+    public unowned string? to_string () {
       switch ( this ) {
         case NORMAL:
           return "NORMAL";
@@ -315,7 +315,7 @@ namespace SQLHeavy {
         return FULL;
     }
 
-    public weak string? to_string () {
+    public unowned string? to_string () {
       switch ( this ) {
         case OFF:
           return "OFF";
@@ -364,7 +364,7 @@ namespace SQLHeavy {
         return DEFAULT;
     }
 
-    public weak string? to_string () {
+    public unowned string? to_string () {
       switch ( this ) {
         case DEFAULT:
           return "DEFAULT";

@@ -38,26 +38,17 @@ namespace SQLHeavy {
       }
     }
 
-    [Compact]
-    private class Value : GLib.Object {
-      public void* value;
-      public GLib.DestroyNotify destroy_notify;
-
-      ~ Value () {
-        if ( this.destroy_notify != null )
-          this.destroy_notify (value);
-      }
-
-      public Value (void* value, GLib.DestroyNotify destroy_notify = GLib.g_free) {
-        this.value = value;
-        this.destroy_notify = destroy_notify;
-      }
-    }
-
     [CCode (cname = "g_hash_table_unref", cheader_filename = "glib.h")]
     private extern void g_hash_table_unref (GLib.HashTable ht);
     [CCode (cname = "g_hash_table_ref", cheader_filename = "glib.h")]
-    private extern weak GLib.HashTable g_hash_table_ref (GLib.HashTable ht);
+    private extern unowned GLib.HashTable g_hash_table_ref (GLib.HashTable ht);
+    [CCode (cname = "g_boxed_free", cheader_filename = "glib.h")]
+    private extern void g_boxed_free (GLib.Type type, void * ptr);
+
+    private void g_boxed_value_free (void* value) {
+      if ( value != null )
+        g_boxed_free (typeof (GLib.Value), (void*)value);
+    }
 
     /**
      * Context used to manage a call to a user defined function
@@ -66,21 +57,21 @@ namespace SQLHeavy {
       private unowned Sqlite.Context ctx = null;
       private unowned UserFuncData user_func_data = null;
 
-      private unowned GLib.HashTable<string, Value>? _data = null;
-      private unowned GLib.HashTable<string, Value> data {
+      private unowned GLib.HashTable<string, GLib.Value?> _data;
+      private GLib.HashTable<string, GLib.Value?> data {
         get {
           if ( this._data == null ) {
             if ( this.user_func_data.is_scalar ) {
-              this._data = this.ctx.get_auxdata<GLib.HashTable<string, Value>> (0);
+              this._data = this.ctx.get_auxdata<GLib.HashTable<string, GLib.Value?>> (0);
               if ( this._data == null ) {
-                this.ctx.set_auxdata<GLib.HashTable<string, Value>> (0, new GLib.HashTable<string, Value>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref));
-                this._data = this.ctx.get_auxdata<GLib.HashTable<string, Value>> (0);
+                this.ctx.set_auxdata<GLib.HashTable<string, GLib.Value?>> (0, new GLib.HashTable<string, GLib.Value?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, (GLib.DestroyNotify) g_boxed_value_free));
+                this._data = this.ctx.get_auxdata<GLib.HashTable<string, GLib.Value?>> (0);
               }
             }
             else {
               GLib.Memory.copy (&this._data, this.ctx.aggregate ((int)sizeof (GLib.HashTable)), sizeof (GLib.HashTable));
               if ( this._data == null )
-                this._data = g_hash_table_ref (new GLib.HashTable<string, Value>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref));
+                this._data = g_hash_table_ref (new GLib.HashTable<string, GLib.Value?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref));
             }
           }
 
@@ -111,8 +102,8 @@ namespace SQLHeavy {
        *
        * @see get_user_data
        */
-      public void set_user_data (string key, void* value, GLib.DestroyNotify destroy_notify = GLib.g_free) {
-        this.data.replace (key, new Value (value, destroy_notify));
+      public void set_user_data (string key, GLib.Value value) {
+        this.data.replace (key, value);
       }
 
       /**
@@ -122,9 +113,8 @@ namespace SQLHeavy {
        *
        * @see set_user_data
        */
-      public unowned void* get_user_data (string key) {
-        unowned Value v = this.data.lookup (key);
-        return (v != null) ? v.value : null;
+      public unowned GLib.Value? get_user_data (string key) {
+        return this.data.lookup (key);
       }
 
       internal void handle_result (GLib.Value? value) {
@@ -138,6 +128,8 @@ namespace SQLHeavy {
           this.ctx.result_double (value.get_double ());
         else if ( value.holds (typeof (string)) )
           this.ctx.result_text (value.get_string (), -1, GLib.g_free);
+        else if ( value.holds (typeof (bool)) )
+          this.ctx.result_int (value.get_boolean () ? 1 : 0);
         else
           GLib.error ("Unknown return type.");
       }
@@ -152,15 +144,15 @@ namespace SQLHeavy {
           this.handle_result (res);
         }
         catch ( SQLHeavy.Error e ) {
-          this.ctx.result_error_code (sqlite_code_from_error (e));
+          this.ctx.result_error (this.ctx.db_handle ().errmsg (), sqlite_code_from_error (e));
         }
       }
 
       internal void call_finalize_func () {
         if ( !this.user_func_data.is_scalar ) {
           this.user_func_data.final (this);
-          g_hash_table_unref (this.data);
         }
+        g_hash_table_unref (this.data);
       }
 
       internal Context (Sqlite.Context ctx) {
@@ -178,6 +170,26 @@ namespace SQLHeavy {
     private static void on_user_finalize_called (Sqlite.Context context) {
       var ctx = new Context (context);
       ctx.call_finalize_func ();
+    }
+
+    public GLib.Value? regex (UserFunction.Context ctx, GLib.SList<GLib.Value?> args) throws Error {
+      GLib.Regex? regex = null;
+      unowned string str_expr = args.data.get_string ();
+      GLib.Value? gv_expr = ctx.get_user_data (str_expr);
+      if ( gv_expr == null ) {
+        try {
+          regex = new GLib.Regex (str_expr, GLib.RegexCompileFlags.OPTIMIZE | GLib.RegexCompileFlags.DOLLAR_ENDONLY);
+        }
+        catch ( GLib.RegexError e ) {
+          throw new SQLHeavy.Error.ERROR ("Unable to compile regular expression: %s", e.message);
+        }
+        ctx.set_user_data (str_expr, regex);
+      }
+      else {
+        regex = (GLib.Regex)gv_expr.get_boxed ();
+      }
+
+      return regex.match (args.nth_data (1).get_string ());
     }
   }
 }
