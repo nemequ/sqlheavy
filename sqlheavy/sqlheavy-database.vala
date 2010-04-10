@@ -603,7 +603,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       this.unregister_function (name);
       var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, func);
       this.user_functions.insert (name, ufc);
-      this.db.create_function<UserFunction.UserFuncData> (name, argc, Sqlite.TextEncoding.UTF8, ufc, null,
+      this.db.create_function<UserFunction.UserFuncData> (name, argc, Sqlite.UTF8, ufc, null,
                                                           UserFunction.on_user_function_called,
                                                           UserFunction.on_user_finalize_called);
     }
@@ -621,11 +621,11 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       this.unregister_function (name);
       var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, func);
       this.user_functions.insert (name, ufc);
-      this.db.create_function (name, argc, Sqlite.TextEncoding.UTF8, ufc, UserFunction.on_user_function_called, null, null);
+      this.db.create_function (name, argc, Sqlite.UTF8, ufc, UserFunction.on_user_function_called, null, null);
     }
 
     private void unregister_function_context (UserFunction.UserFuncData ufc) {
-      this.db.create_function (ufc.name, ufc.argc, Sqlite.TextEncoding.UTF8, ufc, null, null, null);
+      this.db.create_function (ufc.name, ufc.argc, Sqlite.UTF8, ufc, null, null, null);
     }
 
     /**
