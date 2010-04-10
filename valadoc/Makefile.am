@@ -1,11 +1,9 @@
 NULL =
 
-sqlheavy-@SQLHEAVY_API_VERSION@:
-	valadoc \
+VALADOC_FLAGS = \
 		--force \
 		--pkg sqlite3 \
 		-b $(top_srcdir)/sqlheavy \
-		-o $(top_srcdir)/valadoc/sqlheavy-@SQLHEAVY_API_VERSION@ \
 		--package-name sqlheavy-@SQLHEAVY_API_VERSION@ \
 		--package-version @SQLHEAVY_VERSION@ \
 		$(top_srcdir)/sqlheavy/sqlheavy-database.vala \
@@ -19,5 +17,23 @@ sqlheavy-@SQLHEAVY_API_VERSION@:
 		$(top_srcdir)/sqlheavy/sqlheavy-value.vala \
 		$(NULL)
 
+sqlheavy-@SQLHEAVY_API_VERSION@:
+	valadoc \
+		-o $(top_srcdir)/valadoc/sqlheavy-@SQLHEAVY_API_VERSION@ \
+		$(VALADOC_FLAGS) \
+		$(NULL)
+
+sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc/html:
+	valadoc \
+		-X --ignore-headers \
+		-X $(top_srcdir)/sqlheavy/sqlheavy-1.0-internal.h \
+		-o $(top_srcdir)/valadoc/sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc \
+		--doclet gtkdoc \
+		$(VALADOC_FLAGS) \
+		$(NULL)
+
 valadoc_DATA = sqlheavy-@SQLHEAVY_API_VERSION@
 valadocdir = /usr/share/doc/sqlheavy-@SQLHEAVY_API_VERSION@
+
+gtkdoc_DATA = sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc/html
+gtkdocdir = /usr/share/gtk-doc/html

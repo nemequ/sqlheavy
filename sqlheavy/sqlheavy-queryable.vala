@@ -40,7 +40,7 @@ namespace SQLHeavy {
     /**
      * Execute the supplied SQL, iterating through multiple statements if necessary.
      *
-     * @param sql, An SQL query.
+     * @param sql An SQL query.
      */
     public void execute (string sql, ssize_t max_len = -1) throws Error {
       unowned string? s = sql;
@@ -65,7 +65,7 @@ namespace SQLHeavy {
     /**
      * Create a prepared statement.
      *
-     * @param sql, An SQL query.
+     * @param sql An SQL query.
      */
     public SQLHeavy.Statement prepare (string sql) throws SQLHeavy.Error {
       return new SQLHeavy.Statement (this, sql);
@@ -74,7 +74,7 @@ namespace SQLHeavy {
     /**
      * Runs an SQL script located in a file
      *
-     * @param filename, the location of the script
+     * @param filename the location of the script
      */
     public void run_script (string filename) throws Error {
       try {
