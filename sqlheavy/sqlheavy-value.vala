@@ -1,22 +1,4 @@
 namespace SQLHeavy {
-  /**
-   * Container which is placed in a GValue to represent a blob
-   */
-  [Compact]
-  public class Blob {
-    /**
-     * The data in the blob.
-     */
-    public uint8[] data;
-
-    /**
-     * Create a blob.
-     */
-    public Blob (uint8[] data) {
-      this.data = data;
-    }
-  }
-
   internal GLib.Type sqlite_type_to_g_type (int stype) throws SQLHeavy.Error {
     switch ( stype ) {
       case Sqlite.INTEGER:
@@ -28,7 +10,7 @@ namespace SQLHeavy {
       case Sqlite.NULL:
         return typeof (void);
       case Sqlite.BLOB:
-        return typeof (Blob);
+        return typeof (GLib.ByteArray);
       default:
         throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
     }
@@ -49,15 +31,17 @@ namespace SQLHeavy {
     GLib.Value gval = GLib.Value (gtype);
 
     if ( gtype == typeof (int64) )
-      gval.set_int64 (value.to_int64 ());
+      gval = value.to_int64 ();
     else if ( gtype == typeof (double) )
-      gval.set_double (value.to_double ());
+      gval = value.to_double ();
     else if ( gtype == typeof (string) )
-      gval.set_string (value.to_text ());
-    else if ( gtype == typeof (Blob) ) {
+      gval = value.to_text ();
+    else if ( gtype == typeof (GLib.ByteArray) ) {
       unowned uint8[] blob = (uint8[])value.to_blob ();
       blob.length = value.to_bytes ();
-      gval.set_boxed (new Blob (blob));
+      var ba = new GLib.ByteArray.sized (blob.length);
+      ba.append (blob);
+      gval = ba;
     }
 
     return gval;

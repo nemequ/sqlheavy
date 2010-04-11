@@ -210,20 +210,7 @@ namespace SQLHeavy {
      * @see fetch_get_name
      */
     public GLib.Type get_column_type (int col) throws SQLHeavy.Error {
-      switch ( this.stmt.column_type (this.fetch_check_index (col)) ) {
-        case Sqlite.INTEGER:
-          return typeof (int64);
-        case Sqlite.TEXT:
-          return typeof (string);
-        case Sqlite.FLOAT:
-          return typeof (double);
-        case Sqlite.NULL:
-          return typeof (void);
-        case Sqlite.BLOB:
-          return typeof (GLib.Array);
-        default:
-          throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
-      }
+      return sqlite_type_to_g_type (this.stmt.column_type (this.fetch_check_index (col)));
     }
 
     /**
@@ -235,45 +222,7 @@ namespace SQLHeavy {
      * @see fetch_result
      */
     public GLib.Value? fetch (int col) throws SQLHeavy.Error {
-      GLib.Value? res = null;
-
-      this.fetch_check_index (col);
-
-      var col_type = this.get_column_type (col);
-      if ( col_type == typeof (int64) ) {
-        var i64v = this.fetch_int64 (col);
-        if ( i64v > int.MAX ) {
-          res = GLib.Value (typeof (int64));
-          res.set_int64 (i64v);
-        }
-        else {
-          res = GLib.Value (typeof (int));
-          res.set_int ((int)i64v);
-        }
-      }
-      else if ( col_type == typeof (string) ) {
-        res = GLib.Value (typeof (string));
-        res.take_string (this.fetch_string (col));
-      }
-      else if ( col_type == typeof (void) ) {
-        res = null;
-      }
-      else if ( col_type == typeof (GLib.Array) ) {
-        res = GLib.Value (typeof (GLib.Array));
-        var blob_size = this.stmt.column_bytes(col);
-        //var arr = new GLib.Array.sized<uint8> (false, false, sizeof (uint8), blob_size);
-        var arr = new GLib.Array <uint8> (false, false, 1);
-        arr.append_vals (this.stmt.column_blob (col), blob_size);
-        res.set_boxed (arr);
-      }
-      else if ( col_type == typeof (double) ) {
-        res = GLib.Value (typeof (double));
-        res.set_double (this.fetch_double (col));
-      }
-      else
-        GLib.assert_not_reached ();
-
-      return res;
+      return sqlite_value_to_g_value (this.stmt.column_value (this.fetch_check_index (col)));
     }
 
     /**
@@ -552,18 +501,24 @@ namespace SQLHeavy {
      * @see bind_named
      */
     public void bind (int col, GLib.Value? value) throws SQLHeavy.Error {
+      this.bind_check_index (col);
+
       if ( value == null )
-        this.bind_null (col);
+        this.stmt.bind_null (col);
       else if ( value.holds (typeof (int)) )
-        this.bind_int (col, value.get_int ());
+        this.stmt.bind_int (col, value.get_int ());
       else if ( value.holds (typeof (int64)) )
-        this.bind_int64 (col, value.get_int64 ());
+        this.stmt.bind_int64 (col, value.get_int64 ());
       else if ( value.holds (typeof (string)) )
-        this.bind_string (col, value.get_string ());
+        this.stmt.bind_text (col, value.get_string ());
       else if ( value.holds (typeof (double)) )
-        this.bind_double (col, value.get_double ());
+        this.stmt.bind_double (col, value.get_double ());
       else if ( value.holds (typeof (float)) )
-        this.bind_double (col, value.get_float ());
+        this.stmt.bind_double (col, value.get_float ());
+      else if ( value.holds (typeof (GLib.ByteArray)) ) {
+        unowned GLib.ByteArray ba = value as GLib.ByteArray;
+        this.stmt.bind_blob (col, GLib.Memory.dup (ba.data, ba.len), (int) ba.len, GLib.g_free);
+      }
       else
         throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
     }
