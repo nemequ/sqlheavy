@@ -77,7 +77,7 @@ namespace SQLHeavy {
     /**
      * Create a new transaction.
      *
-     * @param parent, The queryable to create the transaction on top of
+     * @param parent The queryable to create the transaction on top of
      */
     public Transaction (SQLHeavy.Queryable parent) {
       Object (parent: parent);

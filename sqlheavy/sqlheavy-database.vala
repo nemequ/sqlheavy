@@ -309,7 +309,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      *
      * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_incremental_vacuum]]
      *
-     * @param pages, the number of pages to remove
+     * @param pages the number of pages to remove
      */
     public void incremental_vacuum (int pages) {
       try {
@@ -691,8 +691,8 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
     /**
      * Open a database.
      *
-     * @param filename, Where to store the database, or null for memory only.
-     * @param mode, Bitmask of mode to use when opening the database.
+     * @param filename Where to store the database, or null for memory only.
+     * @param mode Bitmask of mode to use when opening the database.
      */
     public Database (string? filename = null,
                      SQLHeavy.FileMode mode =

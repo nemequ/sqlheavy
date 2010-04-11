@@ -229,7 +229,7 @@ namespace SQLHeavy {
     /**
      * Return a field from result.
      *
-     * @param col, the index of the column to return.
+     * @param col the index of the column to return.
      * @return the value of the field
      * @see fetch_named
      * @see fetch_result
@@ -768,9 +768,9 @@ namespace SQLHeavy {
     /**
      * Create a prepared statement.
      *
-     * @param queryable, The database to use.
-     * @param sql, An SQL query.
-     * @param tail, Where to store the any unprocessed part of the query.
+     * @param queryable The database to use.
+     * @param sql An SQL query.
+     * @param tail Where to store the any unprocessed part of the query.
      * @see SQLHeavy.Queryable.prepare
      */
     public Statement (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
