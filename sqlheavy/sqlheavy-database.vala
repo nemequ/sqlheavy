@@ -7,10 +7,24 @@ namespace SQLHeavy {
   /**
    * A database.
    */
-  public class Database : Queryable {
+  public class Database : GLib.Object, Queryable {
     private GLib.HashTable <string, UserFunction.UserFuncData> user_functions =
       new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
     internal unowned Sqlite.Database db;
+
+    public SQLHeavy.Database database { get { return this; } }
+
+    private Sqlite.Mutex? _transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
+
+    public void @lock () {
+      this._transaction_lock.enter ();
+    }
+
+    public void @unlock () {
+      this._transaction_lock.leave ();
+    }
+
+    public signal void sql_executed (string sql);
 
     private SQLHeavy.Statement? profiling_insert_stmt = null;
     private void profiling_cb (SQLHeavy.Statement stmt) {
@@ -582,12 +596,12 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
         this.db = null;
         GLib.critical ("Unable to open database.");
       }
+
+      this.db.trace ((sql) => { this.sql_executed (sql); });
     }
 
     /**
      * Register aggregate function for use within SQLite
-     *
-     * 
      *
      * See SQLite documentation at [[http://sqlite.org/c3ref/create_function.html]]
      *

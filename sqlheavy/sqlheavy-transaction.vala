@@ -1,12 +1,29 @@
 namespace SQLHeavy {
   /**
-   * Object representing an SQLite transaction (EXPERIMENTAL)
+   * Object representing an SQLite transaction
    */
-  public class Transaction : Queryable {
+  public class Transaction : GLib.Object, Queryable {
     /**
      * Status of the transaction.
      */
     public TransactionStatus status { get; private set; default = TransactionStatus.UNRESOLVED; }
+
+    /**
+     * Parent querayble
+     */
+    public SQLHeavy.Queryable? parent { get; construct; }
+
+    public SQLHeavy.Database database { get { return this.parent.database; } }
+
+    private Sqlite.Mutex? _transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
+
+    public void @lock () {
+      this._transaction_lock.enter ();
+    }
+
+    public void @unlock () {
+      this._transaction_lock.leave ();
+    }
 
     private void resolve (bool commit) {
       if ( this.status != TransactionStatus.UNRESOLVED ) {

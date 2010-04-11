@@ -1,15 +1,12 @@
 namespace SQLHeavy {
   /**
-   * Object on which queries may be run
+   * Interface on which queries may be run
    */
-  public abstract class Queryable : GLib.Object {
-    public SQLHeavy.Queryable? parent { get; construct; }
-    public SQLHeavy.Database database {
-      get {
-        return (this is SQLHeavy.Database) ? (SQLHeavy.Database)this : this.parent.database;
-      }
-    }
-    private Sqlite.Mutex? transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
+  public interface Queryable : GLib.Object {
+    /**
+     * Database
+     */
+    public abstract SQLHeavy.Database database { get; }
 
     /**
      * Signal which is emitted when a query finished executing.
@@ -19,16 +16,12 @@ namespace SQLHeavy {
     /**
      * Lock the queryable and refuse to run any queries against it.
      */
-    public void @lock () {
-      this.transaction_lock.enter ();
-    }
+    public abstract void @lock ();
 
     /**
      * Unlock the queryable and allow queries to be run against it.
      */
-    public void @unlock () {
-      this.transaction_lock.leave ();
-    }
+    public abstract void @unlock ();
 
     /**
      * Begin a transaction. Will lock the queryable until the transaction is resolved.

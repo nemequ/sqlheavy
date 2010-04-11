@@ -13,6 +13,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-queryable.vala \
 	sqlheavy-statement.vala \
 	sqlheavy-transaction.vala \
+	sqlheavy-transaction-stack.vala \
 	sqlheavy-user-functions.vala \
 	sqlheavy-versioned-database.vala \
 	sqlheavy-value.vala \
