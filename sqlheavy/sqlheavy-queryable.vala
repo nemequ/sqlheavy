@@ -10,21 +10,29 @@ namespace SQLHeavy {
 
     /**
      * Signal which is emitted when a query finished executing.
+     *
+     * @see Database.sql_executed
      */
     public signal void query_executed (SQLHeavy.Statement stmt);
 
     /**
      * Lock the queryable and refuse to run any queries against it.
+     *
+     * @see unlock
      */
     public abstract void @lock ();
 
     /**
      * Unlock the queryable and allow queries to be run against it.
+     *
+     * @see lock
      */
     public abstract void @unlock ();
 
     /**
      * Begin a transaction. Will lock the queryable until the transaction is resolved.
+     *
+     * @return a new transaction
      */
     public Transaction begin_transaction () {
       return new Transaction (this);
@@ -59,6 +67,7 @@ namespace SQLHeavy {
      * Create a prepared statement.
      *
      * @param sql An SQL query.
+     * @return a new statement
      */
     public SQLHeavy.Statement prepare (string sql) throws SQLHeavy.Error {
       return new SQLHeavy.Statement (this, sql);

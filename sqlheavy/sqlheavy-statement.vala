@@ -31,7 +31,7 @@ namespace SQLHeavy {
     public signal void received_row ();
 
     /**
-     * The database this statement operates on.
+     * The queryable this statement operates on.
      */
     public weak SQLHeavy.Queryable queryable { get; construct set; }
     private unowned Sqlite.Statement stmt;
@@ -115,6 +115,9 @@ namespace SQLHeavy {
 
     /**
      * Evaluate the statement.
+     *
+     * @return true on success, false if the query is finished executing
+     * @see Statement.execute
      */
     public bool step () throws Error {
       if ( this.finished )
@@ -140,6 +143,8 @@ namespace SQLHeavy {
 
     /**
      * Completely evaluate the statement, calling step () until it returns false.
+     *
+     * @see Statement.step
      */
     public void execute () throws SQLHeavy.Error {
       while ( this.step () ) { }
@@ -147,6 +152,8 @@ namespace SQLHeavy {
 
     /**
      * Execute the statement, and return the last insert ID.
+     *
+     * @return the last inserted row ID
      */
     public int64 execute_insert () throws SQLHeavy.Error {
       this.queryable.@lock ();
@@ -163,10 +170,24 @@ namespace SQLHeavy {
       return col;
     }
 
+    /**
+     * Fetch the column name for the specified index
+     *
+     * @param col index of column to fetch
+     * @return the name of the column
+     * @see fetch_get_index
+     */
     public unowned string fetch_get_name (int col) throws SQLHeavy.Error {
       return this.stmt.column_name (this.fetch_check_index (col));
     }
 
+    /**
+     * Fetch the index for the specified column name
+     *
+     * @param col column name
+     * @return the index of the column
+     * @see fetch_get_name
+     */
     public int fetch_get_index (string col) throws SQLHeavy.Error {
       if ( this.result_columns == null ) {
         this.result_columns = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
@@ -181,6 +202,13 @@ namespace SQLHeavy {
       return col_number;
     }
 
+    /**
+     * Get column type
+     *
+     * @param col the column index
+     * @return the GType of the column
+     * @see fetch_get_name
+     */
     public GLib.Type get_column_type (int col) throws SQLHeavy.Error {
       switch ( this.stmt.column_type (this.fetch_check_index (col)) ) {
         case Sqlite.INTEGER:
@@ -201,7 +229,10 @@ namespace SQLHeavy {
     /**
      * Return a field from result.
      *
-     * @param col, the offset of the column to return.
+     * @param col, the index of the column to return.
+     * @return the value of the field
+     * @see fetch_named
+     * @see fetch_result
      */
     public GLib.Value? fetch (int col) throws SQLHeavy.Error {
       GLib.Value? res = null;
@@ -245,52 +276,163 @@ namespace SQLHeavy {
       return res;
     }
 
+    /**
+     * Fetch a field from the result by name
+     *
+     * @param col column name
+     * @return the field value
+     * @see fetch
+     * @see fetch_result
+     */
     public GLib.Value? fetch_named (string col) throws SQLHeavy.Error {
       return this.fetch (this.fetch_get_index (col));
     }
 
+    /**
+     * Fetch a field from the result as a string
+     *
+     * @param col column index
+     * @return the field value
+     * @see fetch_named_string
+     * @see fetch_result_string
+     * @see fetch
+     */
     public string? fetch_string (int col = 0) throws SQLHeavy.Error {
       return this.stmt.column_text (this.fetch_check_index (col));
     }
 
+    /**
+     * Fetch a field from the result as a string by name
+     *
+     * @param col column name
+     * @return the field value
+     * @see fetch_string
+     * @see fetch_result_string
+     * @see fetch
+     */
     public string? fetch_named_string (string col) throws SQLHeavy.Error {
       return this.fetch_string (this.fetch_get_index (col));
     }
 
+    /**
+     * Fetch a field from the result as an integer
+     *
+     * @param col column index
+     * @return the field value
+     * @see fetch_named_int
+     * @see fetch_result_int
+     * @see fetch
+     */
     public int fetch_int (int col = 0) throws SQLHeavy.Error {
       return this.stmt.column_int (this.fetch_check_index (col));
     }
 
+    /**
+     * Fetch a field from the result as an integer by name
+     *
+     * @param col column name
+     * @return the field value
+     * @see fetch_int
+     * @see fetch_result_int
+     * @see fetch
+     */
     public int fetch_named_int (string col) throws SQLHeavy.Error {
       return this.fetch_int (this.fetch_get_index (col));
     }
 
+    /**
+     * Fetch a field from the result as a signed 64-bit integer
+     *
+     * @param col column index
+     * @return the field value
+     * @see fetch_named_int64
+     * @see fetch_result_int64
+     * @see fetch
+     */
     public int64 fetch_int64 (int col = 0) throws SQLHeavy.Error {
       return this.stmt.column_int64 (this.fetch_check_index (col));
     }
 
+    /**
+     * Fetch a field from the result as a signed 64-bit integer by name
+     *
+     * @param col column name
+     * @return the field value
+     * @see fetch_int64
+     * @see fetch_result_int64
+     * @see fetch
+     */
     public int64 fetch_named_int64 (string col) throws SQLHeavy.Error {
       return this.fetch_int64 (this.fetch_get_index (col));
     }
 
+    /**
+     * Fetch a field from the result as a double
+     *
+     * @param col column index
+     * @return the field value
+     * @see fetch_named_double
+     * @see fetch_result_double
+     * @see fetch
+     */
     public double fetch_double (int col = 0) throws SQLHeavy.Error {
       return this.stmt.column_double (this.fetch_check_index (col));
     }
 
+    /**
+     * Fetch a field from the result as a double by name
+     *
+     * @param col column name
+     * @return the field value
+     * @see fetch_double
+     * @see fetch_result_double
+     * @see fetch
+     */
     public double fetch_named_double (string col) throws SQLHeavy.Error {
       return this.fetch_double (this.fetch_get_index (col));
     }
 
+    /**
+     * Fetch a field from the result as an array of bytes
+     *
+     * @param col column index
+     * @return the field value
+     * @see fetch_named_blob
+     * @see fetch_result_blob
+     * @see fetch
+     */
     public uint8[] fetch_blob (int col = 0) throws SQLHeavy.Error {
       var res = new uint8[this.stmt.column_bytes(this.fetch_check_index (col))];
       GLib.Memory.copy (res, this.stmt.column_blob (col), res.length);
       return res;
     }
 
+    /**
+     * Fetch a field from the result as an array of bytes by name
+     *
+     * @param col column name
+     * @return the field value
+     * @see fetch_blob
+     * @see fetch_result_blob
+     * @see fetch
+     */
     public uint8[] fetch_named_blob (string col) throws SQLHeavy.Error {
       return this.fetch_blob (this.fetch_get_index (col));
     }
 
+    /**
+     * Fetch result
+     *
+     * This function will call {@link step} once, then return the
+     * result of a {@link fetch} on the specified column after calling
+     * {@link reset}.
+     *
+     * @param col the index of the column to fetch
+     * @return the value of the field
+     * @see step
+     * @see fetch
+     * @see reset
+     */
     public GLib.Value? fetch_result (int col = 0) throws SQLHeavy.Error {
       this.step ();
       var ret = this.fetch (col);
@@ -298,6 +440,14 @@ namespace SQLHeavy {
       return ret;
     }
 
+    /**
+     * Fetch result as a string
+     *
+     * @param col column index
+     * @return value of the field
+     * @see fetch_result
+     * @see fetch_string
+     */
     public string? fetch_result_string (int col = 0) throws SQLHeavy.Error {
       this.step ();
       var ret = this.fetch_string (col);
@@ -305,6 +455,14 @@ namespace SQLHeavy {
       return ret;
     }
 
+    /**
+     * Fetch result as an int
+     *
+     * @param col column index
+     * @return value of the field
+     * @see fetch_result
+     * @see fetch_int
+     */
     public int fetch_result_int (int col = 0) throws SQLHeavy.Error {
       this.step ();
       var ret = this.fetch_int (col);
@@ -312,6 +470,14 @@ namespace SQLHeavy {
       return ret;
     }
 
+    /**
+     * Fetch result as an int64
+     *
+     * @param col column index
+     * @return value of the field
+     * @see fetch_result
+     * @see fetch_int64
+     */
     public int64 fetch_result_int64 (int col = 0) throws SQLHeavy.Error {
       this.step ();
       var ret = this.fetch_int64 (col);
@@ -319,6 +485,14 @@ namespace SQLHeavy {
       return ret;
     }
 
+    /**
+     * Fetch result as a double
+     *
+     * @param col column index
+     * @return value of the field
+     * @see fetch_result
+     * @see fetch_double
+     */
     public double fetch_result_double (int col = 0) throws SQLHeavy.Error {
       this.step ();
       var ret = this.fetch_double (col);
@@ -326,6 +500,14 @@ namespace SQLHeavy {
       return ret;
     }
 
+    /**
+     * Fetch result as an array of bytes
+     *
+     * @param col column index
+     * @return value of the field
+     * @see fetch_result
+     * @see fetch_blob
+     */
     public uint8[] fetch_result_blob (int col = 0) throws SQLHeavy.Error {
       this.step ();
       var ret = this.fetch_blob (col);
@@ -339,6 +521,12 @@ namespace SQLHeavy {
       return col;
     }
 
+    /**
+     * Get index of the named parameter
+     *
+     * @param col name of the parameter
+     * @return index of the parameter
+     */
     public int bind_get_index (string col) throws SQLHeavy.Error {
       var idx = this.stmt.bind_parameter_index (col);
       if ( idx == 0 )
@@ -346,6 +534,23 @@ namespace SQLHeavy {
       return idx;
     }
 
+    /**
+     * Get the name of a parameter
+     *
+     * @param col index of the parameter
+     * @return name of the parameter
+     */
+    public unowned string bind_get_name (int col) throws SQLHeavy.Error {
+      return this.stmt.bind_parameter_name (this.bind_check_index (col));
+    }
+
+    /**
+     * Bind a value to the specified parameter
+     *
+     * @param col name of the parameter
+     * @param value value to bind
+     * @see bind_named
+     */
     public void bind (int col, GLib.Value? value) throws SQLHeavy.Error {
       if ( value == null )
         this.bind_null (col);
@@ -363,26 +568,73 @@ namespace SQLHeavy {
         throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
     }
 
-    public unowned string bind_get_name (int col) throws SQLHeavy.Error {
-      return this.stmt.bind_parameter_name (this.bind_check_index (col));
+    /**
+     * Bind a value to the specified parameter by name
+     *
+     * @param col name of the parameter
+     * @param value value to bind
+     * @see bind
+     */
+    public void bind_named (string name, GLib.Value? value) throws SQLHeavy.Error {
+      this.bind (this.bind_get_index (name), value);
     }
 
+    /**
+     * Bind an int value to the specified parameter
+     *
+     * @param col index of the parameter
+     * @param value value to bind
+     * @see bind_named_int
+     * @see bind
+     */
     public void bind_int (int col, int value) throws SQLHeavy.Error {
       error_if_not_ok (this.stmt.bind_int (this.bind_check_index (col), value), this.queryable);
     }
 
+    /**
+     * Bind an int value to the specified named parameter
+     *
+     * @param col name of the parameter
+     * @param value value to bind
+     * @see bind_int
+     * @see bind
+     */
     public void bind_named_int (string col, int value) throws SQLHeavy.Error {
       this.bind_int (this.bind_get_index (col), value);
     }
 
+    /**
+     * Bind an int64 value to the specified parameter
+     *
+     * @param col index of the parameter
+     * @param value value to bind
+     * @see bind_named_int64
+     * @see bind
+     */
     public void bind_int64 (int col, int64 value) throws SQLHeavy.Error {
       error_if_not_ok (this.stmt.bind_int64 (this.bind_check_index (col), value), this.queryable);
     }
 
+    /**
+     * Bind an int64 value to the specified named parameter
+     *
+     * @param col name of the parameter
+     * @param value value to bind
+     * @see bind_int64
+     * @see bind
+     */
     public void bind_named_int64 (string col, int64 value) throws SQLHeavy.Error {
       this.bind_int64 (this.bind_get_index (col), value);
     }
 
+    /**
+     * Bind a string value to the specified parameter
+     *
+     * @param col index of the parameter
+     * @param value value to bind
+     * @see bind_named_string
+     * @see bind
+     */
     public void bind_string (int col, string? value) throws SQLHeavy.Error {
       if ( value == null )
         this.bind_null (col);
@@ -390,30 +642,84 @@ namespace SQLHeavy {
         error_if_not_ok (this.stmt.bind_text (this.bind_check_index (col), value), this.queryable);
     }
 
+    /**
+     * Bind a string value to the specified named parameter
+     *
+     * @param col name of the parameter
+     * @param value value to bind
+     * @see bind_string
+     * @see bind
+     */
     public void bind_named_string (string col, string? value) throws SQLHeavy.Error {
       this.bind_string (this.bind_get_index (col), value);
     }
 
+    /**
+     * Bind null to the specified parameter
+     *
+     * @param col index of the parameter
+     * @see bind_named_null
+     * @see bind
+     */
     public void bind_null (int col) throws SQLHeavy.Error {
       error_if_not_ok (this.stmt.bind_null (this.bind_check_index (col)), this.queryable);
     }
 
+    /**
+     * Bind null to the specified named parameter
+     *
+     * @param col name of the parameter
+     * @see bind_null
+     * @see bind
+     */
     public void bind_named_null (string col) throws SQLHeavy.Error {
       this.bind_null (this.bind_get_index (col));
     }
 
+    /**
+     * Bind an double value to the specified parameter
+     *
+     * @param col index of the parameter
+     * @param value value to bind
+     * @see bind_named_double
+     * @see bind
+     */
     public void bind_double (int col, double value) throws SQLHeavy.Error {
       error_if_not_ok (this.stmt.bind_double (this.bind_check_index (col), value), this.queryable);
     }
 
+    /**
+     * Bind an double value to the specified named parameter
+     *
+     * @param col name of the parameter
+     * @param value value to bind
+     * @see bind_double
+     * @see bind
+     */
     public void bind_named_double (string col, double value) throws SQLHeavy.Error {
       this.bind_double (this.bind_get_index (col), value);
     }
 
+    /**
+     * Bind a byte array value to the specified parameter
+     *
+     * @param col index of the parameter
+     * @param value value to bind
+     * @see bind_named_blob
+     * @see bind
+     */
     public void bind_blob (int col, uint8[] value) throws SQLHeavy.Error {
       error_if_not_ok (this.stmt.bind_blob (col, GLib.Memory.dup (value, value.length), value.length, GLib.g_free), this.queryable);
     }
 
+    /**
+     * Bind a byte array value to the specified named parameter
+     *
+     * @param col name of the parameter
+     * @param value value to bind
+     * @see bind_blob
+     * @see bind
+     */
     public void bind_named_blob (string col, uint8[] value) throws SQLHeavy.Error {
       this.bind_blob (this.bind_get_index (col), value);
     }
@@ -426,6 +732,16 @@ namespace SQLHeavy {
       sqlite3_finalize (this.stmt);
     }
 
+    /**
+     * Fetch a column from the result set
+     *
+     * This function will call {@link step} automatically, so you
+     * probably don't want to call it from an already active
+     * transaction.
+     *
+     * @param col column offset
+     * @return a {@link GLib.ValueArray} of fields
+     */
     public GLib.ValueArray get_column (int col) throws SQLHeavy.Error {
       var valid = this.step ();
       var data = new GLib.ValueArray (this.column_count);

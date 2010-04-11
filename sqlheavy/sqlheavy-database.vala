@@ -24,6 +24,15 @@ namespace SQLHeavy {
       this._transaction_lock.leave ();
     }
 
+    /**
+     * SQL executed
+     *
+     * Will be emitted whenever a query is executed. This is useful
+     * for debugging, but {@link Queryable.query_executed} provides a
+     * more powerful interface.
+     *
+     * @see Queryable.query_executed
+     */
     public signal void sql_executed (string sql);
 
     private SQLHeavy.Statement? profiling_insert_stmt = null;
@@ -657,6 +666,11 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
 
     /**
      * Registers common functions
+     *
+     * More functions may be added later, but currently this function
+     * will register:
+     *
+     * * REGEXP: see [[http://www.sqlite.org/lang_expr.html#regexp]]
      */
     public void register_common_functions () {
       this.register_scalar_function ("REGEXP", 2, UserFunction.regex);
