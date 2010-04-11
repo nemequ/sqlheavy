@@ -28,6 +28,7 @@ sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc/html:
 	valadoc \
 		-X --ignore-headers \
 		-X $(top_srcdir)/sqlheavy/sqlheavy-1.0-internal.h \
+		-X -l -X $(top_srcdir)/sqlheavy/.libs/libsqlheavy-1.0.so \
 		-o $(top_srcdir)/valadoc/sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc \
 		--doclet gtkdoc \
 		$(VALADOC_FLAGS) \
