@@ -760,6 +760,15 @@ namespace SQLHeavy {
       this.execution_timer.reset ();
     }
 
+    /**
+     * Create a prepared statement.
+     *
+     * @param queryable The database to use.
+     * @param sql An SQL query.
+     * @param max_len the maximum length of the SQL query
+     * @param tail Where to store the any unprocessed part of the query.
+     * @see Queryable.prepare
+     */
     public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
       Object (queryable: queryable);
       error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, max_len, out this.stmt, out tail), queryable);
@@ -770,7 +779,6 @@ namespace SQLHeavy {
      *
      * @param queryable The database to use.
      * @param sql An SQL query.
-     * @param tail Where to store the any unprocessed part of the query.
      * @see SQLHeavy.Queryable.prepare
      */
     public Statement (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
