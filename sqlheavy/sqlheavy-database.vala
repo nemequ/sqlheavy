@@ -536,6 +536,18 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
     }
 
     /**
+     * Secure-delete
+     *
+     * Whether to overwrite deleted content with zeros
+     *
+     * See SQLite documentation at: [[http://sqlite.org/pragma.html#secure_delete]]
+     */
+    public bool secure_delete {
+      get { return this.pragma_get_bool ("secure_delete"); }
+      set { this.pragma_set_bool ("secure_delete", value); }
+    }
+
+    /**
      * User version
      *
      * User-defined schema version
