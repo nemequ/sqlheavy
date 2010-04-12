@@ -175,9 +175,9 @@ namespace SQLHeavy {
      *
      * @param col index of column to fetch
      * @return the name of the column
-     * @see fetch_get_index
+     * @see column_index
      */
-    public unowned string fetch_get_name (int col) throws SQLHeavy.Error {
+    public unowned string column_name (int col) throws SQLHeavy.Error {
       return this.stmt.column_name (this.fetch_check_index (col));
     }
 
@@ -186,14 +186,14 @@ namespace SQLHeavy {
      *
      * @param col column name
      * @return the index of the column
-     * @see fetch_get_name
+     * @see fetch_name
      */
-    public int fetch_get_index (string col) throws SQLHeavy.Error {
+    public int column_index (string col) throws SQLHeavy.Error {
       if ( this.result_columns == null ) {
         this.result_columns = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
         var ncols = this.column_count;
         for ( int c = 0 ; c < ncols ; c++ )
-          this.result_columns.replace (this.fetch_get_name (c), c);
+          this.result_columns.replace (this.column_name (c), c);
       }
 
       int? col_number = this.result_columns.lookup (col);
@@ -207,9 +207,9 @@ namespace SQLHeavy {
      *
      * @param col the column index
      * @return the GType of the column
-     * @see fetch_get_name
+     * @see fetch_name
      */
-    public GLib.Type get_column_type (int col) throws SQLHeavy.Error {
+    public GLib.Type column_type (int col) throws SQLHeavy.Error {
       return sqlite_type_to_g_type (this.stmt.column_type (this.fetch_check_index (col)));
     }
 
@@ -234,7 +234,7 @@ namespace SQLHeavy {
      * @see fetch_result
      */
     public GLib.Value? fetch_named (string col) throws SQLHeavy.Error {
-      return this.fetch (this.fetch_get_index (col));
+      return this.fetch (this.column_index (col));
     }
 
     /**
@@ -260,7 +260,7 @@ namespace SQLHeavy {
      * @see fetch
      */
     public string? fetch_named_string (string col) throws SQLHeavy.Error {
-      return this.fetch_string (this.fetch_get_index (col));
+      return this.fetch_string (this.column_index (col));
     }
 
     /**
@@ -286,7 +286,7 @@ namespace SQLHeavy {
      * @see fetch
      */
     public int fetch_named_int (string col) throws SQLHeavy.Error {
-      return this.fetch_int (this.fetch_get_index (col));
+      return this.fetch_int (this.column_index (col));
     }
 
     /**
@@ -312,7 +312,7 @@ namespace SQLHeavy {
      * @see fetch
      */
     public int64 fetch_named_int64 (string col) throws SQLHeavy.Error {
-      return this.fetch_int64 (this.fetch_get_index (col));
+      return this.fetch_int64 (this.column_index (col));
     }
 
     /**
@@ -338,7 +338,7 @@ namespace SQLHeavy {
      * @see fetch
      */
     public double fetch_named_double (string col) throws SQLHeavy.Error {
-      return this.fetch_double (this.fetch_get_index (col));
+      return this.fetch_double (this.column_index (col));
     }
 
     /**
@@ -366,7 +366,7 @@ namespace SQLHeavy {
      * @see fetch
      */
     public uint8[] fetch_named_blob (string col) throws SQLHeavy.Error {
-      return this.fetch_blob (this.fetch_get_index (col));
+      return this.fetch_blob (this.column_index (col));
     }
 
     /**

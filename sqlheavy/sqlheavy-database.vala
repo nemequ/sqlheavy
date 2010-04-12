@@ -12,14 +12,23 @@ namespace SQLHeavy {
       new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
     internal unowned Sqlite.Database db;
 
+    /**
+     * {@inheritDoc}
+     */
     public SQLHeavy.Database database { get { return this; } }
 
     private Sqlite.Mutex? _transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
 
+    /**
+     * {@inheritDoc}
+     */
     public void @lock () {
       this._transaction_lock.enter ();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void @unlock () {
       this._transaction_lock.leave ();
     }

@@ -3,6 +3,9 @@ namespace SQLHeavy {
    * A convenience class used to represent a database and script(s) for the schema
    */
   public class VersionedDatabase : SQLHeavy.Database {
+    /**
+     * Location of database schema
+     */
     public string schema { get; construct; }
 
     construct {

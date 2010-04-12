@@ -13,14 +13,23 @@ namespace SQLHeavy {
      */
     public SQLHeavy.Queryable? parent { get; construct; }
 
+    /**
+     * {@inheritDoc}
+     */
     public SQLHeavy.Database database { get { return this.parent.database; } }
 
     private Sqlite.Mutex? _transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
 
+    /**
+     * {@inheritDoc}
+     */
     public void @lock () {
       this._transaction_lock.enter ();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void @unlock () {
       this._transaction_lock.leave ();
     }

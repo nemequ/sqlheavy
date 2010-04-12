@@ -17,12 +17,21 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public SQLHeavy.Database database { get { return this.patriarch.database; } }
 
+    /**
+     * {@inheritDoc}
+     */
     public void @lock () {
       this.active_queryable.@lock ();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void @unlock () {
       this.active_queryable.unlock ();
     }
@@ -66,18 +75,32 @@ namespace SQLHeavy {
         this.pop (commit);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void execute (string sql, ssize_t max_len = -1) throws Error {
       this.active_queryable.execute (sql, max_len);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public SQLHeavy.Statement prepare (string sql) throws SQLHeavy.Error {
       return this.active_queryable.prepare (sql);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void run_script (string filename) throws Error {
       this.active_queryable.run_script (filename);
     }
 
+    /**
+     * Create a new transaction stack
+     *
+     * @param patriarch queryable on which to build the stack
+     */
     public TransactionStack (Queryable patriarch) {
       Object (patriarch: patriarch);
     }
