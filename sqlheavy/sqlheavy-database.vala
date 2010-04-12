@@ -10,7 +10,12 @@ namespace SQLHeavy {
   public class Database : GLib.Object, Queryable {
     private GLib.HashTable <string, UserFunction.UserFuncData> user_functions =
       new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
-    internal unowned Sqlite.Database db;
+
+    private unowned Sqlite.Database db;
+
+    internal unowned Sqlite.Database get_sqlite_db () {
+      return this.db;
+    }
 
     /**
      * {@inheritDoc}
@@ -53,7 +58,7 @@ namespace SQLHeavy {
         unowned SQLHeavy.Statement pstmt = this.profiling_insert_stmt;
         pstmt.auto_clear = true;
         pstmt.bind_named_string (":sql", stmt.sql);
-        pstmt.bind_named_double (":clock", stmt.execution_timer.elapsed ());
+        pstmt.bind_named_double (":clock", stmt.execution_time_elapsed ());
         pstmt.bind_named_int64 (":fullscan_step", stmt.full_scan_steps);
         pstmt.bind_named_int64 (":sort", stmt.sort_operations);
         pstmt.execute ();
@@ -70,7 +75,7 @@ namespace SQLHeavy {
      * Enabling profiling while this is null will cause the database
      * to be created in :memory:
      */
-    public SQLHeavy.Database? profiling_data = null;
+    public SQLHeavy.Database? profiling_data { get; set; default = null; }
 
     /**
      * Whether profiling is enabled.
@@ -80,7 +85,7 @@ namespace SQLHeavy {
      * done so we can gather more information about the query than is
      * available from and SQLite profiling callback.
      *
-     * @see Statement.execution_timer
+     * @see Statement.execution_time_elapsed
      */
     public bool enable_profiling {
       get { return this.profiling_data != null; }

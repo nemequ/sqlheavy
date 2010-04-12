@@ -3,7 +3,7 @@ namespace SQLHeavy {
     if ( ec == Sqlite.OK )
       return true;
 
-    string? msg = (queryable != null) ? queryable.database.db.errmsg () : null;
+    string? msg = (queryable != null) ? queryable.database.get_sqlite_db ().errmsg () : null;
     switch ( ec ) {
       case Sqlite.ERROR:      throw new Error.ERROR        (msg ?? SQLHeavy.ErrorMessage.ERROR);
       case Sqlite.INTERNAL:   throw new Error.INTERNAL     (msg ?? SQLHeavy.ErrorMessage.INTERNAL);

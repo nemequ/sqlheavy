@@ -11,14 +11,21 @@ namespace SQLHeavy {
     private int error_code = Sqlite.OK;
     private GLib.HashTable<string, int?> result_columns = null;
 
+    private GLib.Timer execution_timer = new GLib.Timer ();
+
     /**
      * A timer for determining how much time (wall-clock) has been
      * spent executing the statement.
      *
      * This clock is started and stopped each time step () is called,
      * and reset when reset () is called.
+     *
+     * @return seconds elapsed
+     * @see Database.enable_profiling
      */
-    public GLib.Timer execution_timer;
+    public double execution_time_elapsed () {
+      return this.execution_timer.elapsed ();
+    }
 
     /**
      * When set, reset() will automatically clear the bindings.
@@ -710,7 +717,6 @@ namespace SQLHeavy {
     }
 
     construct {
-      this.execution_timer = new GLib.Timer ();
       this.execution_timer.stop ();
       this.execution_timer.reset ();
     }
@@ -726,7 +732,7 @@ namespace SQLHeavy {
      */
     public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
       Object (queryable: queryable);
-      error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, max_len, out this.stmt, out tail), queryable);
+      error_if_not_ok (sqlite3_prepare (queryable.database.get_sqlite_db (), sql, max_len, out this.stmt, out tail), queryable);
     }
 
     /**
@@ -738,7 +744,7 @@ namespace SQLHeavy {
      */
     public Statement (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
       Object (queryable: queryable);
-      error_if_not_ok (sqlite3_prepare (queryable.database.db, sql, -1, out this.stmt, null), queryable);
+      error_if_not_ok (sqlite3_prepare (queryable.database.get_sqlite_db (), sql, -1, out this.stmt, null), queryable);
     }
   }
 }
