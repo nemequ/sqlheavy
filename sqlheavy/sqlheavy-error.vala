@@ -146,4 +146,63 @@ namespace SQLHeavy {
     internal const string DONE          = "sqlite3_step() has finished executing";
     internal const string UNKNOWN       = "Unknown error occured.";
   }
+
+  internal string sqlite_errstr (int ec) {
+    switch ( ec ) {
+      case Sqlite.ERROR:
+        return ErrorMessage.ERROR;
+      case Sqlite.INTERNAL:
+        return ErrorMessage.INTERNAL;
+      case Sqlite.PERM:
+        return ErrorMessage.ACCESS_DENIED;
+      case Sqlite.ABORT:
+        return ErrorMessage.ABORTED;
+      case Sqlite.BUSY:
+        return ErrorMessage.BUSY;
+      case Sqlite.LOCKED:
+        return ErrorMessage.LOCKED;
+      case Sqlite.NOMEM:
+        return ErrorMessage.NO_MEMORY;
+      case Sqlite.READONLY:
+        return ErrorMessage.READ_ONLY;
+      case Sqlite.INTERRUPT:
+        return ErrorMessage.INTERRUPTED;
+      case Sqlite.IOERR:
+        return ErrorMessage.IO;
+      case Sqlite.CORRUPT:
+        return ErrorMessage.CORRUPT;
+      case Sqlite.FULL:
+        return ErrorMessage.FULL;
+      case Sqlite.CANTOPEN:
+        return ErrorMessage.CAN_NOT_OPEN;
+      case Sqlite.EMPTY:
+        return ErrorMessage.EMPTY;
+      case Sqlite.SCHEMA:
+        return ErrorMessage.SCHEMA;
+      case Sqlite.TOOBIG:
+        return ErrorMessage.TOO_BIG;
+      case Sqlite.CONSTRAINT:
+        return ErrorMessage.CONSTRAINT;
+      case Sqlite.MISMATCH:
+        return ErrorMessage.MISMATCH;
+      case Sqlite.MISUSE:
+        return ErrorMessage.MISUSE;
+      case Sqlite.NOLFS:
+        return ErrorMessage.NOLFS;
+      case Sqlite.AUTH:
+        return ErrorMessage.AUTH;
+      case Sqlite.FORMAT:
+        return ErrorMessage.FORMAT;
+      case Sqlite.RANGE:
+        return ErrorMessage.RANGE;
+      case Sqlite.NOTADB:
+        return ErrorMessage.NOTADB;
+      case Sqlite.ROW:
+        return ErrorMessage.ROW;
+      case Sqlite.DONE:
+        return ErrorMessage.DONE;
+      default:
+        return "Unknown";
+    }
+  }
 }
