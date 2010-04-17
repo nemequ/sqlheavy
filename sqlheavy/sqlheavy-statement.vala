@@ -46,7 +46,16 @@ namespace SQLHeavy {
     /**
      * The SQL query used to create this statement.
      */
-    public string sql { get { return this.stmt.sql(); } }
+    private string? _sql = null;
+    public string sql {
+      get {
+        return this._sql;
+      }
+
+      construct {
+        this._sql = value;
+      }
+    }
 
     /**
      * The number of parameters in the statement.
@@ -719,6 +728,13 @@ namespace SQLHeavy {
     construct {
       this.execution_timer.stop ();
       this.execution_timer.reset ();
+
+      unowned string tail;
+      this.error_code = sqlite3_prepare (queryable.database.get_sqlite_db (), this._sql, -1, out this.stmt, out tail);
+      if ( this.error_code == Sqlite.OK )
+        this._sql = this.stmt.sql ();
+      else
+        GLib.critical ("Unable to create statement: %s", sqlite_errstr (this.error_code));
     }
 
     /**
@@ -730,8 +746,8 @@ namespace SQLHeavy {
      * @param tail Where to store the any unprocessed part of the query.
      * @see Queryable.prepare
      */
-    public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
-      Object (queryable: queryable);
+    public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string tail = null) throws Error {
+      Object (queryable: queryable, sql: sql);
       error_if_not_ok (sqlite3_prepare (queryable.database.get_sqlite_db (), sql, max_len, out this.stmt, out tail), queryable);
     }
 
@@ -743,8 +759,8 @@ namespace SQLHeavy {
      * @see SQLHeavy.Queryable.prepare
      */
     public Statement (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
-      Object (queryable: queryable);
-      error_if_not_ok (sqlite3_prepare (queryable.database.get_sqlite_db (), sql, -1, out this.stmt, null), queryable);
+      Object (queryable: queryable, sql: sql);
+      error_if_not_ok (this.error_code);
     }
   }
 }
