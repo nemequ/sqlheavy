@@ -84,14 +84,14 @@ namespace SQLHeavy {
      *
      * See SQLite documentation at [[http://sqlite.org/c3ref/c_stmtstatus_fullscan_step.html]]
      */
-    public int full_scan_steps { get { return this.stmt.status (Sqlite.Status.STMT_FULLSCAN_STEP, 0); } }
+    public int full_scan_steps { get { return this.stmt.status (Sqlite.StatementStatus.FULLSCAN_STEP, 0); } }
 
     /**
      * This is the number of sort operations that have occurred.
      *
      * See SQLite documentation at [[http://sqlite.org/c3ref/c_stmtstatus_fullscan_step.html]]
      */
-    public int sort_operations { get { return this.stmt.status (Sqlite.Status.STMT_SORT, 0); } }
+    public int sort_operations { get { return this.stmt.status (Sqlite.StatementStatus.SORT, 0); } }
 
     /**
      * Reset the statement, allowing for another execution.
