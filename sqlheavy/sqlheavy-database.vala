@@ -167,6 +167,19 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       }
     }
 
+    /**
+     * Number of lookaside memory slots currently checked out
+     *
+     * See SQLite documentation at [[http://www.sqlite.org/malloc.html#lookaside]]
+     */
+    public int lookaside_used {
+      get {
+        int current, high;
+        this.db.status (Sqlite.DatabaseStatus.LOOKASIDE_USED, out current, out high);
+        return current;
+      }
+    }
+
     private int pragma_get_int (string pragma) {
       return this.pragma_get_string (pragma).to_int ();
     }
