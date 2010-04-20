@@ -287,7 +287,7 @@ namespace SQLHeavy {
 
     private int fetch_check_index (int col) throws SQLHeavy.Error {
       if (col < 0 || col > this.column_count)
-        throw new SQLHeavy.Error.RANGE (SQLHeavy.ErrorMessage.RANGE);
+        throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));
       return col;
     }
 
@@ -319,7 +319,7 @@ namespace SQLHeavy {
 
       int? col_number = this.result_columns.lookup (col);
       if ( col_number == null )
-        throw new SQLHeavy.Error.RANGE (SQLHeavy.ErrorMessage.RANGE);
+        throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));
       return col_number;
     }
 
@@ -587,7 +587,7 @@ namespace SQLHeavy {
 
     private int bind_check_index (int col) throws SQLHeavy.Error {
       if (col < 0 || col > this.parameter_count)
-        throw new SQLHeavy.Error.RANGE (SQLHeavy.ErrorMessage.RANGE);
+        throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));
       return col;
     }
 

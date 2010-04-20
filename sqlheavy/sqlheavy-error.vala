@@ -3,35 +3,36 @@ namespace SQLHeavy {
     if ( ec == Sqlite.OK )
       return true;
 
-    string? msg = (queryable != null) ? queryable.database.get_sqlite_db ().errmsg () : null;
+    string? msg = sqlite_errstr (ec);
+
     switch ( ec ) {
-      case Sqlite.ERROR:      throw new Error.ERROR        (msg ?? SQLHeavy.ErrorMessage.ERROR);
-      case Sqlite.INTERNAL:   throw new Error.INTERNAL     (msg ?? SQLHeavy.ErrorMessage.INTERNAL);
-      case Sqlite.PERM:       throw new Error.ACCESS_DENIED(msg ?? SQLHeavy.ErrorMessage.ACCESS_DENIED);
-      case Sqlite.ABORT:      throw new Error.ABORTED      (msg ?? SQLHeavy.ErrorMessage.ABORTED);
-      case Sqlite.BUSY:       throw new Error.BUSY         (msg ?? SQLHeavy.ErrorMessage.BUSY);
-      case Sqlite.LOCKED:     throw new Error.LOCKED       (msg ?? SQLHeavy.ErrorMessage.LOCKED);
-      case Sqlite.NOMEM:      throw new Error.NO_MEMORY    (msg ?? SQLHeavy.ErrorMessage.NO_MEMORY);
-      case Sqlite.READONLY:   throw new Error.READ_ONLY    (msg ?? SQLHeavy.ErrorMessage.READ_ONLY);
-      case Sqlite.INTERRUPT:  throw new Error.INTERRUPTED  (msg ?? SQLHeavy.ErrorMessage.INTERRUPTED);
-      case Sqlite.IOERR:      throw new Error.IO           (msg ?? SQLHeavy.ErrorMessage.IO);
-      case Sqlite.CORRUPT:    throw new Error.CORRUPT      (msg ?? SQLHeavy.ErrorMessage.CORRUPT);
-      case Sqlite.FULL:       throw new Error.FULL         (msg ?? SQLHeavy.ErrorMessage.FULL);
-      case Sqlite.CANTOPEN:   throw new Error.CAN_NOT_OPEN (msg ?? SQLHeavy.ErrorMessage.CAN_NOT_OPEN);
-      case Sqlite.EMPTY:      throw new Error.EMPTY        (msg ?? SQLHeavy.ErrorMessage.EMPTY);
-      case Sqlite.SCHEMA:     throw new Error.SCHEMA       (msg ?? SQLHeavy.ErrorMessage.SCHEMA);
-      case Sqlite.TOOBIG:     throw new Error.TOO_BIG      (msg ?? SQLHeavy.ErrorMessage.TOO_BIG);
-      case Sqlite.CONSTRAINT: throw new Error.CONSTRAINT   (msg ?? SQLHeavy.ErrorMessage.CONSTRAINT);
-      case Sqlite.MISMATCH:   throw new Error.MISMATCH     (msg ?? SQLHeavy.ErrorMessage.MISMATCH);
-      case Sqlite.MISUSE:     throw new Error.MISUSE       (msg ?? SQLHeavy.ErrorMessage.MISUSE);
-      case Sqlite.NOLFS:      throw new Error.NOLFS        (msg ?? SQLHeavy.ErrorMessage.NOLFS);
-      case Sqlite.AUTH:       throw new Error.AUTH         (msg ?? SQLHeavy.ErrorMessage.AUTH);
-      case Sqlite.FORMAT:     throw new Error.FORMAT       (msg ?? SQLHeavy.ErrorMessage.FORMAT);
-      case Sqlite.RANGE:      throw new Error.RANGE        (msg ?? SQLHeavy.ErrorMessage.RANGE);
-      case Sqlite.NOTADB:     throw new Error.NOTADB       (msg ?? SQLHeavy.ErrorMessage.NOTADB);
-      case Sqlite.ROW:        throw new Error.ROW          (msg ?? SQLHeavy.ErrorMessage.ROW);
-      case Sqlite.DONE:       throw new Error.DONE         (msg ?? SQLHeavy.ErrorMessage.DONE);
-      default:                throw new Error.UNKNOWN      (msg ?? SQLHeavy.ErrorMessage.UNKNOWN);
+      case Sqlite.ERROR:      throw new Error.ERROR        (msg);
+      case Sqlite.INTERNAL:   throw new Error.INTERNAL     (msg);
+      case Sqlite.PERM:       throw new Error.ACCESS_DENIED(msg);
+      case Sqlite.ABORT:      throw new Error.ABORTED      (msg);
+      case Sqlite.BUSY:       throw new Error.BUSY         (msg);
+      case Sqlite.LOCKED:     throw new Error.LOCKED       (msg);
+      case Sqlite.NOMEM:      throw new Error.NO_MEMORY    (msg);
+      case Sqlite.READONLY:   throw new Error.READ_ONLY    (msg);
+      case Sqlite.INTERRUPT:  throw new Error.INTERRUPTED  (msg);
+      case Sqlite.IOERR:      throw new Error.IO           (msg);
+      case Sqlite.CORRUPT:    throw new Error.CORRUPT      (msg);
+      case Sqlite.FULL:       throw new Error.FULL         (msg);
+      case Sqlite.CANTOPEN:   throw new Error.CAN_NOT_OPEN (msg);
+      case Sqlite.EMPTY:      throw new Error.EMPTY        (msg);
+      case Sqlite.SCHEMA:     throw new Error.SCHEMA       (msg);
+      case Sqlite.TOOBIG:     throw new Error.TOO_BIG      (msg);
+      case Sqlite.CONSTRAINT: throw new Error.CONSTRAINT   (msg);
+      case Sqlite.MISMATCH:   throw new Error.MISMATCH     (msg);
+      case Sqlite.MISUSE:     throw new Error.MISUSE       (msg);
+      case Sqlite.NOLFS:      throw new Error.NOLFS        (msg);
+      case Sqlite.AUTH:       throw new Error.AUTH         (msg);
+      case Sqlite.FORMAT:     throw new Error.FORMAT       (msg);
+      case Sqlite.RANGE:      throw new Error.RANGE        (msg);
+      case Sqlite.NOTADB:     throw new Error.NOTADB       (msg);
+      case Sqlite.ROW:        throw new Error.ROW          (msg);
+      case Sqlite.DONE:       throw new Error.DONE         (msg);
+      default:                throw new Error.UNKNOWN      (msg);
     }
   }
 
@@ -84,129 +85,128 @@ namespace SQLHeavy {
     THREAD
   }
 
+  /**
+   * Convert an SQLHeavy.Error to an SQLite error code. This function
+   * is used to convert errors thrown by user defined functions.
+   *
+   * @e SQLHeavy error
+   */
   internal int sqlite_code_from_error (SQLHeavy.Error e) {
     if ( e is Error.INTERNAL )
       return Sqlite.INTERNAL;
     else if ( e is Error.ACCESS_DENIED )
       return Sqlite.PERM;
+    else if ( e is Error.ERROR )
+      return Sqlite.ERROR;
+    else if ( e is Error.ABORTED )
+      return Sqlite.ABORT;
+    else if ( e is Error.BUSY )
+      return Sqlite.BUSY;
+    else if ( e is Error.LOCKED )
+      return Sqlite.LOCKED;
+    else if ( e is Error.NO_MEMORY )
+      return Sqlite.NOMEM;
+    else if ( e is Error.READ_ONLY )
+      return Sqlite.READONLY;
+    else if ( e is Error.INTERRUPTED )
+      return Sqlite.INTERRUPT;
+    else if ( e is Error.IO )
+      return Sqlite.IOERR;
+    else if ( e is Error.CORRUPT )
+      return Sqlite.CORRUPT;
+    else if ( e is Error.FULL )
+      return Sqlite.FULL;
+    else if ( e is Error.CAN_NOT_OPEN )
+      return Sqlite.CANTOPEN;
+    else if ( e is Error.EMPTY )
+      return Sqlite.EMPTY;
+    else if ( e is Error.SCHEMA )
+      return Sqlite.SCHEMA;
+    else if ( e is Error.TOO_BIG )
+      return Sqlite.TOOBIG;
+    else if ( e is Error.CONSTRAINT )
+      return Sqlite.CONSTRAINT;
+    else if ( e is Error.MISMATCH )
+      return Sqlite.MISMATCH;
+    else if ( e is Error.MISUSE )
+      return Sqlite.MISUSE;
+    else if ( e is Error.NOLFS )
+      return Sqlite.NOLFS;
+    else if ( e is Error.AUTH )
+      return Sqlite.AUTH;
+    else if ( e is Error.FORMAT )
+      return Sqlite.FORMAT;
+    else if ( e is Error.RANGE )
+      return Sqlite.RANGE;
+    else if ( e is Error.NOTADB )
+      return Sqlite.NOTADB;
+    else if ( e is Error.ROW )
+      return Sqlite.ROW;
+    else if ( e is Error.DONE )
+      return Sqlite.DONE;
     else
       return Sqlite.ERROR;
-      // case Sqlite.ERROR:      throw new Error.ERROR        (SQLHeavy.ErrorMessage.ERROR);
-      // case Sqlite.ABORT:      throw new Error.ABORTED      (SQLHeavy.ErrorMessage.ABORTED);
-      // case Sqlite.BUSY:       throw new Error.BUSY         (SQLHeavy.ErrorMessage.BUSY);
-      // case Sqlite.LOCKED:     throw new Error.LOCKED       (SQLHeavy.ErrorMessage.LOCKED);
-      // case Sqlite.NOMEM:      throw new Error.NO_MEMORY    (SQLHeavy.ErrorMessage.NO_MEMORY);
-      // case Sqlite.READONLY:   throw new Error.READ_ONLY    (SQLHeavy.ErrorMessage.READ_ONLY);
-      // case Sqlite.INTERRUPT:  throw new Error.INTERRUPTED  (SQLHeavy.ErrorMessage.INTERRUPTED);
-      // case Sqlite.IOERR:      throw new Error.IO           (SQLHeavy.ErrorMessage.IO);
-      // case Sqlite.CORRUPT:    throw new Error.CORRUPT      (SQLHeavy.ErrorMessage.CORRUPT);
-      // case Sqlite.FULL:       throw new Error.FULL         (SQLHeavy.ErrorMessage.FULL);
-      // case Sqlite.CANTOPEN:   throw new Error.CAN_NOT_OPEN (SQLHeavy.ErrorMessage.CAN_NOT_OPEN);
-      // case Sqlite.EMPTY:      throw new Error.EMPTY        (SQLHeavy.ErrorMessage.EMPTY);
-      // case Sqlite.SCHEMA:     throw new Error.SCHEMA       (SQLHeavy.ErrorMessage.SCHEMA);
-      // case Sqlite.TOOBIG:     throw new Error.TOO_BIG      (SQLHeavy.ErrorMessage.TOO_BIG);
-      // case Sqlite.CONSTRAINT: throw new Error.CONSTRAINT   (SQLHeavy.ErrorMessage.CONSTRAINT);
-      // case Sqlite.MISMATCH:   throw new Error.MISMATCH     (SQLHeavy.ErrorMessage.MISMATCH);
-      // case Sqlite.MISUSE:     throw new Error.MISUSE       (SQLHeavy.ErrorMessage.MISUSE);
-      // case Sqlite.NOLFS:      throw new Error.NOLFS        (SQLHeavy.ErrorMessage.NOLFS);
-      // case Sqlite.AUTH:       throw new Error.AUTH         (SQLHeavy.ErrorMessage.AUTH);
-      // case Sqlite.FORMAT:     throw new Error.FORMAT       (SQLHeavy.ErrorMessage.FORMAT);
-      // case Sqlite.RANGE:      throw new Error.RANGE        (SQLHeavy.ErrorMessage.RANGE);
-      // case Sqlite.NOTADB:     throw new Error.NOTADB       (SQLHeavy.ErrorMessage.NOTADB);
-      // case Sqlite.ROW:        throw new Error.ROW          (SQLHeavy.ErrorMessage.ROW);
-      // case Sqlite.DONE:       throw new Error.DONE         (SQLHeavy.ErrorMessage.DONE);
-      // default:                throw new Error.UNKNOWN      (SQLHeavy.ErrorMessage.UNKNOWN);
   }
 
   /**
-   * Namespace used internally to store description of error codes.
+   * Convert an SQLite error code into a string representation.
    */
-  namespace ErrorMessage {
-    internal const string ERROR         = "SQL error or missing database";
-    internal const string INTERNAL      = "Internal logic error in SQLite";
-    internal const string ACCESS_DENIED = "Access permission denied";
-    internal const string ABORTED       = "Callback routine requested an abort";
-    internal const string BUSY          = "The database file is locked";
-    internal const string LOCKED        = "A table in the database is locked";
-    internal const string NO_MEMORY     = "A malloc failed";
-    internal const string READ_ONLY     = "Attempt to write a readonly database";
-    internal const string INTERRUPTED   = "Operation interrupted";
-    internal const string IO            = "Some kind of disk I/O error occurred";
-    internal const string CORRUPT       = "The database disk image is malformed";
-    internal const string FULL          = "Insertion failed because database is full";
-    internal const string CAN_NOT_OPEN  = "Unable to open the database file";
-    internal const string EMPTY         = "Database is empty";
-    internal const string SCHEMA        = "The database schema changed";
-    internal const string TOO_BIG       = "String or BLOB exceeds size limit";
-    internal const string CONSTRAINT    = "Abort due to constraint violation";
-    internal const string MISMATCH      = "Data type mismatch";
-    internal const string MISUSE        = "Library used incorrectly";
-    internal const string NOLFS         = "Uses OS features not supported on host";
-    internal const string AUTH          = "Authorization denied";
-    internal const string FORMAT        = "Auxiliary database format error";
-    internal const string RANGE         = "2nd parameter to sqlite3_bind out of range";
-    internal const string NOTADB        = "File opened that is not a database file";
-    internal const string ROW           = "sqlite3_step() has another row ready";
-    internal const string DONE          = "sqlite3_step() has finished executing";
-    internal const string UNKNOWN       = "Unknown error occured.";
-  }
-
-  internal string sqlite_errstr (int ec) {
+  internal unowned string sqlite_errstr (int ec) {
     switch ( ec ) {
       case Sqlite.ERROR:
-        return ErrorMessage.ERROR;
+        return "SQL error or missing database";
       case Sqlite.INTERNAL:
-        return ErrorMessage.INTERNAL;
+        return "Internal logic error in SQLite";
       case Sqlite.PERM:
-        return ErrorMessage.ACCESS_DENIED;
+        return "Access permission denied";
       case Sqlite.ABORT:
-        return ErrorMessage.ABORTED;
+        return "Callback routine requested an abort";
       case Sqlite.BUSY:
-        return ErrorMessage.BUSY;
+        return "The database file is locked";
       case Sqlite.LOCKED:
-        return ErrorMessage.LOCKED;
+        return "A table in the database is locked";
       case Sqlite.NOMEM:
-        return ErrorMessage.NO_MEMORY;
+        return "A malloc failed";
       case Sqlite.READONLY:
-        return ErrorMessage.READ_ONLY;
+        return "Attempt to write a readonly database";
       case Sqlite.INTERRUPT:
-        return ErrorMessage.INTERRUPTED;
+        return "Operation interrupted";
       case Sqlite.IOERR:
-        return ErrorMessage.IO;
+        return "Some kind of disk I/O error occurred";
       case Sqlite.CORRUPT:
-        return ErrorMessage.CORRUPT;
+        return "The database disk image is malformed";
       case Sqlite.FULL:
-        return ErrorMessage.FULL;
+        return "Insertion failed because database is full";
       case Sqlite.CANTOPEN:
-        return ErrorMessage.CAN_NOT_OPEN;
+        return "Unable to open the database file";
       case Sqlite.EMPTY:
-        return ErrorMessage.EMPTY;
+        return "Database is empty";
       case Sqlite.SCHEMA:
-        return ErrorMessage.SCHEMA;
+        return "The database schema changed";
       case Sqlite.TOOBIG:
-        return ErrorMessage.TOO_BIG;
+        return "String or BLOB exceeds size limit";
       case Sqlite.CONSTRAINT:
-        return ErrorMessage.CONSTRAINT;
+        return "Abort due to constraint violation";
       case Sqlite.MISMATCH:
-        return ErrorMessage.MISMATCH;
+        return "Data type mismatch";
       case Sqlite.MISUSE:
-        return ErrorMessage.MISUSE;
+        return "Library used incorrectly";
       case Sqlite.NOLFS:
-        return ErrorMessage.NOLFS;
+        return "Uses OS features not supported on host";
       case Sqlite.AUTH:
-        return ErrorMessage.AUTH;
+        return "Authorization denied";
       case Sqlite.FORMAT:
-        return ErrorMessage.FORMAT;
+        return "Auxiliary database format error";
       case Sqlite.RANGE:
-        return ErrorMessage.RANGE;
+        return "2nd parameter to sqlite3_bind out of range";
       case Sqlite.NOTADB:
-        return ErrorMessage.NOTADB;
+        return "File opened that is not a database file";
       case Sqlite.ROW:
-        return ErrorMessage.ROW;
+        return "sqlite3_step() has another row ready";
       case Sqlite.DONE:
-        return ErrorMessage.DONE;
+        return "sqlite3_step() has finished executing";
       default:
-        return "Unknown";
+        return "An unknown error occured";
     }
   }
 }
