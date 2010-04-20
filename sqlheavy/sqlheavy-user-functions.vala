@@ -1,6 +1,30 @@
 namespace SQLHeavy {
+  /**
+   * Symbols related to the creation and execution of user-created
+   * functions.
+   *
+   * See SQLite documentation at [[http://www.sqlite.org/c3ref/create_function.html]]
+   */
   namespace UserFunction {
+    /**
+     * This function is called as SQLite is stepping through the
+     * data. It is analogous to SQLite's
+     * [[http://www.sqlite.org/c3ref/create_function.html|xStep and xFunc]]
+     * callback.
+     *
+     * @return value to return from the function
+     * @param ctx execution context
+     * @param args arguments passed to the function
+     */
     public delegate GLib.Value? UserFunc (UserFunction.Context ctx, GLib.SList<GLib.Value?> args) throws Error;
+    /**
+     * This function is called when SQLite finishes stepping through
+     * the data. It is analogous to SQLite's
+     * [[http://www.sqlite.org/c3ref/create_function.html|xFinal]]
+     * callback.
+     *
+     * @param ctx execution context
+     */
     public delegate void FinalizeFunc (UserFunction.Context ctx);
 
     [Compact]
@@ -97,9 +121,6 @@ namespace SQLHeavy {
        * feature of SQLite, allowing user data to be shared accross an
        * entire aggregate operation.
        *
-       * This function is meant to be similar to
-       * GLib.Object.set_data_full
-       *
        * @see get_user_data
        */
       public void set_user_data (string key, GLib.Value value) {
@@ -108,8 +129,6 @@ namespace SQLHeavy {
 
       /**
        * Get user data
-       *
-       * This function is meant to be similar to GLib.Object.get_data
        *
        * @see set_user_data
        */
@@ -131,7 +150,7 @@ namespace SQLHeavy {
         else if ( value.holds (typeof (bool)) )
           this.ctx.result_int (value.get_boolean () ? 1 : 0);
         else
-          GLib.error ("Unknown return type.");
+          GLib.critical ("Unknown return type (%s).", value.type_name ());
       }
 
       internal void call_user_func (Sqlite.Value[] args) {
@@ -172,6 +191,17 @@ namespace SQLHeavy {
       ctx.call_finalize_func ();
     }
 
+    /**
+     * Implementation of a REGEXP function using GRegex
+     *
+     * SQLite includes special support for a function named REGEXP,
+     * which is left unimplemented by SQLite. This function provides a
+     * basic implementation based on the regex support in GLib.
+     *
+     * @return whether or not the expression matched
+     * @param ctx execution context
+     * @param args arguments to the function
+     */
     public GLib.Value? regex (UserFunction.Context ctx, GLib.SList<GLib.Value?> args) throws Error {
       GLib.Regex? regex = null;
       unowned string str_expr = args.data.get_string ();
