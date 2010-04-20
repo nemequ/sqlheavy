@@ -2,36 +2,23 @@ namespace SQLHeavy {
   /**
    * Transaction type.
    *
+   * See SQLite documentation at [[http://sqlite.org/lang_transaction.html]]
+   *
    * @see SQLHeavy.Transaction
    */
   public enum TransactionType {
     /**
      * No locks are acquired on the database until the database is
-     * first accessed. Thus with a deferred transaction, the BEGIN
-     * statement itself does nothing. Locks are not acquired until the
-     * first read or write operation. The first read operation against
-     * a database creates a SHARED lock and the first write operation
-     * creates a RESERVED lock. Because the acquisition of locks is
-     * deferred until they are needed, it is possible that another
-     * thread or process could create a separate transaction and write
-     * to the database after the BEGIN on the current thread has
-     * executed.
+     * first accessed.
      */
     DEFERRED,
     /**
-     * RESERVED locks are acquired on all databases as soon as the
-     * BEGIN command is executed, without waiting for the database to
-     * be used. After a BEGIN IMMEDIATE, you are guaranteed that no
-     * other thread or process will be able to write to the database
-     * or do a BEGIN IMMEDIATE or BEGIN EXCLUSIVE. Other processes can
-     * continue to read from the database, however.
+     * Lock database as immediately, without waiting for the database
+     * to actually be used.
      */
     IMMEDIATE,
     /**
-     * An exclusive transaction causes EXCLUSIVE locks to be acquired
-     * on all databases. After a BEGIN EXCLUSIVE, you are guaranteed
-     * that no other thread or process will be able to read or write
-     * the database until the transaction is complete.
+     * Lock database, including from other threads and processes.
      */
     EXCLUSIVE;
 
@@ -83,17 +70,14 @@ namespace SQLHeavy {
      */
     NONE = 0,
     /**
-     * Freelist pages are moved to the end of the database file and
-     * the database file is truncated to remove the freelist pages at
-     * every transaction commit.
+     * Auto-vacuum every time a transaction is committed.
      */
     FULL = 1,
     /**
-     * The additional information needed to do auto-vacuuming is
-     * stored in the database file but auto-vacuuming does not occur
-     * automatically at each commit as it does with FULL. In
-     * incremental mode, the separate incremental_vacuum pragma must
-     * be invoked to cause the auto-vacuum to occur.
+     * Store information for vacuuming, but do not perform
+     * auto-vacuuming.
+     *
+     * @see Database.incremental_vacuum
      */
     INCREMENTAL = 2
   }
@@ -172,34 +156,23 @@ namespace SQLHeavy {
    */
   public enum JournalMode {
     /**
-     * The rollback journal is deleted at the conclusion of each
-     * transaction.
+     * Journal is deleted after each transaction
      */
     DELETE,
     /**
-     * Commits transactions by truncating the rollback journal to
-     * zero-length instead of deleting it.
+     * Truncate the journal instead of deleting it
      */
     TRUNCATE,
     /**
-     * Prevents the rollback journal from being deleted at the end of
-     * each transaction. Instead, the header of the journal is
-     * overwritten with zeros.
+     * Overwrite the journal with zeros instead of deleting it
      */
     PERSIST,
     /**
-     * Stores the rollback journal in volatile RAM. This saves disk
-     * I/O but at the expense of database safety and integrity. If the
-     * application using SQLite crashes in the middle of a trans
-     * action when the MEMORY journaling mode is set, then the
-     * database file will very likely go corrupt.
+     * Stores the journal in RAM instead of on disk
      */
     MEMORY,
     /**
-     * Disables the rollback journal completely. If the application
-     * crashes in the middle of a transaction when the OFF journaling
-     * mode is set, then the database file will very likely go
-     * corrupt.
+     * Disable the journal completely
      */
     OFF;
 
@@ -385,7 +358,7 @@ namespace SQLHeavy {
    */
   public enum TransactionStatus {
     /**
-     * Transactino has not yet been committed or rolled back
+     * Transaction has not yet been committed or rolled back
      */
     UNRESOLVED = 0,
     /**
