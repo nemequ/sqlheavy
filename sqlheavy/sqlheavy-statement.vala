@@ -202,7 +202,7 @@ namespace SQLHeavy {
      *
      * @param col column name
      * @return the index of the column
-     * @see fetch_name
+     * @see column_name
      */
     public int column_index (string col) throws SQLHeavy.Error {
       if ( this.result_columns == null ) {
@@ -223,7 +223,7 @@ namespace SQLHeavy {
      *
      * @param col the column index
      * @return the GType of the column
-     * @see fetch_name
+     * @see column_name
      */
     public GLib.Type column_type (int col) throws SQLHeavy.Error {
       return sqlite_type_to_g_type (this.stmt.column_type (this.fetch_check_index (col)));
