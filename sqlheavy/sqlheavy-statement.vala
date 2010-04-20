@@ -40,7 +40,7 @@ namespace SQLHeavy {
     /**
      * The queryable this statement operates on.
      */
-    public weak SQLHeavy.Queryable queryable { get; construct set; }
+    public weak SQLHeavy.Queryable queryable { get; construct; }
     private unowned Sqlite.Statement stmt;
 
     /**
