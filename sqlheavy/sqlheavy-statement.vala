@@ -130,23 +130,19 @@ namespace SQLHeavy {
     }
 
     /**
-     * Evaluate the statement.
-     *
-     * @return true on success, false if the query is finished executing
-     * @see Statement.execute
+     * Internal function to step the transaction, assumes relevant
+     * locks have been acquired.
      */
-    public bool step () throws Error {
+    public bool step_internal () throws Error {
       if ( this.finished )
         return false;
 
       if ( !this.active ) {
-        this.queryable.@lock ();
         this.active = true;
         this.execution_timer.reset ();
         this.execution_timer.start ();
         this.error_code = this.stmt.step ();
         this.execution_timer.stop ();
-        this.queryable.@unlock ();
       }
       else {
         this.execution_timer.start ();
@@ -158,12 +154,118 @@ namespace SQLHeavy {
     }
 
     /**
+     * Evaluate the statement.
+     *
+     * @return true on success, false if the query is finished executing
+     * @see Statement.step_async
+     * @see Statement.execute
+     */
+    public bool step () throws Error {
+      var db = this.queryable.database;
+
+      this.queryable.@lock ();
+      db.step_lock ();
+      var res = this.step_internal ();
+      db.step_unlock ();
+      this.queryable.unlock ();
+      return res;
+    }
+
+    /**
+     * Evaluate the statement asynchronously
+     *
+     * @return true on success, false if the query is finished executing
+     * @see Statement.step
+     * @see Statement.execute_async
+     */
+    public async bool step_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
+      return true;
+    }
+
+    /**
      * Completely evaluate the statement, calling step () until it returns false.
      *
      * @see Statement.step
+     * @see Statement.execute_async
      */
     public void execute () throws SQLHeavy.Error {
-      while ( this.step () ) { }
+      var db = this.queryable.database;
+
+      this.queryable.@lock ();
+      db.step_lock ();
+      while ( this.step_internal () ) { }
+      db.step_unlock ();
+      this.queryable.unlock ();
+
+      this.reset ();
+    }
+
+    /**
+     * Completely evaluate the statement asynchronously, calling step
+     * until it returns false.
+     *
+     * @param cancellable a cancellable used to abort the operation
+     *
+     * @see Statement.step
+     * @see Statement.execute
+     */
+    public async void execute_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
+      SQLHeavy.Error? err = null;
+      try {
+        GLib.Thread.create (() => {
+            bool executing = false;
+            GLib.Mutex lck = new GLib.Mutex ();
+            unowned GLib.Thread th = GLib.Thread.self ();
+            ulong cancellable_sig = 0;
+
+            if ( cancellable != null ) {
+              cancellable_sig = cancellable.cancelled.connect (() => {
+                  lck.@lock ();
+                  if ( executing )
+                    this.queryable.database.interrupt ();
+                  else {
+                    err = new SQLHeavy.Error.INTERRUPTED (sqlite_errstr (Sqlite.INTERRUPT));
+                    th.exit (null);
+                  }
+                  lck.unlock ();
+                });
+            }
+
+            var db = this.queryable.database;
+            db.step_lock ();
+            executing = true;
+            try {
+              while ( (cancellable == null ||
+                       !cancellable.is_cancelled ()) &&
+                      this.step_internal () ) { }
+            }
+            catch ( SQLHeavy.Error e ) {
+              err = e;
+            }
+            lck.@lock ();
+            executing = false;
+            db.step_unlock ();
+            lck.unlock ();
+
+            if ( cancellable_sig != 0 ) {
+              cancellable.disconnect (cancellable_sig);
+            }
+
+            execute_async.callback ();
+
+            return null;
+          }, false);
+      }
+      catch ( GLib.ThreadError e ) {
+        throw new SQLHeavy.Error.THREAD ("Thread error: %s (%d)", e.message, e.code);
+      }
+
+      yield;
+
+      if ( err != null )
+        throw err;
+
+      this.reset ();
     }
 
     /**
@@ -177,6 +279,9 @@ namespace SQLHeavy {
       this.execute ();
       var last_insert_id = this.queryable.database.last_insert_id;
       this.queryable.@unlock ();
+
+      this.reset ();
+
       return last_insert_id;
     }
 

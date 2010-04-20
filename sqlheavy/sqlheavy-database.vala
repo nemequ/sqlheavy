@@ -39,6 +39,46 @@ namespace SQLHeavy {
     }
 
     /**
+     * Step lock
+     *
+     * Used to lock a database while stepping through a statement in
+     * support of the threading for the async functions.
+     *
+     * @see step_lock
+     * @see step_unlock
+     */
+    private Sqlite.Mutex? _step_lock = null;
+
+    /**
+     * Lock the step lock
+     *
+     * @see step_unlock
+     * @see _step_lock
+     */
+    internal void step_lock () {
+      this._step_lock.enter ();
+    }
+
+    /**
+     * Unlock the step lock
+     *
+     * @see step_lock
+     * @see _step_lock
+     */
+    internal void step_unlock () {
+      this._step_lock.leave ();
+    }
+
+    /**
+     * Interrupt (cancel) the currently running query
+     *
+     * See SQLite documentation at [[http://www.sqlite.org/c3ref/interrupt.html]]
+     */
+    public void interrupt () {
+      this.db.interrupt ();
+    }
+
+    /**
      * SQL executed
      *
      * Will be emitted whenever a query is executed. This is useful
@@ -710,6 +750,8 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      * will register:
      *
      * * REGEXP: see [[http://www.sqlite.org/lang_expr.html#regexp]]
+     *
+     * @see UserFunction.regex
      */
     public void register_common_functions () {
       this.register_scalar_function ("REGEXP", 2, UserFunction.regex);

@@ -77,7 +77,11 @@ namespace SQLHeavy {
     /**
      * An unhandled data type was encountered.
      */
-    DATA_TYPE
+    DATA_TYPE,
+    /**
+     * A thread error was encountered
+     */
+    THREAD
   }
 
   internal int sqlite_code_from_error (SQLHeavy.Error e) {
@@ -126,7 +130,7 @@ namespace SQLHeavy {
     internal const string LOCKED        = "A table in the database is locked";
     internal const string NO_MEMORY     = "A malloc failed";
     internal const string READ_ONLY     = "Attempt to write a readonly database";
-    internal const string INTERRUPTED   = "Operation terminated by sqlite3_interrupt = ";
+    internal const string INTERRUPTED   = "Operation interrupted";
     internal const string IO            = "Some kind of disk I/O error occurred";
     internal const string CORRUPT       = "The database disk image is malformed";
     internal const string FULL          = "Insertion failed because database is full";

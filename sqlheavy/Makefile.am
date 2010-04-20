@@ -34,6 +34,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	-H SQLHeavy.h \
 	--internal-header sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
+	--pkg gio-2.0 \
 	--pkg glib-2.0 \
 	--pkg gobject-2.0 \
 	--pkg sqlite3 \

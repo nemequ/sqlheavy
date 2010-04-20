@@ -3,6 +3,7 @@ NULL =
 VALADOC_FLAGS = \
 		--force \
 		--pkg sqlite3 \
+		--pkg gio-2.0 \
 		-b $(top_srcdir)/sqlheavy \
 		--package-name sqlheavy-@SQLHEAVY_API_VERSION@ \
 		--package-version @SQLHEAVY_VERSION@ \
