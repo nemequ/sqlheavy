@@ -47,14 +47,14 @@ namespace SQLHeavy {
     return gval;
   }
 
-  internal GLib.SList<GLib.Value?>? sqlite_value_array_to_g_value_slist (Sqlite.Value[] values) {
+  internal GLib.ValueArray? sqlite_value_array_to_g_value_array (Sqlite.Value[] values) {
     if ( values.length == 0 )
       return null;
 
-    var vl = new GLib.SList<GLib.Value?> ();
-    for ( int i = values.length ; i > 0 ; i-- )
-      vl.prepend (sqlite_value_to_g_value (values[i - 1]));
+    var va = new GLib.ValueArray (values.length);
+    for ( int i = 0 ; i < values.length ; i++ )
+      va.append (sqlite_value_to_g_value (values[i]));
 
-    return vl;
+    return va;
   }
 }

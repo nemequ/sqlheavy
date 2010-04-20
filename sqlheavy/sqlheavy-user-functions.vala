@@ -16,7 +16,7 @@ namespace SQLHeavy {
      * @param ctx execution context
      * @param args arguments passed to the function
      */
-    public delegate GLib.Value? UserFunc (UserFunction.Context ctx, GLib.SList<GLib.Value?> args) throws Error;
+    public delegate GLib.Value? UserFunc (UserFunction.Context ctx, GLib.ValueArray args) throws Error;
     /**
      * This function is called when SQLite finishes stepping through
      * the data. It is analogous to SQLite's
@@ -155,11 +155,7 @@ namespace SQLHeavy {
 
       internal void call_user_func (Sqlite.Value[] args) {
         try {
-          GLib.SList<GLib.Value?> gargs = null;
-          if ( args.length > 0 )
-            gargs = sqlite_value_array_to_g_value_slist (args);
-
-          var res = this.user_func_data.func (this, gargs);
+          var res = this.user_func_data.func (this, sqlite_value_array_to_g_value_array (args));
           this.handle_result (res);
         }
         catch ( SQLHeavy.Error e ) {
@@ -202,9 +198,9 @@ namespace SQLHeavy {
      * @param ctx execution context
      * @param args arguments to the function
      */
-    public GLib.Value? regex (UserFunction.Context ctx, GLib.SList<GLib.Value?> args) throws Error {
+    public GLib.Value? regex (UserFunction.Context ctx, GLib.ValueArray args) throws Error {
       GLib.Regex? regex = null;
-      unowned string str_expr = args.data.get_string ();
+      unowned string str_expr = args.get_nth (0).get_string ();
       GLib.Value? gv_expr = ctx.get_user_data (str_expr);
       if ( gv_expr == null ) {
         try {
@@ -219,7 +215,15 @@ namespace SQLHeavy {
         regex = (GLib.Regex)gv_expr.get_boxed ();
       }
 
-      return regex.match (args.nth_data (1).get_string ());
+      var arg = args.get_nth (1);
+      if ( arg == null )
+        return false;
+      if ( !arg.holds (typeof (string)) ) {
+        // TODO: attempt to transform -> string
+        throw new SQLHeavy.Error.MISMATCH (sqlite_errstr (Sqlite.MISMATCH));
+      }
+
+      return regex.match (arg.get_string ());
     }
   }
 }
