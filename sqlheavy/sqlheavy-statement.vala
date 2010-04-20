@@ -94,6 +94,13 @@ namespace SQLHeavy {
     public int sort_operations { get { return this.stmt.status (Sqlite.StatementStatus.SORT, 0); } }
 
     /**
+     * Clear bindings
+     */
+    public void clear_bindings () {
+      this.stmt.clear_bindings ();
+    }
+
+    /**
      * Reset the statement, allowing for another execution.
      */
     public void reset () {
@@ -101,7 +108,8 @@ namespace SQLHeavy {
         this.queryable.query_executed (this);
 
       if ( this.auto_clear )
-        this.stmt.clear_bindings ();
+        this.clear_bindings ();
+
       this.stmt.reset ();
       this.finished = false;
       this.result_columns = null;
