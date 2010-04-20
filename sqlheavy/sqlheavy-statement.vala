@@ -222,24 +222,26 @@ namespace SQLHeavy {
       try {
         GLib.Thread.create (() => {
             bool executing = false;
-            GLib.Mutex lck = new GLib.Mutex ();
             unowned GLib.Thread th = GLib.Thread.self ();
             ulong cancellable_sig = 0;
+            bool thread_exited = false;
 
             if ( cancellable != null ) {
               cancellable_sig = cancellable.cancelled.connect (() => {
-                  lck.@lock ();
                   if ( executing )
                     this.queryable.database.interrupt ();
                   else {
+                    thread_exited = true;
                     err = new SQLHeavy.Error.INTERRUPTED (sqlite_errstr (Sqlite.INTERRUPT));
+                    execute_async.callback ();
                     th.exit (null);
                   }
-                  lck.unlock ();
                 });
             }
 
             var db = this.queryable.database;
+
+            this.queryable.@lock ();
             db.step_lock ();
             executing = true;
             try {
@@ -250,16 +252,18 @@ namespace SQLHeavy {
             catch ( SQLHeavy.Error e ) {
               err = e;
             }
-            lck.@lock ();
-            executing = false;
-            db.step_unlock ();
-            lck.unlock ();
 
-            if ( cancellable_sig != 0 ) {
-              cancellable.disconnect (cancellable_sig);
+            if ( !thread_exited ) {
+              db.step_unlock ();
+              this.queryable.unlock ();
+              executing = false;
+
+              if ( cancellable_sig != 0 ) {
+                cancellable.disconnect (cancellable_sig);
+              }
+
+              execute_async.callback ();
             }
-
-            execute_async.callback ();
 
             return null;
           }, false);
@@ -270,6 +274,7 @@ namespace SQLHeavy {
 
       yield;
 
+      GLib.debug ("Finishing...");
       if ( err != null )
         throw err;
 
