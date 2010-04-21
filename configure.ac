@@ -39,6 +39,7 @@ AM_CONDITIONAL(HAVE_INTROSPECTION, false)
 # Checks for libraries.
 GLIB_REQUIRED=2.22.0
 SQLITE3_REQUIRED=3.6.20
+VALADOC_REQUIRED=0.2
 
 PKG_CHECK_MODULES(GIO, gio-2.0 >= $GLIB_REQUIRED)
 AC_SUBST(GIO_CFLAGS)
@@ -54,6 +55,23 @@ AC_SUBST(GMODULE_LIBS)
 PKG_CHECK_MODULES(SQLITE3, sqlite3 >= $SQLITE3_REQUIRED)
 AC_SUBST(SQLITE3_CFLAGS)
 AC_SUBST(SQLITE3_LIBS)
+
+AC_ARG_ENABLE(valadoc,
+  AS_HELP_STRING([--enable-valadoc[=@<:@no/auto/yes@:>@]], [Enable valadoc support]),,
+    [enable_valadoc=auto])
+
+found_valadoc=no
+AS_IF([test "x$enable_valadoc" != "xno"], [
+    AC_PATH_PROG(VALADOC, valadoc, :)
+    AS_IF([test -x "$VALADOC"], [
+      found_valadoc=yes
+      AC_SUBST(VALADOC)
+    ], [
+      AS_IF([test "x$enable_valadoc" == "xyes"], AC_MSG_ERROR([Unable to find valadoc]))
+    ])
+  ])
+
+AM_CONDITIONAL(ENABLE_VALADOC, test x$found_valadoc == xyes)
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h])

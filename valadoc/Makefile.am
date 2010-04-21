@@ -1,5 +1,7 @@
 NULL =
 
+if ENABLE_VALADOC
+
 VALADOC_FLAGS = \
 		--force \
 		--pkg sqlite3 \
@@ -19,24 +21,36 @@ VALADOC_FLAGS = \
 		$(top_srcdir)/sqlheavy/sqlheavy-value.vala \
 		$(NULL)
 
-sqlheavy-@SQLHEAVY_API_VERSION@:
-	valadoc \
-		-o $(top_srcdir)/valadoc/sqlheavy-@SQLHEAVY_API_VERSION@ \
+devhelp:
+	$(VALADOC) \
+		-o devhelp \
+		--doclet devhelp \
 		$(VALADOC_FLAGS) \
 		$(NULL)
 
-sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc/html:
-	valadoc \
+gtkdoc:
+	$(VALADOC) \
 		-X --ignore-headers \
 		-X $(top_srcdir)/sqlheavy/sqlheavy-1.0-internal.h \
 		-X -l -X $(top_srcdir)/sqlheavy/.libs/libsqlheavy-1.0.so \
-		-o $(top_srcdir)/valadoc/sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc \
+		-o gtkdoc \
 		--doclet gtkdoc \
 		$(VALADOC_FLAGS) \
 		$(NULL)
 
-valadoc_DATA = sqlheavy-@SQLHEAVY_API_VERSION@
-valadocdir = /usr/share/doc/sqlheavy-@SQLHEAVY_API_VERSION@
+# The gtkdoc doclet doesn't play nice yet.
+#gtkdoc_DATA = sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc/html
+#gtkdocdir = /usr/share/gtk-doc/html
 
-gtkdoc_DATA = sqlheavy-@SQLHEAVY_API_VERSION@-gtkdoc/html
-gtkdocdir = /usr/share/gtk-doc/html
+clean-local:
+	rm -rf devhelp
+
+uninstall-hook:
+	rm -rf $(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
+
+install-data-hook: devhelp
+	cp -R devhelp/sqlheavy-@SQLHEAVY_API_VERSION@ $(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
+
+all: devhelp
+
+endif
