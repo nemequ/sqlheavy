@@ -317,6 +317,29 @@ namespace SQLHeavy {
     }
 
     /**
+     * Fetch the column names for the results
+     *
+     * @return an array of column names
+     * @see column_name
+     */
+    public string[] column_names () {
+      try {
+        var columns = new string[this.column_count];
+
+        for ( var i = 0 ; i < columns.length ; i++ )
+          columns[i] = this.column_name (i);
+
+        return columns;
+      }
+      catch ( SQLHeavy.Error e ) {
+        /* The only thing that throws an error is the column_name
+         * call, and since we know 0 <= argument < column_count, it
+         * should never fail. */
+        GLib.assert_not_reached ();
+      }
+    }
+
+    /**
      * Fetch the index for the specified column name
      *
      * @param col column name
