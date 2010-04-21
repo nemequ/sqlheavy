@@ -87,5 +87,15 @@ namespace SQLHeavy {
         throw new SQLHeavy.Error.IO ("Unable to open script: %s (%d).", e.message, e.code);
       }
     }
+
+    /**
+     * Read the entire result set into an array
+     *
+     * @return a GValueArray of (boxed) GValueArrays representing rows and columns, respectively
+     * @see Statement.get_table
+     */
+    public GLib.ValueArray get_table (string sql) throws SQLHeavy.Error {
+      return this.prepare (sql).get_table ();
+    }
   }
 }

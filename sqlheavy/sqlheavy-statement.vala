@@ -310,6 +310,7 @@ namespace SQLHeavy {
      * @param col index of column to fetch
      * @return the name of the column
      * @see column_index
+     * @see column_names
      */
     public unowned string column_name (int col) throws SQLHeavy.Error {
       return this.stmt.column_name (this.fetch_check_index (col));
@@ -354,9 +355,27 @@ namespace SQLHeavy {
      * @return the value of the field
      * @see fetch_named
      * @see fetch_result
+     * @see fetch_row
      */
     public GLib.Value? fetch (int col) throws SQLHeavy.Error {
       return sqlite_value_to_g_value (this.stmt.column_value (this.fetch_check_index (col)));
+    }
+
+    /**
+     * Return a row from result
+     *
+     * @return the current row
+     * @see fetch
+     * @see get_row
+     */
+    public GLib.ValueArray fetch_row () throws SQLHeavy.Error {
+      var columns = this.column_count;
+      var data = new GLib.ValueArray (columns);
+
+      for ( var c = 0 ; c < columns ; c++ )
+        data.append (this.fetch (c));
+
+      return data;
     }
 
     /**
@@ -598,6 +617,33 @@ namespace SQLHeavy {
       return ret;
     }
 
+    /**
+     * Return the next row from the result
+     *
+     * @return the next row, or null if there is none
+     * @see fetch_row
+     */
+    public GLib.ValueArray? get_row () throws SQLHeavy.Error {
+      return this.step () ? this.fetch_row () : null;
+    }
+
+    /**
+     * Read the entire result set into an array
+     *
+     * @return a GValueArray of (boxed) GValueArrays representing rows and columns, respectively
+     * @see get_row
+     * @see Queryable.get_table
+     */
+    public GLib.ValueArray get_table () throws SQLHeavy.Error {
+      var data = new GLib.ValueArray (0);
+      GLib.ValueArray? row = null;
+
+      while ( (row = this.get_row ()) != null )
+        data.append (row);
+
+      return data;
+    }
+
     private int bind_check_index (int col) throws SQLHeavy.Error {
       if (col < 0 || col > this.parameter_count)
         throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));
@@ -829,11 +875,11 @@ namespace SQLHeavy {
      * transaction.
      *
      * @param col column offset
-     * @return a {@link GLib.ValueArray} of fields
+     * @return fields
      */
     public GLib.ValueArray get_column (int col) throws SQLHeavy.Error {
       var valid = this.step ();
-      var data = new GLib.ValueArray (this.column_count);
+      var data = new GLib.ValueArray (0);
 
       while ( valid ) {
         data.append (this.fetch (col));
