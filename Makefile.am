@@ -2,7 +2,7 @@ NULL =
 
 SUBDIRS = \
 	sqlheavy \
-	valadoc \
+	docs \
 	$(NULL)
 
 ACLOCAL_AMFLAGS=-I m4
