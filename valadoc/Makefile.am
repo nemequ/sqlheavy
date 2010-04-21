@@ -49,14 +49,16 @@ gtkdoc:
 #gtkdocdir = /usr/share/gtk-doc/html
 
 clean-local:
-	rm -rf valadoc devhelp
+	rm -rf valadoc devhelp gtkdoc
 
 uninstall-hook:
 	rm -rf $(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
+#	rm -rf $(datadir)/gtk-doc/html/sqlheavy-@SQLHEAVY_API_VERSION@
 
-install-data-hook: devhelp
+install-data-hook: devhelp gtkdoc
 	cp -R devhelp/sqlheavy-@SQLHEAVY_API_VERSION@ $(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
+#	cp -R gtkdoc/html $(datadir)/gtk-doc/html/sqlheavy-@SQLHEAVY_API_VERSION@
 
-all: valadoc devhelp
+all: valadoc devhelp # gtkdoc
 
 endif
