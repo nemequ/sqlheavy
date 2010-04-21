@@ -21,6 +21,12 @@ VALADOC_FLAGS = \
 		$(top_srcdir)/sqlheavy/sqlheavy-value.vala \
 		$(NULL)
 
+valadoc:
+	$(VALADOC) \
+		-o valadoc \
+		$(VALADOC_FLAGS) \
+		$(NULL)
+
 devhelp:
 	$(VALADOC) \
 		-o devhelp \
@@ -43,7 +49,7 @@ gtkdoc:
 #gtkdocdir = /usr/share/gtk-doc/html
 
 clean-local:
-	rm -rf devhelp
+	rm -rf valadoc devhelp
 
 uninstall-hook:
 	rm -rf $(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
@@ -51,6 +57,6 @@ uninstall-hook:
 install-data-hook: devhelp
 	cp -R devhelp/sqlheavy-@SQLHEAVY_API_VERSION@ $(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
 
-all: devhelp
+all: valadoc devhelp
 
 endif
