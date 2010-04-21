@@ -655,6 +655,7 @@ namespace SQLHeavy {
      *
      * @return a GValueArray of (boxed) GValueArrays representing rows and columns, respectively
      * @see get_row
+     * @see print_table
      * @see Queryable.get_table
      */
     public GLib.ValueArray get_table () throws SQLHeavy.Error {
@@ -665,6 +666,67 @@ namespace SQLHeavy {
         data.append (row);
 
       return data;
+    }
+
+    /**
+     * Print the result set to a file stream
+     *
+     * @param fd the stream to print to
+     * @see get_table
+     * @see Queryable.print_table
+     */
+    public void print_table (GLib.FileStream fd = GLib.stderr) throws SQLHeavy.Error {
+      var column_names = this.column_names ();
+      var column_lengths = new size_t[column_names.length];
+      int col = 0;
+      var data = new GLib.PtrArray ();
+
+      for ( col = 0 ; col < column_lengths.length ; col++ )
+        column_lengths[col] = column_names[col].size ();
+
+      while ( this.step () ) {
+        var row_data = new GLib.PtrArray.sized (column_lengths.length);
+        data.add (g_ptr_array_ref (row_data));
+        for ( col = 0 ; col < column_names.length ; col++ ) {
+          string cell = this.fetch_string (col);
+          var cell_l = cell.size ();
+          if ( column_lengths[col] < cell_l )
+            column_lengths[col] = cell_l;
+          row_data.add (GLib.Memory.dup (cell, (uint) cell_l + 1));
+        }
+      }
+
+      GLib.StringBuilder sep = new GLib.StringBuilder ("+");
+      for ( col = 0 ; col < column_names.length ; col++ ) {
+        for ( var c = 0 ; c < column_lengths[col] + 2 ; c++ )
+          sep.append_c ('-');
+        sep.append_c ('+');
+      }
+      sep.append_c ('\n');
+
+      var column_fmt = new string[column_names.length];
+      fd.puts (sep.str);
+      fd.putc ('|');
+      for ( col = 0 ; col < column_names.length ; col++ ) {
+        column_fmt[col] = " %%%llds |".printf (column_lengths[col]);
+        fd.printf (column_fmt[col], column_names[col]);
+      }
+      fd.putc ('\n');
+      fd.puts (sep.str);
+
+      for ( var row = 0 ; row < data.len ; row++ ) {
+        fd.putc ('|');
+
+        unowned GLib.PtrArray row_data = (GLib.PtrArray)data.index (row);
+        for ( col = 0 ; col < column_names.length ; col++ ) {
+          fd.printf (column_fmt[col], (string) row_data.index (col));
+          GLib.g_free (row_data.index (col));
+        }
+        g_ptr_array_unref (row_data);
+
+        fd.putc ('\n');
+        fd.puts (sep.str);
+      }
     }
 
     private int bind_check_index (int col) throws SQLHeavy.Error {
