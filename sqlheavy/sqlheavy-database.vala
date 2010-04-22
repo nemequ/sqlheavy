@@ -753,16 +753,23 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      * * MD5: MD5 hashing algorithm
      * * SHA1: SHA-1 hashing algorithm
      * * SHA256: SHA-256 hashing algorithm
+     * * COMPRESS: Compress data using ZLib
+     * * DECOMPRESS: Decompress data using ZLib
      *
-     * @see UserFunction.regex
+     * @see CommonFunction.regex
+     * @see CommonFunction.md5
+     * @see CommonFunction.sha1
+     * @see CommonFunction.sha256
+     * @see CommonFunction.compress
+     * @see CommonFunction.decompress
      */
     public void register_common_functions () {
-      this.register_scalar_function ("REGEXP", 2, UserFunction.regex);
-      this.register_scalar_function ("MD5", 1, UserFunction.md5);
-      this.register_scalar_function ("SHA1", 1, UserFunction.sha1);
-      this.register_scalar_function ("SHA256", 1, UserFunction.sha256);
-      this.register_scalar_function ("COMPRESS", 1, UserFunction.compress);
-      this.register_scalar_function ("DECOMPRESS", 1, UserFunction.decompress);
+      this.register_scalar_function ("REGEXP", 2, SQLHeavy.CommonFunction.regex);
+      this.register_scalar_function ("MD5", 1, SQLHeavy.CommonFunction.md5);
+      this.register_scalar_function ("SHA1", 1, SQLHeavy.CommonFunction.sha1);
+      this.register_scalar_function ("SHA256", 1, SQLHeavy.CommonFunction.sha256);
+      this.register_scalar_function ("COMPRESS", 1, SQLHeavy.CommonFunction.compress);
+      this.register_scalar_function ("DECOMPRESS", 1, SQLHeavy.CommonFunction.decompress);
     }
 
     /**

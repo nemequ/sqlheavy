@@ -9,6 +9,7 @@ VALADOC_FLAGS = \
 		-b $(top_srcdir)/sqlheavy \
 		--package-name sqlheavy-@SQLHEAVY_API_VERSION@ \
 		--package-version @SQLHEAVY_VERSION@ \
+		$(top_srcdir)/sqlheavy/sqlheavy-common-function.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-database.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-enums.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-error.vala \
