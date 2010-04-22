@@ -1,5 +1,6 @@
-SQLHeavy is a convenience wrapper on top of SQLite. Though its primary
-purpose is to provide an easy to use Vala interface, it also provides
-a very nice C interface and GObject Introspection support, and may be
-easier to use from other languages than the standard SQLite interface.
+SQLHeavy is a wrapper on top of SQLite with a GObject-based interface,
+providing very nice APIs for C and Vala, GObject Introspection
+support, and additional functionality not present in SQLite.
 
+For more information on SQLHeavy, see the project page on Google Code:
+http://code.google.com/p/sqlheavy/
