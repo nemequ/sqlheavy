@@ -225,5 +225,54 @@ namespace SQLHeavy {
 
       return regex.match (arg.get_string ());
     }
+
+    private GLib.Value? checksum (GLib.ChecksumType cs, UserFunction.Context ctx, GLib.ValueArray args) throws Error {
+      var arg = args.get_nth (0);
+      if ( arg.holds (typeof (string)) )
+        return GLib.Checksum.compute_for_string (cs, arg.get_string ());
+      else if ( arg.holds (typeof (GLib.ByteArray)) )
+        return GLib.Checksum.compute_for_data (cs, ((GLib.ByteArray) arg.get_boxed ()).data);
+      else
+        throw new SQLHeavy.Error.MISMATCH (sqlite_errstr (Sqlite.MISMATCH));
+    }
+
+    /**
+     * Implementation of a MD5 function using GChecksum
+     *
+     * @return whether or not the expression matched
+     * @param ctx execution context
+     * @param args arguments to the function
+     * @see sha1
+     * @see sha256
+     */
+    public GLib.Value? md5 (UserFunction.Context ctx, GLib.ValueArray args) throws Error {
+      return checksum (GLib.ChecksumType.MD5, ctx, args);
+    }
+
+    /**
+     * Implementation of a SHA-1 function using GChecksum
+     *
+     * @return whether or not the expression matched
+     * @param ctx execution context
+     * @param args arguments to the function
+     * @see sha256
+     * @see md5
+     */
+    public GLib.Value? sha1 (UserFunction.Context ctx, GLib.ValueArray args) throws Error {
+      return checksum (GLib.ChecksumType.SHA1, ctx, args);
+    }
+
+    /**
+     * Implementation of a SHA-256 function using GChecksum
+     *
+     * @return whether or not the expression matched
+     * @param ctx execution context
+     * @param args arguments to the function
+     * @see sha1
+     * @see md5
+     */
+    public GLib.Value? sha256 (UserFunction.Context ctx, GLib.ValueArray args) throws Error {
+      return checksum (GLib.ChecksumType.SHA256, ctx, args);
+    }
   }
 }

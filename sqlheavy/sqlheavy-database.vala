@@ -750,11 +750,17 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      * will register:
      *
      * * REGEXP: see [[http://www.sqlite.org/lang_expr.html#regexp]]
+     * * MD5: MD5 hashing algorithm
+     * * SHA1: SHA-1 hashing algorithm
+     * * SHA256: SHA-256 hashing algorithm
      *
      * @see UserFunction.regex
      */
     public void register_common_functions () {
       this.register_scalar_function ("REGEXP", 2, UserFunction.regex);
+      this.register_scalar_function ("MD5", 1, UserFunction.md5);
+      this.register_scalar_function ("SHA1", 1, UserFunction.sha1);
+      this.register_scalar_function ("SHA256", 1, UserFunction.sha256);
     }
 
     /**
