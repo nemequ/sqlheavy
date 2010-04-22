@@ -1,10 +1,22 @@
 namespace SQLHeavy {
   /**
-   * A convenience class used to represent a database and script(s) for the schema
+   * A class used to represent a database and its schema
+   *
+   * The {@link schema} should be a directory which
+   * contains a Create.sql script to create the database and set the
+   * [[http://www.sqlite.org/pragma.html#version|user_version]].
+   *
+   * Each time the database is opened, it will check for scripts
+   * named Update-to-%d.sql to update the schema to the version
+   * number represented by %d (i.e., user_version + 1), and execute
+   * them when appropriate.
+   *
+   * This provides an easy way to keep your database schema up to data
+   * when you update your program.
    */
   public class VersionedDatabase : SQLHeavy.Database {
     /**
-     * Location of database schema
+     * Location of database schema directory
      */
     public string schema { get; construct; }
 
