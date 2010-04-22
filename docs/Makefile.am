@@ -7,7 +7,7 @@ VALADOC_FLAGS = \
 		--pkg sqlite3 \
 		--pkg gio-2.0 \
 		-b $(top_srcdir)/sqlheavy \
-		--package-name sqlheavy-@SQLHEAVY_API_VERSION@ \
+		--package-name SQLHeavy \
 		--package-version @SQLHEAVY_VERSION@ \
 		$(top_srcdir)/sqlheavy/sqlheavy-common-function.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-database.vala \
@@ -49,14 +49,14 @@ clean-local:
 	rm -rf valadoc devhelp gtkdoc
 
 uninstall-hook:
-	rm -rf $(DESTDIR)$(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
-#	rm -rf $(DESTDIR)$(datadir)/gtk-doc/html/sqlheavy-@SQLHEAVY_API_VERSION@
+	rm -rf $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy
+#	rm -rf $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
 
 install-data-hook: devhelp # gtkdoc
-	$(MKDIR_P) $(DESTDIR)$(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@/img
-	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@ devhelp/sqlheavy-@SQLHEAVY_API_VERSION@/*.*
-	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@/img devhelp/sqlheavy-@SQLHEAVY_API_VERSION@/img/*
-#	cp -R gtkdoc/html $(DESTDIR)$(datadir)/gtk-doc/html/sqlheavy-@SQLHEAVY_API_VERSION@
+	$(MKDIR_P) $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy/img
+	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy devhelp/SQLHeavy/*.*
+	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy/img devhelp/SQLHeavy/img/*
+#	cp -R gtkdoc/html $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
 
 all: valadoc devhelp # gtkdoc
 
