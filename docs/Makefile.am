@@ -48,12 +48,14 @@ clean-local:
 	rm -rf valadoc devhelp gtkdoc
 
 uninstall-hook:
-	rm -rf $(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
-#	rm -rf $(datadir)/gtk-doc/html/sqlheavy-@SQLHEAVY_API_VERSION@
+	rm -rf $(DESTDIR)$(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
+#	rm -rf $(DESTDIR)$(datadir)/gtk-doc/html/sqlheavy-@SQLHEAVY_API_VERSION@
 
 install-data-hook: devhelp # gtkdoc
-	cp -R devhelp/sqlheavy-@SQLHEAVY_API_VERSION@ $(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@
-#	cp -R gtkdoc/html $(datadir)/gtk-doc/html/sqlheavy-@SQLHEAVY_API_VERSION@
+	$(MKDIR_P) $(DESTDIR)$(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@/img
+	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@ devhelp/sqlheavy-@SQLHEAVY_API_VERSION@/*.*
+	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/sqlheavy-@SQLHEAVY_API_VERSION@/img devhelp/sqlheavy-@SQLHEAVY_API_VERSION@/img/*
+#	cp -R gtkdoc/html $(DESTDIR)$(datadir)/gtk-doc/html/sqlheavy-@SQLHEAVY_API_VERSION@
 
 all: valadoc devhelp # gtkdoc
 
