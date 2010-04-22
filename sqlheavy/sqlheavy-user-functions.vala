@@ -149,6 +149,8 @@ namespace SQLHeavy {
           this.ctx.result_text (value.get_string (), -1, GLib.g_free);
         else if ( value.holds (typeof (bool)) )
           this.ctx.result_int (value.get_boolean () ? 1 : 0);
+        else if ( value.holds (typeof (GLib.ByteArray)) )
+          this.ctx.result_blob (((GLib.ByteArray) value.get_boxed ()).data);
         else
           GLib.critical ("Unknown return type (%s).", value.type_name ());
       }
@@ -273,6 +275,83 @@ namespace SQLHeavy {
      */
     public GLib.Value? sha256 (UserFunction.Context ctx, GLib.ValueArray args) throws Error {
       return checksum (GLib.ChecksumType.SHA256, ctx, args);
+    }
+
+    private GLib.Value? convert_blob (GLib.Converter converter, UserFunction.Context ctx, GLib.ValueArray args) throws SQLHeavy.Error {
+      var arg = args.values[0];
+      uint8[] in_data;
+
+      if ( arg.holds (typeof (string)) )
+        in_data = (uint8[]) arg.get_string ().to_utf8 ();
+      else if ( arg.holds (typeof (GLib.ByteArray)) )
+        in_data = ((GLib.ByteArray) arg.get_boxed ()).data;
+      else
+        throw new SQLHeavy.Error.MISMATCH (sqlite_errstr (Sqlite.MISMATCH));
+
+      var res = new GLib.ByteArray ();
+      size_t bytes_read, bytes_written, outbuf_l = 4096;
+      int in_offset = 0;
+      void * outbuf = GLib.malloc (outbuf_l);
+
+      while ( true ) {
+        try {
+          var end = int.min (in_offset + 256, in_data.length);
+
+          var cr = converter.convert (in_data[in_offset:end],
+                                      end - in_offset,
+                                      outbuf,
+                                      outbuf_l,
+                                      end >= in_data.length ? GLib.ConverterFlags.INPUT_AT_END : GLib.ConverterFlags.NO_FLAGS,
+                                      out bytes_read,
+                                      out bytes_written);
+
+          if ( cr == GLib.ConverterResult.CONVERTED ||
+               cr == GLib.ConverterResult.FINISHED ) {
+            unowned uint8[] data = (uint8[]) outbuf;
+            data.length = (int) bytes_written;
+            res.append (data);
+
+            if ( cr == GLib.ConverterResult.FINISHED )
+              break;
+            else
+              in_offset += (int) bytes_read;
+          }
+        } catch ( GLib.Error e ) {
+          if ( e is GLib.IOError.PARTIAL_INPUT ) {
+            GLib.free (outbuf);
+            outbuf_l += 4096;
+            outbuf = GLib.malloc (outbuf_l);
+          }
+          GLib.error (e.message);
+        }
+      }
+
+      GLib.free (outbuf);
+      return res;
+    }
+
+    /**
+     * Implementation of a ZLib COMPRESS function
+     *
+     * @return whether or not the expression matched
+     * @param ctx execution context
+     * @param args arguments to the function
+     * @see decompress
+     */
+    public GLib.Value? compress (UserFunction.Context ctx, GLib.ValueArray args) throws SQLHeavy.Error {
+      return convert_blob (new GLib.ZlibCompressor (GLib.ZlibCompressorFormat.ZLIB, -1), ctx, args);
+    }
+
+    /**
+     * Implementation of a ZLib DECOMPRESS function
+     *
+     * @return whether or not the expression matched
+     * @param ctx execution context
+     * @param args arguments to the function
+     * @see compress
+     */
+    public GLib.Value? decompress (UserFunction.Context ctx, GLib.ValueArray args) throws SQLHeavy.Error {
+      return convert_blob (new GLib.ZlibDecompressor (GLib.ZlibCompressorFormat.ZLIB), ctx, args);
     }
   }
 }

@@ -761,6 +761,8 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       this.register_scalar_function ("MD5", 1, UserFunction.md5);
       this.register_scalar_function ("SHA1", 1, UserFunction.sha1);
       this.register_scalar_function ("SHA256", 1, UserFunction.sha256);
+      this.register_scalar_function ("COMPRESS", 1, UserFunction.compress);
+      this.register_scalar_function ("DECOMPRESS", 1, UserFunction.decompress);
     }
 
     /**
