@@ -55,6 +55,7 @@ sqlheavyinclude_HEADERS = \
 vapidir = $(datadir)/vala/vapi
 vapi_DATA = \
 	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
+	sqlheavy-@SQLHEAVY_API_VERSION@.deps \
 	$(NULL)
 
 if HAVE_INTROSPECTION
