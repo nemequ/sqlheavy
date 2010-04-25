@@ -180,6 +180,81 @@ namespace SQLHeavy {
     }
 
     /**
+     * Handle asynchronous execution
+     *
+     * @param steps the maximum number of times to call {@link step), or -1
+     * @param cancellable a GCancellable, or null
+     */
+    private async bool step_internal_async (int steps = 0, GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
+      SQLHeavy.Error? err = null;
+      bool step_res = false;
+      try {
+        GLib.Thread.create (() => {
+            bool executing = false;
+            unowned GLib.Thread th = GLib.Thread.self ();
+            ulong cancellable_sig = 0;
+            bool thread_exited = false;
+
+            if ( cancellable != null ) {
+              cancellable_sig = cancellable.cancelled.connect (() => {
+                  if ( executing )
+                    this.queryable.database.interrupt ();
+                  else {
+                    thread_exited = true;
+                    err = new SQLHeavy.Error.INTERRUPTED (sqlite_errstr (Sqlite.INTERRUPT));
+                    execute_async.callback ();
+                    th.exit (null);
+                  }
+                });
+            }
+
+            var db = this.queryable.database;
+
+            this.queryable.@lock ();
+            db.step_lock ();
+            executing = true;
+            try {
+              while ( steps != 0 ) {
+                if ( (cancellable != null && cancellable.is_cancelled ()) || !(step_res = this.step_internal ()) )
+                  break;
+                if ( steps > 0 )
+                  steps--;
+              }
+            }
+            catch ( SQLHeavy.Error e ) {
+              err = e;
+            }
+
+            if ( !thread_exited ) {
+              db.step_unlock ();
+              this.queryable.unlock ();
+              executing = false;
+
+              if ( cancellable_sig != 0 ) {
+                cancellable.disconnect (cancellable_sig);
+              }
+
+              step_internal_async.callback ();
+            }
+
+            return null;
+          }, false);
+      }
+      catch ( GLib.ThreadError e ) {
+        throw new SQLHeavy.Error.THREAD ("Thread error: %s (%d)", e.message, e.code);
+      }
+
+      yield;
+
+      if ( err != null )
+        throw err;
+
+      this.reset ();
+
+      return step_res;
+    }
+
+    /**
      * Evaluate the statement asynchronously
      *
      * @return true on success, false if the query is finished executing
@@ -187,7 +262,7 @@ namespace SQLHeavy {
      * @see Statement.execute_async
      */
     public async bool step_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      return true;
+      return yield this.step_internal_async (1, cancellable);
     }
 
     /**
@@ -218,67 +293,7 @@ namespace SQLHeavy {
      * @see Statement.execute
      */
     public async void execute_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      SQLHeavy.Error? err = null;
-      try {
-        GLib.Thread.create (() => {
-            bool executing = false;
-            unowned GLib.Thread th = GLib.Thread.self ();
-            ulong cancellable_sig = 0;
-            bool thread_exited = false;
-
-            if ( cancellable != null ) {
-              cancellable_sig = cancellable.cancelled.connect (() => {
-                  if ( executing )
-                    this.queryable.database.interrupt ();
-                  else {
-                    thread_exited = true;
-                    err = new SQLHeavy.Error.INTERRUPTED (sqlite_errstr (Sqlite.INTERRUPT));
-                    execute_async.callback ();
-                    th.exit (null);
-                  }
-                });
-            }
-
-            var db = this.queryable.database;
-
-            this.queryable.@lock ();
-            db.step_lock ();
-            executing = true;
-            try {
-              while ( (cancellable == null ||
-                       !cancellable.is_cancelled ()) &&
-                      this.step_internal () ) { }
-            }
-            catch ( SQLHeavy.Error e ) {
-              err = e;
-            }
-
-            if ( !thread_exited ) {
-              db.step_unlock ();
-              this.queryable.unlock ();
-              executing = false;
-
-              if ( cancellable_sig != 0 ) {
-                cancellable.disconnect (cancellable_sig);
-              }
-
-              execute_async.callback ();
-            }
-
-            return null;
-          }, false);
-      }
-      catch ( GLib.ThreadError e ) {
-        throw new SQLHeavy.Error.THREAD ("Thread error: %s (%d)", e.message, e.code);
-      }
-
-      yield;
-
-      GLib.debug ("Finishing...");
-      if ( err != null )
-        throw err;
-
-      this.reset ();
+      yield this.step_internal_async (-1, cancellable);
     }
 
     /**
