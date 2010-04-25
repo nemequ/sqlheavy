@@ -7,22 +7,23 @@ private async void test (SQLHeavy.Database db) {
 
   var id = GLib.Timeout.add_seconds (1, () => {
       if ( cancellable != null ) {
-        // Comment these three lines if you don't want to cancel.
         GLib.debug ("Canceling...");
         cancellable.cancel ();
         return false;
       }
+      GLib.debug ("Tick");
       return true;
     });
 
   GLib.debug ("Running query...");
   try {
     var stmt = db.prepare ("UPDATE `foo` SET `bar` = ((`bar` + 1729) / 7) % 3;");
+    // Comment out this line if you want to cancel the query.
     cancellable = new GLib.Cancellable ();
     yield stmt.execute_async (cancellable);
   } catch ( SQLHeavy.Error e ) {
     if ( e is SQLHeavy.Error.INTERRUPTED )
-      GLib.debug ("Query cancelled.");
+      GLib.debug ("Query canceled.");
     else
       GLib.error ("Execution threw an error: %s (%d)", e.message, e.code);
   }
@@ -42,7 +43,7 @@ private static int main (string[] args) {
     stmt.execute ();
 
     GLib.debug ("Populating database...");
-    var trans = new SQLHeavy.Transaction (db);
+    var trans = db.begin_transaction ();
 
     stmt = trans.prepare ("INSERT INTO `foo` (`bar`) VALUES (:value);");
     for ( int i = 0 ; i < 65536 * 8 ; i++ ) {
