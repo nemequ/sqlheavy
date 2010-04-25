@@ -185,9 +185,10 @@ namespace SQLHeavy {
      * @param steps the maximum number of times to call {@link step), or -1
      * @param cancellable a GCancellable, or null
      */
-    private async bool step_internal_async (int steps = 0, GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
+    private async bool step_internal_async (int steps = 0, GLib.Cancellable? cancellable = null, bool capture_last_insert_id = false, out int64 last_insert_id = null) throws SQLHeavy.Error {
       SQLHeavy.Error? err = null;
       bool step_res = false;
+      int64 insert_id = 0;
       try {
         GLib.Thread.create (() => {
             bool executing = false;
@@ -226,6 +227,9 @@ namespace SQLHeavy {
             }
 
             if ( !thread_exited ) {
+              if ( capture_last_insert_id )
+                insert_id = this.queryable.database.last_insert_id;
+
               db.step_unlock ();
               this.queryable.unlock ();
               executing = false;
@@ -249,6 +253,9 @@ namespace SQLHeavy {
       if ( err != null )
         throw err;
 
+      if ( capture_last_insert_id )
+        last_insert_id = insert_id;
+
       this.reset ();
 
       return step_res;
@@ -262,7 +269,8 @@ namespace SQLHeavy {
      * @see Statement.execute_async
      */
     public async bool step_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      return yield this.step_internal_async (1, cancellable);
+      int64 last_insert_id;
+      return yield this.step_internal_async (1, cancellable, false, out last_insert_id);
     }
 
     /**
@@ -293,23 +301,57 @@ namespace SQLHeavy {
      * @see Statement.execute
      */
     public async void execute_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      yield this.step_internal_async (-1, cancellable);
+      int64 last_insert_id;
+      yield this.step_internal_async (-1, cancellable, false, out last_insert_id);
     }
 
     /**
      * Execute the statement, and return the last insert ID.
      *
+     * This function should be used instead of {@link execute} and
+     * {@link Database.last_insert_id} because it will execute fetch
+     * the last insert id while the {@link queryable} is locked for
+     * the execution.
+     *
      * @return the last inserted row ID
+     * @see execute_insert_async
+     * @see Database.last_insert_id
+     * @see execute
+     * @see step
      */
     public int64 execute_insert () throws SQLHeavy.Error {
+      var db = this.queryable.database;
+
       this.queryable.@lock ();
+      db.step_lock ();
       this.active = true;
-      this.execute ();
+      while ( this.step_internal () ) { }
       var last_insert_id = this.queryable.database.last_insert_id;
+      db.step_unlock ();
       this.queryable.@unlock ();
 
       this.reset ();
 
+      return last_insert_id;
+    }
+
+    /**
+     * Asynchronously execute the statement, and return the last insert ID.
+     *
+     * This function should be used instead of {@link execute_async}
+     * and {@link Database.last_insert_id} because it will execute
+     * fetch the last insert id while the {@link queryable} is locked
+     * for the execution.
+     *
+     * @return the last inserted row ID
+     * @see execute_insert
+     * @see Database.last_insert_id
+     * @see execute_async
+     * @see step_async
+     */
+    public async int64 execute_insert_async (GLib.Cancellable? cancellable) throws SQLHeavy.Error {
+      int64 last_insert_id = 0;
+      yield this.step_internal_async (-1, cancellable, true, out last_insert_id);
       return last_insert_id;
     }
 
