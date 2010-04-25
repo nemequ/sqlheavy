@@ -1,6 +1,14 @@
 namespace SQLHeavy {
   /**
    * Object representing an SQLite transaction
+   *
+   * Note that this is implemented using SQLite's
+   * [[http://sqlite.org/lang_savepoint.html|SAVEPOINT]] feature,
+   * meaning that by default it is like that of a
+   * {@link TransactionType.DEFERRED} transaction. This behaviour may
+   * be modified by first manually running a
+   * [[http://sqlite.org/lang_transaction.html|transaction]] in SQL,
+   * but remember that such transactions cannot be nested.
    */
   public class Transaction : GLib.Object, Queryable {
     /**
