@@ -1,0 +1,8 @@
+.deps
+.libs
+*.c
+*.o
+*.stamp
+async
+common-functions
+
