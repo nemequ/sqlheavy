@@ -156,7 +156,7 @@ namespace SQLHeavy {
      * @see decompress
      */
     public GLib.Value? compress (UserFunction.Context ctx, GLib.ValueArray args) throws SQLHeavy.Error {
-      return convert_blob (new GLib.ZlibCompressor (GLib.ZlibCompressorFormat.ZLIB, -1), ctx, args);
+      return convert_blob (new GLib.ZlibCompressor (GLib.ZlibCompressorFormat.RAW, -1), ctx, args);
     }
 
     /**
@@ -168,7 +168,7 @@ namespace SQLHeavy {
      * @see compress
      */
     public GLib.Value? decompress (UserFunction.Context ctx, GLib.ValueArray args) throws SQLHeavy.Error {
-      return convert_blob (new GLib.ZlibDecompressor (GLib.ZlibCompressorFormat.ZLIB), ctx, args);
+      return convert_blob (new GLib.ZlibDecompressor (GLib.ZlibCompressorFormat.RAW), ctx, args);
     }
   }
 }
