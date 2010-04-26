@@ -116,27 +116,6 @@ namespace SQLHeavy {
       this.execution_timer.reset ();
     }
 
-    private bool step_handle () throws Error {
-      int ec = this.error_code;
-      this.error_code = Sqlite.OK;
-
-      if ( ec == Sqlite.ROW ) {
-        this.received_row ();
-        return true;
-      }
-      else if ( ec == Sqlite.DONE ) {
-        this.finished = true;
-        this.active = false;
-        this.queryable.query_executed (this);
-        return false;
-      }
-      else {
-        error_if_not_ok (ec, this.queryable);
-      }
-
-      GLib.assert_not_reached ();
-    }
-
     /**
      * Internal function to step the transaction, assumes relevant
      * locks have been acquired.
@@ -158,7 +137,24 @@ namespace SQLHeavy {
         this.execution_timer.stop ();
       }
 
-      return this.step_handle ();
+      int ec = this.error_code;
+      this.error_code = Sqlite.OK;
+
+      if ( ec == Sqlite.ROW ) {
+        this.received_row ();
+        return true;
+      }
+      else if ( ec == Sqlite.DONE ) {
+        this.finished = true;
+        this.active = false;
+        this.queryable.query_executed (this);
+        return false;
+      }
+      else {
+        error_if_not_ok (ec, this.queryable);
+      }
+
+      GLib.assert_not_reached ();
     }
 
     /**
