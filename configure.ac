@@ -83,5 +83,6 @@ AC_CHECK_HEADERS([stdlib.h string.h])
 AC_CONFIG_FILES([Makefile
                  sqlheavy/Makefile
                  sqlheavy-$SQLHEAVY_API_VERSION.pc
-                 docs/Makefile])
+                 docs/Makefile
+                 examples/Makefile])
 AC_OUTPUT
