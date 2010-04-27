@@ -78,10 +78,10 @@ namespace SQLHeavy {
      * Context used to manage a call to a user defined function
      */
     public class Context {
-      private unowned Sqlite.Context ctx = null;
-      private unowned UserFuncData user_func_data = null;
+      private unowned Sqlite.Context? ctx = null;
+      private unowned UserFuncData? user_func_data = null;
 
-      private unowned GLib.HashTable<string, GLib.Value?> _data;
+      private unowned GLib.HashTable<string, GLib.Value?>? _data = null;
       private GLib.HashTable<string, GLib.Value?> data {
         get {
           if ( this._data == null ) {
@@ -99,7 +99,7 @@ namespace SQLHeavy {
             }
           }
 
-          return this._data;
+          return (!) this._data;
         }
       }
 

@@ -16,7 +16,7 @@ namespace SQLHeavy {
     }
   }
 
-  internal GLib.Value? sqlite_value_to_g_value (Sqlite.Value value) {
+  internal GLib.Value sqlite_value_to_g_value (Sqlite.Value value) {
     GLib.Type gtype;
     try {
       gtype = sqlite_type_to_g_type (value.to_type ());
@@ -24,9 +24,6 @@ namespace SQLHeavy {
     catch ( SQLHeavy.Error e ) {
       GLib.assert_not_reached ();
     }
-
-    if ( gtype == typeof (void) )
-      return null;
 
     GLib.Value gval = GLib.Value (gtype);
 
@@ -47,10 +44,7 @@ namespace SQLHeavy {
     return gval;
   }
 
-  internal GLib.ValueArray? sqlite_value_array_to_g_value_array (Sqlite.Value[] values) {
-    if ( values.length == 0 )
-      return null;
-
+  internal GLib.ValueArray sqlite_value_array_to_g_value_array (Sqlite.Value[] values) {
     var va = new GLib.ValueArray (values.length);
     for ( int i = 0 ; i < values.length ; i++ )
       va.append (sqlite_value_to_g_value (values[i]));

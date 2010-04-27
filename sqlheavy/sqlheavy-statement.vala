@@ -9,7 +9,7 @@ namespace SQLHeavy {
    */
   public class Statement : GLib.Object {
     private int error_code = Sqlite.OK;
-    private GLib.HashTable<string, int?> result_columns = null;
+    private GLib.HashTable<string, int?>? result_columns = null;
 
     private GLib.Timer execution_timer = new GLib.Timer ();
 
@@ -46,7 +46,7 @@ namespace SQLHeavy {
     /**
      * The SQL query used to create this statement.
      */
-    private string? _sql = null;
+    private string _sql;
     public string sql {
       get {
         return this._sql;
@@ -410,7 +410,7 @@ namespace SQLHeavy {
       int? col_number = this.result_columns.lookup (col);
       if ( col_number == null )
         throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));
-      return col_number;
+      return (!) col_number;
     }
 
     /**
@@ -433,7 +433,7 @@ namespace SQLHeavy {
      * @see fetch_result
      * @see fetch_row
      */
-    public GLib.Value? fetch (int col) throws SQLHeavy.Error {
+    public GLib.Value fetch (int col) throws SQLHeavy.Error {
       return sqlite_value_to_g_value (this.stmt.column_value (this.fetch_check_index (col)));
     }
 
@@ -700,7 +700,10 @@ namespace SQLHeavy {
      * @see fetch_row
      */
     public GLib.ValueArray? get_row () throws SQLHeavy.Error {
-      return this.step () ? this.fetch_row () : null;
+      if ( this.step () )
+        return this.fetch_row ();
+      else
+        return null;
     }
 
     /**
@@ -716,7 +719,7 @@ namespace SQLHeavy {
       GLib.ValueArray? row = null;
 
       while ( (row = this.get_row ()) != null )
-        data.append (row);
+        data.append ((!) row);
 
       return data;
     }
@@ -741,7 +744,7 @@ namespace SQLHeavy {
         var row_data = new GLib.PtrArray.sized (column_lengths.length);
         data.add (g_ptr_array_ref (row_data));
         for ( col = 0 ; col < column_names.length ; col++ ) {
-          string cell = this.fetch_string (col);
+          var cell = this.fetch_string (col);
           var cell_l = cell.size ();
           if ( column_lengths[col] < cell_l )
             column_lengths[col] = cell_l;
@@ -834,7 +837,7 @@ namespace SQLHeavy {
       else if ( value.holds (typeof (float)) )
         this.stmt.bind_double (col, value.get_float ());
       else if ( value.holds (typeof (GLib.ByteArray)) ) {
-        unowned GLib.ByteArray ba = value as GLib.ByteArray;
+        unowned GLib.ByteArray ba = (GLib.ByteArray) value;
         this.stmt.bind_blob (col, GLib.Memory.dup (ba.data, ba.len), (int) ba.len, GLib.g_free);
       }
       else
@@ -912,7 +915,7 @@ namespace SQLHeavy {
       if ( value == null )
         this.bind_null (col);
       else
-        error_if_not_ok (this.stmt.bind_text (this.bind_check_index (col), value), this.queryable);
+        error_if_not_ok (this.stmt.bind_text (this.bind_check_index (col), (!) value), this.queryable);
     }
 
     /**
@@ -1031,7 +1034,7 @@ namespace SQLHeavy {
       this.execution_timer.stop ();
       this.execution_timer.reset ();
 
-      unowned string tail;
+      unowned string? tail;
       this.error_code = sqlite3_prepare (queryable.database.get_sqlite_db (), this._sql, -1, out this.stmt, out tail);
       if ( this.error_code == Sqlite.OK )
         this._sql = this.stmt.sql ();
@@ -1048,7 +1051,7 @@ namespace SQLHeavy {
      * @param tail Where to store the any unprocessed part of the query.
      * @see Queryable.prepare
      */
-    public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string tail = null) throws Error {
+    public Statement.full (SQLHeavy.Queryable queryable, string sql, int max_len = -1, out unowned string? tail = null) throws Error {
       Object (queryable: queryable, sql: sql);
       error_if_not_ok (sqlite3_prepare (queryable.database.get_sqlite_db (), sql, max_len, out this.stmt, out tail), queryable);
     }

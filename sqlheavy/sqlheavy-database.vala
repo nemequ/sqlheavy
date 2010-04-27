@@ -11,10 +11,10 @@ namespace SQLHeavy {
     private GLib.HashTable <string, UserFunction.UserFuncData> user_functions =
       new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
 
-    private unowned Sqlite.Database db;
+    private unowned Sqlite.Database? db = null;
 
     internal unowned Sqlite.Database get_sqlite_db () {
-      return this.db;
+      return (!) this.db;
     }
 
     /**
@@ -95,7 +95,7 @@ namespace SQLHeavy {
         if ( this.profiling_insert_stmt == null )
           this.profiling_insert_stmt = this.profiling_data.prepare ("INSERT INTO `queries` (`sql`, `clock`, `fullscan_step`, `sort`) VALUES (:sql, :clock, :fullscan_step, :sort);");
 
-        unowned SQLHeavy.Statement pstmt = this.profiling_insert_stmt;
+        unowned SQLHeavy.Statement pstmt = (!) this.profiling_insert_stmt;
         pstmt.auto_clear = true;
         pstmt.bind_named_string (":sql", stmt.sql);
         pstmt.bind_named_double (":clock", stmt.execution_time_elapsed ());
@@ -552,7 +552,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_temp_store_directory]]
      */
     public string temp_store_directory {
-      owned get { return this.pragma_get_string ("temp_store_directory"); }
+      owned get { return (!) this.pragma_get_string ("temp_store_directory"); }
       set { this.pragma_set_string ("temp_store_directory", value); }
     }
 
@@ -738,9 +738,9 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      * @param name name of the function
      */
     public void unregister_function (string name) {
-      var ufc = this.user_functions.lookup (name);
+      SQLHeavy.UserFunction.UserFuncData? ufc = this.user_functions.lookup (name);
       if ( ufc != null )
-        this.unregister_function_context (ufc);
+        this.unregister_function_context ((!) ufc);
     }
 
     /**
@@ -784,7 +784,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
                        SQLHeavy.FileMode.WRITE |
                        SQLHeavy.FileMode.CREATE) throws SQLHeavy.Error {
       if ( filename == null ) filename = ":memory:";
-      Object (filename: filename, mode: mode);
+      Object (filename: (!) filename, mode: mode);
     }
 
     ~ Database () {
@@ -792,7 +792,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
         this.unregister_function_context (udf);
 
       if ( this.db != null )
-        sqlite3_close (this.db);
+        sqlite3_close ((!) this.db);
     }
   }
 }

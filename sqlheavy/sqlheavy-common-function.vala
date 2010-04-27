@@ -28,7 +28,7 @@ namespace SQLHeavy {
         catch ( GLib.RegexError e ) {
           throw new SQLHeavy.Error.ERROR ("Unable to compile regular expression: %s", e.message);
         }
-        ctx.set_user_data (str_expr, regex);
+        ctx.set_user_data (str_expr, (!) regex);
       }
       else {
         regex = (GLib.Regex)gv_expr.get_boxed ();

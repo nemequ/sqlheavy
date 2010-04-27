@@ -22,7 +22,7 @@ namespace SQLHeavy {
      */
     EXCLUSIVE;
 
-    public unowned string? to_string () {
+    public unowned string to_string () {
       switch ( this ) {
         case DEFERRED:
           return "DEFERRED";
@@ -31,7 +31,7 @@ namespace SQLHeavy {
         case EXCLUSIVE:
           return "EXCLUSIVE";
         default:
-          return null;
+          GLib.assert_not_reached ();
       }
     }
   }
@@ -115,7 +115,7 @@ namespace SQLHeavy {
      *
      * @param encoding encoding
      */
-    public static Encoding from_string (string encoding) {
+    public static Encoding from_string (string? encoding) {
       var enc = encoding.up ();
 
       if ( enc == UTF_8.to_string().up() )
@@ -127,11 +127,11 @@ namespace SQLHeavy {
       else if ( enc == UTF_16BE.to_string().up() )
         return UTF_16BE;
 
-      GLib.critical ("Invalid encoding (%s).", encoding);
+      GLib.critical ("Invalid encoding (%s).", (!) (encoding ?? "null"));
       return UTF_8;
     }
 
-    public unowned string? to_string () {
+    public unowned string to_string () {
       switch ( this ) {
         case UTF_8:
           return "UTF-8";
@@ -142,7 +142,7 @@ namespace SQLHeavy {
         case UTF_16BE:
           return "UTF-16be";
         default:
-          return null;
+          GLib.assert_not_reached ();
       }
     }
   }
@@ -176,7 +176,7 @@ namespace SQLHeavy {
      */
     OFF;
 
-    public static JournalMode from_string (string journal_mode) {
+    public static JournalMode from_string (string? journal_mode) {
       string mode = journal_mode.up ();
 
       if ( mode == DELETE.to_string () )
@@ -193,7 +193,7 @@ namespace SQLHeavy {
         return DELETE;
     }
 
-    public unowned string? to_string () {
+    public unowned string to_string () {
       switch ( this ) {
         case DELETE:
           return "DELETE";
@@ -206,7 +206,7 @@ namespace SQLHeavy {
         case OFF:
           return "OFF";
         default:
-          return null;
+          GLib.assert_not_reached ();
       }
     }
   }
@@ -229,7 +229,7 @@ namespace SQLHeavy {
      */
     EXCLUSIVE;
 
-    public static LockingMode from_string (string locking_mode) {
+    public static LockingMode from_string (string? locking_mode) {
       var mode = locking_mode.up ();
 
       if ( mode == NORMAL.to_string () )
@@ -240,14 +240,14 @@ namespace SQLHeavy {
         return NORMAL;
     }
 
-    public unowned string? to_string () {
+    public unowned string to_string () {
       switch ( this ) {
         case NORMAL:
           return "NORMAL";
         case EXCLUSIVE:
           return "EXCLUSIVE";
         default:
-          return null;
+          GLib.assert_not_reached ();
       }
     }
   }
@@ -275,7 +275,7 @@ namespace SQLHeavy {
      */
     FULL;
 
-    public static SynchronousMode from_string (string synchronous_mode) {
+    public static SynchronousMode from_string (string? synchronous_mode) {
       var mode = synchronous_mode.up ();
 
       if ( mode == OFF.to_string () )
@@ -288,7 +288,7 @@ namespace SQLHeavy {
         return FULL;
     }
 
-    public unowned string? to_string () {
+    public unowned string to_string () {
       switch ( this ) {
         case OFF:
           return "OFF";
@@ -297,7 +297,7 @@ namespace SQLHeavy {
         case FULL:
           return "FULL";
         default:
-          return null;
+          GLib.assert_not_reached ();
       }
     }
   }
@@ -324,7 +324,7 @@ namespace SQLHeavy {
      */
     MEMORY;
 
-    public static TempStoreMode from_string (string temp_store_mode) {
+    public static TempStoreMode from_string (string? temp_store_mode) {
       var mode = temp_store_mode.up ();
 
       if ( (mode == DEFAULT.to_string()) || (mode == "0") )
@@ -337,7 +337,7 @@ namespace SQLHeavy {
         return DEFAULT;
     }
 
-    public unowned string? to_string () {
+    public unowned string to_string () {
       switch ( this ) {
         case DEFAULT:
           return "DEFAULT";
@@ -346,7 +346,7 @@ namespace SQLHeavy {
         case MEMORY:
           return "MEMORY";
         default:
-          return null;
+          GLib.assert_not_reached ();
       }
     }
   }

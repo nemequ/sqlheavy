@@ -3,7 +3,7 @@ namespace SQLHeavy {
     if ( ec == Sqlite.OK )
       return true;
 
-    string? msg = sqlite_errstr (ec);
+    string msg = sqlite_errstr (ec);
 
     switch ( ec ) {
       case Sqlite.ERROR:      throw new Error.ERROR        (msg);
