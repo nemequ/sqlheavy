@@ -3,6 +3,8 @@
 *.c
 *.o
 *.stamp
+*~
 async
+backup
 common-functions
 

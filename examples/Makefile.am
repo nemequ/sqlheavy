@@ -10,6 +10,7 @@ LDADD = \
 
 noinst_PROGRAMS = \
 	async \
+	backup \
 	common-functions \
 	$(NULL)
 
@@ -28,6 +29,10 @@ CFLAGS = \
 
 async_SOURCES = \
 	async.vala \
+	$(NULL)
+
+backup_SOURCES = \
+	backup.vala \
 	$(NULL)
 
 common_functions_SOURCES = \

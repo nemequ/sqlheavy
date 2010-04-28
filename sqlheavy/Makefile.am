@@ -7,6 +7,7 @@ lib_LTLIBRARIES = \
 	$(NULL)
 
 libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
+	sqlheavy-backup.vala \
 	sqlheavy-common-function.vala \
 	sqlheavy-database.vala \
 	sqlheavy-enums.vala \
