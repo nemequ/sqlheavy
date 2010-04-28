@@ -770,6 +770,11 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       this.register_scalar_function ("DECOMPRESS", 1, SQLHeavy.CommonFunction.decompress);
     }
 
+    public void backup (string destination) throws GLib.Error {
+      var backup = new SQLHeavy.Backup (this, new SQLHeavy.Database (destination));
+      backup.execute ();
+    }
+
     /**
      * Open a database.
      *
