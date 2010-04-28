@@ -34,6 +34,16 @@ namespace SQLHeavy {
     private Sqlite.Backup backup;
 
     /**
+     * Number of pages left to be backed up
+     */
+    public int remaining_pages  { get { return this.backup.remaining (); } }
+
+    /**
+     * Total number of pages
+     */
+    public int total_pages { get { return this.backup.pagecount (); } }
+
+    /**
      * Signal which is emitted each time {@link step} is called
      */
     public signal void stepped ();
