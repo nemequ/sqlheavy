@@ -776,7 +776,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      * @param destination the location to write the backup to
      * @see SQLHeavy.Backup
      */
-    public void backup (string destination) throws GLib.Error {
+    public void backup (string destination) throws SQLHeavy.Error {
       new SQLHeavy.Backup (this, new SQLHeavy.Database (destination)).execute ();
     }
 
