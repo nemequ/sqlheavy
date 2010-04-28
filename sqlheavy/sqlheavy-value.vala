@@ -16,6 +16,23 @@ namespace SQLHeavy {
     }
   }
 
+  // internal GLib.Type sqlite_type_string_to_g_type (string stype) throws SQLHeavy.Error {
+  //   switch ( stype ) {
+  //     case "INTEGER":
+  //       return typeof (int64);
+  //     case "TEXT":
+  //       return typeof (string);
+  //     case "STRING":
+  //       return typeof (string);
+  //     case "FLOAT":
+  //       return typeof (double);
+  //     case "BLOB":
+  //       return typeof (GLib.ByteArray);
+  //     default:
+  //       throw new SQLHeavy.Error.DATA_TYPE ("Data type \"%s\" unsupported.", stype);
+  //   }
+  // }
+
   internal GLib.Value sqlite_value_to_g_value (Sqlite.Value value) {
     GLib.Type gtype;
     try {
@@ -50,5 +67,18 @@ namespace SQLHeavy {
       va.append (sqlite_value_to_g_value (values[i]));
 
     return va;
+  }
+
+  /**
+   * Escape a string for use in an SQL query.
+   *
+   * This function should be used sparingly, as it is generally
+   * preferable to use prepared statements.
+   *
+   * @see Statement.bind_string
+   * @see Statement.bind_named_string
+   */
+  public static string escape_string (string str) {
+    return str.replace ("'", "''");
   }
 }

@@ -12,6 +12,7 @@ noinst_PROGRAMS = \
 	async \
 	backup \
 	common-functions \
+	orm \
 	$(NULL)
 
 VALAFLAGS = \
@@ -37,4 +38,8 @@ backup_SOURCES = \
 
 common_functions_SOURCES = \
 	common-functions.vala \
+	$(NULL)
+
+orm_SOURCES = \
+	orm.vala \
 	$(NULL)
