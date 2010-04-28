@@ -680,12 +680,10 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       if ( (this.mode & SQLHeavy.FileMode.CREATE) == SQLHeavy.FileMode.CREATE )
         flags |= Sqlite.OPEN_CREATE;
 
-      if ( sqlite3_open ((!) filename, out this.db, flags, null) != Sqlite.OK ) {
+      if ( sqlite3_open ((!) filename, out this.db, flags, null) != Sqlite.OK )
         this.db = null;
-        GLib.critical ("Unable to open database.");
-      }
-
-      this.db.trace ((sql) => { this.sql_executed (sql); });
+      else
+        this.db.trace ((sql) => { this.sql_executed (sql); });
     }
 
     /**
@@ -785,6 +783,9 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
                        SQLHeavy.FileMode.CREATE) throws SQLHeavy.Error {
       if ( filename == null ) filename = ":memory:";
       Object (filename: (!) filename, mode: mode);
+
+      if ( this.db == null )
+        throw new SQLHeavy.Error.CAN_NOT_OPEN (sqlite_errstr (Sqlite.CANTOPEN));
     }
 
     ~ Database () {
