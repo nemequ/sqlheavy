@@ -86,20 +86,7 @@ namespace SQLHeavy {
       }
     }
 
-    public interface Record : GLib.Object {
-      public abstract void save () throws SQLHeavy.Error;
-      public abstract int get_field_position (string field) throws SQLHeavy.Error;
-      public abstract void set_field (int field, GLib.Value value) throws SQLHeavy.Error;
-      public void set_named_field (string field, GLib.Value value) throws SQLHeavy.Error {
-        this.set_field (this.get_field_position (field), value);
-      }
-      public abstract GLib.Value fetch_field (int field) throws SQLHeavy.Error;
-      public GLib.Value fetch_named_field (string field) throws SQLHeavy.Error {
-        return this.fetch_field (this.get_field_position (field));
-      }
-    }
-
-    public class Row : GLib.Object, Record {
+    public class Row : GLib.Object, SQLHeavy.Record {
       public Table table { get; construct; }
 
       private int64 _id = 0;
@@ -107,6 +94,8 @@ namespace SQLHeavy {
         get { return this._id; }
         construct { this._id = value; }
       }
+
+      public int field_count { get { return this.table.columns; } }
 
       private GLib.Value?[]? values = null;
 
@@ -175,11 +164,19 @@ namespace SQLHeavy {
         }
       }
 
-      public int get_field_position (string field) throws SQLHeavy.Error {
+      public int field_index (string field) throws SQLHeavy.Error {
         return this.table.column_position (field);
       }
 
-      public void set_field (int field, GLib.Value value) throws SQLHeavy.Error {
+      public string field_name (int field) throws SQLHeavy.Error {
+        return this.table.column_name (field);
+      }
+
+      public GLib.Type field_type (int field) throws SQLHeavy.Error {
+        return this.fetch (field).type ();
+      }
+
+      public void put (int field, GLib.Value value) throws SQLHeavy.Error {
         var column_count = this.table.columns;
 
         if ( field < 0 || field >= column_count )
@@ -193,7 +190,7 @@ namespace SQLHeavy {
         }
       }
 
-      public GLib.Value fetch_field (int field) throws SQLHeavy.Error {
+      public GLib.Value fetch (int field) throws SQLHeavy.Error {
         if ( this.values != null && this.values[field] != null )
           return this.values[field];
 

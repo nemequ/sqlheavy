@@ -365,5 +365,12 @@ namespace SQLHeavy {
     public void put_named_blob (string field, uint8[] value) throws SQLHeavy.Error {
       this.put_blob (this.field_index (field), value);
     }
+
+    /**
+     * Write any changes to the record to the database
+     *
+     * @see put
+     */
+    public abstract void save () throws SQLHeavy.Error;
   }
 }

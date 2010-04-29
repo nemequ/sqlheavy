@@ -9,17 +9,17 @@ private static int main (string[] args) {
     var row = new SQLHeavy.ORM.Row (table);
     var prng = new GLib.Rand ();
 
-    row.set_named_field ("bar", prng.next_double ());
+    row.put_named_double ("bar", prng.next_double ());
     row.save ();
-    GLib.debug ("bar = %g", row.fetch_named_field ("bar").get_double ());
+    GLib.debug ("bar = %g", row.fetch_named_double ("bar"));
 
-    row.set_named_field ("bar", prng.next_double ());
+    row.put_named_double ("bar", prng.next_double ());
     // Note that fetch_named_field will return the value we just set,
     // even though it hasn't yet been saved.
-    GLib.debug ("bar = %g", row.fetch_named_field ("bar").get_double ());
+    GLib.debug ("bar = %g", row.fetch_named_double ("bar"));
     row.save ();
     // Now we make a trip to the database to get the value.
-    GLib.debug ("bar = %g", row.fetch_named_field ("bar").get_double ());
+    GLib.debug ("bar = %g", row.fetch_named_double ("bar"));
   } catch ( SQLHeavy.Error e ) {
     GLib.error (e.message);
   }
