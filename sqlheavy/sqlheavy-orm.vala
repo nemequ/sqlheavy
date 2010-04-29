@@ -9,76 +9,76 @@ namespace SQLHeavy {
       public string name { get; construct; }
       public SQLHeavy.Queryable queryable { get; construct; }
 
-      private class ColumnInfo : GLib.Object {
-        public int position;
+      private class FieldInfo : GLib.Object {
+        public int index;
         public string name;
         public string affinity;
         public bool not_null;
 
-        public ColumnInfo (int position, string name, string affinity, bool not_null) {
-          this.position = position;
+        public FieldInfo (int index, string name, string affinity, bool not_null) {
+          this.index = index;
           this.name = name;
           this.affinity = affinity;
           this.not_null = not_null;
         }
 
-        public ColumnInfo.from_stmt (SQLHeavy.Statement stmt) throws SQLHeavy.Error {
-          this.position = stmt.fetch_int (0);
+        public FieldInfo.from_stmt (SQLHeavy.Statement stmt) throws SQLHeavy.Error {
+          this.index = stmt.fetch_int (0);
           this.name = stmt.fetch_string (1);
           this.affinity = stmt.fetch_string (2);
           this.not_null = stmt.fetch_int (3) > 0;
         }
       }
 
-      private GLib.Sequence<ColumnInfo>? _column_data = null;
-      private GLib.HashTable<string, int?>? _column_names = null;
+      private GLib.Sequence<FieldInfo>? _field_data = null;
+      private GLib.HashTable<string, int?>? _field_names = null;
 
-      private unowned GLib.Sequence<ColumnInfo> get_column_data () throws SQLHeavy.Error {
-        if ( this._column_data == null ) {
-          this._column_data = new GLib.Sequence<ColumnInfo> (GLib.g_object_unref);
-          this._column_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
+      private unowned GLib.Sequence<FieldInfo> get_field_data () throws SQLHeavy.Error {
+        if ( this._field_data == null ) {
+          this._field_data = new GLib.Sequence<FieldInfo> (GLib.g_object_unref);
+          this._field_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
           var stmt = this.queryable.prepare (@"PRAGMA table_info (`$(escape_string (this.name))`);");
           while ( stmt.step () ) {
-            var row = new ColumnInfo.from_stmt (stmt);
-            this._column_data.insert_sorted (row, (a, b) => {
-                return ((ColumnInfo) a).position - ((ColumnInfo) b).position;
+            var row = new FieldInfo.from_stmt (stmt);
+            this._field_data.insert_sorted (row, (a, b) => {
+                return ((FieldInfo) a).index - ((FieldInfo) b).index;
               });
-            this._column_names.insert (row.name, row.position);
+            this._field_names.insert (row.name, row.index);
           }
         }
 
-        return (!) this._column_data;
+        return (!) this._field_data;
       }
 
-      public int columns {
+      public int field_count {
         get {
           try {
-            return this.get_column_data ().get_length ();
+            return this.get_field_data ().get_length ();
           } catch ( SQLHeavy.Error e ) {
-            GLib.critical ("Unable to get number of columns: %s (%d)", e.message, e.code);
+            GLib.critical ("Unable to get number of fields: %s (%d)", e.message, e.code);
             return -1;
           }
         }
       }
 
-      public string column_name (int position) throws SQLHeavy.Error {
-        var iter = this.get_column_data ().get_iter_at_pos (position);
+      public string field_name (int index) throws SQLHeavy.Error {
+        var iter = this.get_field_data ().get_iter_at_pos (index);
         if ( iter == null )
-          throw new SQLHeavy.Error.RANGE ("Invalid column position (%d)", position);
+          throw new SQLHeavy.Error.RANGE ("Invalid field index (%d)", index);
 
         return iter.get ().name;
       }
 
-      public int column_position (string name) throws SQLHeavy.Error {
-        if ( this._column_names == null )
-          this.get_column_data ();
+      public int field_index (string name) throws SQLHeavy.Error {
+        if ( this._field_names == null )
+          this.get_field_data ();
 
-        var position = this._column_names.lookup (name);
-        if ( position == null )
-          throw new SQLHeavy.Error.RANGE ("Invalid column name (`%s')", name);
+        var index = this._field_names.lookup (name);
+        if ( index == null )
+          throw new SQLHeavy.Error.RANGE ("Invalid field name (`%s')", name);
 
-        return position;
+        return index;
       }
 
       public Table (SQLHeavy.Queryable queryable, string name) throws SQLHeavy.Error {
@@ -95,7 +95,7 @@ namespace SQLHeavy {
         construct { this._id = value; }
       }
 
-      public int field_count { get { return this.table.columns; } }
+      public int field_count { get { return this.table.field_count; } }
 
       private GLib.Value?[]? values = null;
 
@@ -105,19 +105,19 @@ namespace SQLHeavy {
             return;
 
           var field = 0;
-          var column_count = this.table.columns;
+          var field_count = this.table.field_count;
           var query = new GLib.StringBuilder ();
           var first_field = true;
 
           if ( this._id > 0 ) {
             query.printf ("UPDATE `%s` SET ", this.table.name);
 
-            for ( field = 0 ; field < column_count ; field++ ) {
+            for ( field = 0 ; field < field_count ; field++ ) {
               if ( this.values[field] != null ) {
                 if ( !first_field )
                   query.append (", ");
-                var column_name = this.table.column_name (field);
-                query.append (@"`$(column_name)` = :$(column_name)");
+                var field_name = this.table.field_name (field);
+                query.append (@"`$(field_name)` = :$(field_name)");
                 first_field = false;
               }
             }
@@ -126,16 +126,16 @@ namespace SQLHeavy {
             query.printf ("INSERT INTO `%s` (", this.table.name);
             var qvalues = new GLib.StringBuilder ();
 
-            for ( field = 0 ; field < column_count ; field++ ) {
+            for ( field = 0 ; field < field_count ; field++ ) {
               if ( this.values[field] != null ) {
                 if ( !first_field ) {
                   query.append (", ");
                   qvalues.append (", ");
                 }
 
-                var column_name = this.table.column_name (field);
-                query.append (@"`$(column_name)`");
-                qvalues.append (@":$(column_name)");
+                var field_name = this.table.field_name (field);
+                query.append (@"`$(field_name)`");
+                qvalues.append (@":$(field_name)");
               }
             }
 
@@ -146,10 +146,10 @@ namespace SQLHeavy {
 
           var stmt = this.table.queryable.prepare (query.str);
 
-          for ( field = 0 ; field < column_count ; field++ ) {
+          for ( field = 0 ; field < field_count ; field++ ) {
             if ( this.values[field] != null ) {
-              var column_name = this.table.column_name (field);
-              stmt.bind_named (@":$(column_name)", this.values[field]);
+              var field_name = this.table.field_name (field);
+              stmt.bind_named (@":$(field_name)", this.values[field]);
             }
           }
 
@@ -165,11 +165,11 @@ namespace SQLHeavy {
       }
 
       public int field_index (string field) throws SQLHeavy.Error {
-        return this.table.column_position (field);
+        return this.table.field_index (field);
       }
 
       public string field_name (int field) throws SQLHeavy.Error {
-        return this.table.column_name (field);
+        return this.table.field_name (field);
       }
 
       public GLib.Type field_type (int field) throws SQLHeavy.Error {
@@ -177,14 +177,14 @@ namespace SQLHeavy {
       }
 
       public void put (int field, GLib.Value value) throws SQLHeavy.Error {
-        var column_count = this.table.columns;
+        var field_count = this.table.field_count;
 
-        if ( field < 0 || field >= column_count )
-          throw new SQLHeavy.Error.RANGE ("Invalid field position (%d)", field);
+        if ( field < 0 || field >= field_count )
+          throw new SQLHeavy.Error.RANGE ("Invalid field index (%d)", field);
 
         lock ( this.values ) {
           if ( this.values == null )
-            this.values = new GLib.Value[column_count];
+            this.values = new GLib.Value[field_count];
 
           this.values[field] = value;
         }
@@ -194,11 +194,11 @@ namespace SQLHeavy {
         if ( this.values != null && this.values[field] != null )
           return this.values[field];
 
-        var column_name = this.table.column_name (field);
+        var field_name = this.table.field_name (field);
         if ( this._id <= 0 )
-          throw new SQLHeavy.Error.MISUSE ("Cannot read field `%s` from record not persisted to database.", column_name);
+          throw new SQLHeavy.Error.MISUSE ("Cannot read field `%s` from record not persisted to database.", field_name);
 
-        var stmt = this.table.queryable.prepare (@"SELECT `$(column_name)` FROM `$(this.table.name)` WHERE `ROWID` = $(this._id)");
+        var stmt = this.table.queryable.prepare (@"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = $(this._id)");
         return stmt.fetch_result ();
       }
 
