@@ -12,13 +12,24 @@ Section: libs
 Vcs-Git: git://gitorious.org/sqlheavy/sqlheavy.git
 Vcs-Browser: http://gitorious.org/sqlheavy
 
+Package: sqlheavy-utils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GObject wrapper for SQLite (executables)
+ SQLHeavy is a convenience wrapper on top of SQLite. Though its primary
+ purpose is to provide an easy to use Vala interface, it also provides
+ a very nice C interface and GObject Introspection support, and may be
+ easier to use from other languages than the standard SQLite interface
+ .
+ This package contains the executables.
+
 Package: libsqlheavy-dev
 Section: libdevel
 Architecture: any
 Depends: libsqlheavy0 (= ${binary:Version}),
          libglib2.0-dev (>= 2.22.0),
          libsqlite3-dev (>= 3.6.23.1)
-Description: GObject wrapper for SQLite
+Description: GObject wrapper for SQLite (development files)
  SQLHeavy is a convenience wrapper on top of SQLite. Though its primary
  purpose is to provide an easy to use Vala interface, it also provides
  a very nice C interface and GObject Introspection support, and may be
@@ -30,7 +41,7 @@ Package: libsqlheavy0
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: GObject wrapper for SQLite
+Description: GObject wrapper for SQLite (library)
  SQLHeavy is a convenience wrapper on top of SQLite. Though its primary
  purpose is to provide an easy to use Vala interface, it also provides
  a very nice C interface and GObject Introspection support, and may be
@@ -43,7 +54,7 @@ Section: doc
 Architecture: all
 Depends: libsqlheavy0 (= ${binary:Version})
 Suggests: devhelp
-Description: GObject wrapper for SQLite
+Description: GObject wrapper for SQLite (documentation)
  SQLHeavy is a convenience wrapper on top of SQLite. Though its primary
  purpose is to provide an easy to use Vala interface, it also provides
  a very nice C interface and GObject Introspection support, and may be
