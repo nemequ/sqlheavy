@@ -785,14 +785,14 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      *
      * @return a hash table of tables, with the key being the table name
      */
-    public GLib.HashTable<string, ORM.Table> get_tables () throws SQLHeavy.Error {
-      var ht = new GLib.HashTable<string, ORM.Table>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
+    public GLib.HashTable<string, SQLHeavy.Table> get_tables () throws SQLHeavy.Error {
+      var ht = new GLib.HashTable<string, SQLHeavy.Table>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
 
       var stmt = this.prepare ("SELECT `name` FROM `SQLITE_MASTER` WHERE `type` = 'table';");
       while ( stmt.step () ) {
         var table_name = stmt.fetch_string (0);
         if ( !table_name.has_prefix ("sqlite_stat") )
-          ht.insert (table_name, new ORM.Table (this, table_name));
+          ht.insert (table_name, new SQLHeavy.Table (this, table_name));
       }
 
       return ht;

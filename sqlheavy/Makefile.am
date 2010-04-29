@@ -12,10 +12,11 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-database.vala \
 	sqlheavy-enums.vala \
 	sqlheavy-error.vala \
-	sqlheavy-orm.vala \
 	sqlheavy-queryable.vala \
 	sqlheavy-record.vala \
+	sqlheavy-row.vala \
 	sqlheavy-statement.vala \
+	sqlheavy-table.vala \
 	sqlheavy-transaction.vala \
 	sqlheavy-transaction-stack.vala \
 	sqlheavy-user-functions.vala \

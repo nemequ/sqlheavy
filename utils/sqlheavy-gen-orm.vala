@@ -143,7 +143,7 @@ namespace SQLHeavy {
         }
       }
 
-      private void visit_table (SQLHeavy.ORM.Table table) throws SQLHeavy.Error {
+      private void visit_table (SQLHeavy.Table table) throws SQLHeavy.Error {
         GLib.StringBuilder class_name = new GLib.StringBuilder ();
 
         foreach ( string segment in table.name.split_set ("-_") ) {
@@ -151,7 +151,7 @@ namespace SQLHeavy {
           class_name.append (segment.offset (1));
         }
 
-        this.write_line (@"public class $(class_name.str) : SQLHeavy.ORM.Row {");
+        this.write_line (@"public class $(class_name.str) : SQLHeavy.Row {");
         this.current_indent++;
 
         var field_count = table.field_count;
@@ -195,7 +195,7 @@ namespace SQLHeavy {
         this.write_line (@"public $(class_name.str) (SQLHeavy.Queryable queryable, int id = 0) throws SQLHeavy.Error {");
         this.current_indent++;
 
-        this.write_line (@"var table = new SQLHeavy.ORM.Table (queryable, \"$(table.name)\");");
+        this.write_line (@"var table = new SQLHeavy.Table (queryable, \"$(table.name)\");");
         this.write_line ("Object (table: table, id: id);");
 
         this.current_indent--;
@@ -208,7 +208,7 @@ namespace SQLHeavy {
       private void visit_database (SQLHeavy.Database database) throws SQLHeavy.Error {
         var tables = database.get_tables ();
         bool first = true;
-        foreach ( unowned SQLHeavy.ORM.Table table in tables.get_values () ) {
+        foreach ( unowned SQLHeavy.Table table in tables.get_values () ) {
           if ( !first )
             this.output.putc ('\n');
           else

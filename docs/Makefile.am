@@ -14,10 +14,11 @@ VALADOC_FLAGS = \
 		$(top_srcdir)/sqlheavy/sqlheavy-database.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-enums.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-error.vala \
-		$(top_srcdir)/sqlheavy/sqlheavy-orm.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-queryable.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-record.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-row.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-statement.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-table.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-transaction.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-transaction-stack.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-user-functions.vala \

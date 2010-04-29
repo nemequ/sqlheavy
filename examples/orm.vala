@@ -5,8 +5,8 @@ private static int main (string[] args) {
 
     db.execute ("CREATE TABLE `foo` ( `bar` FLOAT );");
 
-    var table = new SQLHeavy.ORM.Table (db, "foo");
-    var row = new SQLHeavy.ORM.Row (table);
+    var table = new SQLHeavy.Table (db, "foo");
+    var row = new SQLHeavy.Row (table);
     var prng = new GLib.Rand ();
 
     row.put_named_double ("bar", prng.next_double ());
