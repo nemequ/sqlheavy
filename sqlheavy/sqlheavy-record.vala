@@ -4,79 +4,79 @@ namespace SQLHeavy {
    */
   public interface Record : GLib.Object {
     /**
-     * The number of columns in the result set.
+     * The number of fields in the result set.
      */
-    public abstract int column_count { get; }
+    public abstract int field_count { get; }
 
     /**
-     * Fetch the column name for the specified index
+     * Fetch the field name for the specified index
      *
-     * @param col index of column to fetch
-     * @return the name of the column
-     * @see column_index
-     * @see column_names
+     * @param field index of field to fetch
+     * @return the name of the field
+     * @see field_index
+     * @see field_names
      */
-    public abstract string column_name (int col) throws SQLHeavy.Error;
+    public abstract string field_name (int field) throws SQLHeavy.Error;
 
     /**
-     * Fetch the index for the specified column name
+     * Fetch the index for the specified field name
      *
-     * @param col column name
-     * @return the index of the column
-     * @see column_name
+     * @param field field name
+     * @return the index of the field
+     * @see field_name
      */
-    public abstract int column_index (string col) throws SQLHeavy.Error;
+    public abstract int field_index (string field) throws SQLHeavy.Error;
 
     /**
-     * Fetch the column names for the results
+     * Fetch the field names for the results
      *
-     * @return an array of column names
-     * @see column_name
+     * @return an array of field names
+     * @see field_name
      */
-    public string[] column_names () {
+    public string[] field_names () {
       try {
-        var columns = new string[this.column_count];
+        var fields = new string[this.field_count];
 
-        for ( var i = 0 ; i < columns.length ; i++ )
-          columns[i] = this.column_name (i);
+        for ( var i = 0 ; i < fields.length ; i++ )
+          fields[i] = this.field_name (i);
 
-        return columns;
+        return fields;
       }
       catch ( SQLHeavy.Error e ) {
-        /* The only thing that throws an error is the column_name
-         * call, and since we know 0 <= argument < column_count, it
+        /* The only thing that throws an error is the field_name
+         * call, and since we know 0 <= argument < field_count, it
          * should never fail. */
         GLib.assert_not_reached ();
       }
     }
 
     /**
-     * Get column type
+     * Get field type
      *
-     * @param col the column index
-     * @return the datatype of the column
+     * @param field the field index
+     * @return the datatype of the field
      */
-    public abstract GLib.Type column_type (int col) throws SQLHeavy.Error;
+    public abstract GLib.Type field_type (int field) throws SQLHeavy.Error;
 
     /**
      * Return a field from result.
      *
-     * @param col the index of the column to return.
+     * @param field the index of the field to return.
      * @return the value of the field
      * @see fetch_named
      * @see fetch_row
      */
-    public abstract GLib.Value fetch (int col) throws SQLHeavy.Error;
+    public abstract GLib.Value fetch (int field) throws SQLHeavy.Error;
 
     /**
      * Fetch a field from the result by name
      *
-     * @param col column name
+     * @param field field name
      * @return the field value
      * @see fetch
      */
-    public GLib.Value? fetch_named (string col) throws SQLHeavy.Error {
-      return this.fetch (this.column_index (col));
+    public GLib.Value? fetch_named (string field) throws SQLHeavy.Error {
+      return this.fetch (this.field_index (field));
     }
 
     /**
@@ -86,10 +86,10 @@ namespace SQLHeavy {
      * @see fetch
      */
     public GLib.ValueArray fetch_row () throws SQLHeavy.Error {
-      var columns = this.column_count;
-      var data = new GLib.ValueArray (columns);
+      var fields = this.field_count;
+      var data = new GLib.ValueArray (fields);
 
-      for ( var c = 0 ; c < columns ; c++ )
+      for ( var c = 0 ; c < fields ; c++ )
         data.append (this.fetch (c));
 
       return data;
@@ -99,12 +99,12 @@ namespace SQLHeavy {
      * Fetch a field from the result, and attempt to transform it if necessary
      *
      * @param requested_type the requested type
-     * @param col the column_index
+     * @param field the field_index
      * @return the field value
      * @see fetch
      */
-    public GLib.Value fetch_with_type (GLib.Type requested_type, int col = 0) throws SQLHeavy.Error {
-      var val = this.fetch (col);
+    public GLib.Value fetch_with_type (GLib.Type requested_type, int field = 0) throws SQLHeavy.Error {
+      var val = this.fetch (field);
       if ( val.holds (requested_type) )
         return val;
 
@@ -118,121 +118,121 @@ namespace SQLHeavy {
     /**
      * Fetch a field from the result as a string
      *
-     * @param col column index
+     * @param field field index
      * @return the field value
      * @see fetch_named_string
      * @see fetch
      */
-    public string? fetch_string (int col = 0) throws SQLHeavy.Error {
-      return this.fetch_with_type (typeof (string), col).get_string ();
+    public string? fetch_string (int field = 0) throws SQLHeavy.Error {
+      return this.fetch_with_type (typeof (string), field).get_string ();
     }
 
     /**
      * Fetch a field from the result as a string by name
      *
-     * @param col column name
+     * @param field field name
      * @return the field value
      * @see fetch_string
      * @see fetch
      */
-    public string? fetch_named_string (string col) throws SQLHeavy.Error {
-      return this.fetch_string (this.column_index (col));
+    public string? fetch_named_string (string field) throws SQLHeavy.Error {
+      return this.fetch_string (this.field_index (field));
     }
 
     /**
      * Fetch a field from the result as an integer
      *
-     * @param col column index
+     * @param field field index
      * @return the field value
      * @see fetch_named_int
      * @see fetch
      */
-    public int fetch_int (int col = 0) throws SQLHeavy.Error {
-      return this.fetch_with_type (typeof (int), col).get_int ();
+    public int fetch_int (int field = 0) throws SQLHeavy.Error {
+      return this.fetch_with_type (typeof (int), field).get_int ();
     }
 
     /**
      * Fetch a field from the result as an integer by name
      *
-     * @param col column name
+     * @param field field name
      * @return the field value
      * @see fetch_int
      * @see fetch
      */
-    public int fetch_named_int (string col) throws SQLHeavy.Error {
-      return this.fetch_int (this.column_index (col));
+    public int fetch_named_int (string field) throws SQLHeavy.Error {
+      return this.fetch_int (this.field_index (field));
     }
 
     /**
      * Fetch a field from the result as a signed 64-bit integer
      *
-     * @param col column index
+     * @param field field index
      * @return the field value
      * @see fetch_named_int64
      * @see fetch
      */
-    public int64 fetch_int64 (int col = 0) throws SQLHeavy.Error {
-      return this.fetch_with_type (typeof (int64), col).get_int64 ();
+    public int64 fetch_int64 (int field = 0) throws SQLHeavy.Error {
+      return this.fetch_with_type (typeof (int64), field).get_int64 ();
     }
 
     /**
      * Fetch a field from the result as a signed 64-bit integer by name
      *
-     * @param col column name
+     * @param field field name
      * @return the field value
      * @see fetch_int64
      * @see fetch
      */
-    public int64 fetch_named_int64 (string col) throws SQLHeavy.Error {
-      return this.fetch_int64 (this.column_index (col));
+    public int64 fetch_named_int64 (string field) throws SQLHeavy.Error {
+      return this.fetch_int64 (this.field_index (field));
     }
 
     /**
      * Fetch a field from the result as a double
      *
-     * @param col column index
+     * @param field field index
      * @return the field value
      * @see fetch_named_double
      * @see fetch
      */
-    public double fetch_double (int col = 0) throws SQLHeavy.Error {
-      return this.fetch_with_type (typeof (double), col).get_double ();
+    public double fetch_double (int field = 0) throws SQLHeavy.Error {
+      return this.fetch_with_type (typeof (double), field).get_double ();
     }
 
     /**
      * Fetch a field from the result as a double by name
      *
-     * @param col column name
+     * @param field field name
      * @return the field value
      * @see fetch_double
      * @see fetch
      */
-    public double fetch_named_double (string col) throws SQLHeavy.Error {
-      return this.fetch_double (this.column_index (col));
+    public double fetch_named_double (string field) throws SQLHeavy.Error {
+      return this.fetch_double (this.field_index (field));
     }
 
     /**
      * Fetch a field from the result as an array of bytes
      *
-     * @param col column index
+     * @param field field index
      * @return the field value
      * @see fetch_named_blob
      * @see fetch
      */
-    public uint8[] fetch_blob (int col = 0) throws SQLHeavy.Error {
-      return ((GLib.ByteArray) this.fetch_with_type (typeof (GLib.ByteArray), col).get_boxed ()).data;
+    public uint8[] fetch_blob (int field = 0) throws SQLHeavy.Error {
+      return ((GLib.ByteArray) this.fetch_with_type (typeof (GLib.ByteArray), field).get_boxed ()).data;
     }
 
     /**
      * Fetch a field from the result as an array of bytes by name
      *
-     * @param col column name
+     * @param field field name
      * @return the field value
      * @see fetch_blob
      * @see fetch
      */
-    public uint8[] fetch_named_blob (string col) throws SQLHeavy.Error {
-      return this.fetch_blob (this.column_index (col));
+    public uint8[] fetch_named_blob (string field) throws SQLHeavy.Error {
+      return this.fetch_blob (this.field_index (field));
     }
   }
 }
