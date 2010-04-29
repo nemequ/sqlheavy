@@ -1,9 +1,12 @@
 NULL =
 
+man_MANS = sqlheavy-gen-orm.1
+
+EXTRA_DIST = sqlheavy-gen-orm.1
+
 if ENABLE_VALADOC
 
-VALADOC_FLAGS = \
-		--force \
+VALADOC_FLAGS = --force \
 		--pkg sqlite3 \
 		--pkg gio-2.0 \
 		-b $(top_srcdir)/sqlheavy \

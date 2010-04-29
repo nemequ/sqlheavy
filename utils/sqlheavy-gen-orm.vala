@@ -246,6 +246,10 @@ namespace SQLHeavy {
           var opt_context = new OptionContext ("- SQLHeavy ORM Generator");
           opt_context.set_help_enabled (true);
           opt_context.add_main_entries (options, null);
+
+          opt_context.set_summary ("This tool will generate a Vala file which provides an object for each\ntable in the specified database(s), each of which extends the\nSQLHeavyRecord class.");
+          opt_context.set_description ("Copyright 2010 Evan Nemerson.\nReleased under versions 2.1 and 3 of the LGPL.\n\nFor more information, or to report a bug, see\n<http://code.google.com/p/sqlheavy>");
+
           opt_context.parse (ref args);
         } catch ( GLib.OptionError e ) {
           throw new GeneratorError.OPTION (e.message);

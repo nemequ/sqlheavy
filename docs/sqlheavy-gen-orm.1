@@ -1,0 +1,27 @@
+.TH sqlheavy-gen-orm 1 "29 April 2010" "sqlheavy-gen-orm-0.0.1" "SQLHeavy"
+.SH NAME
+sqlheavy-gen-orm \- SQLHeavy ORM Generator
+.SH SYNOPSIS
+.B valadoc
+[\fIOPTION...\fR] \fIDATABASE\fR...
+.SH DESCRIPTION
+This tool will generate a Vala file which provides an object for each table in the specified database(s), each of which extends the SQLHeavyRecord class.
+.SH OPTIONS
+.TP
+.B --help
+.TP
+.B -n, --namespace=\fINAMESPACE\fR
+Namespace to write the classes to. To nest, separate namespaces with a dot (\".\").
+.TP
+.B -o, --output=\fIFILE\fR
+Write output to \fIFILE\fR (defaults to stdout)
+.TP
+.B -p, --properties
+Write properties instead of methods
+.TP
+.B -d, --document
+Write Valadoc comments
+.SH HOMEPAGE AND BUG REPORT
+http://code.google.com/p/sqlheavy
+.SH AUTHORS
+Evan Nemerson
