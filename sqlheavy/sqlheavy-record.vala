@@ -33,7 +33,7 @@ namespace SQLHeavy {
      * @return an array of field names
      * @see field_name
      */
-    public string[] field_names () {
+    public virtual string[] field_names () {
       try {
         var fields = new string[this.field_count];
 
@@ -75,7 +75,7 @@ namespace SQLHeavy {
      * @return the field value
      * @see fetch
      */
-    public GLib.Value? fetch_named (string field) throws SQLHeavy.Error {
+    public virtual GLib.Value? fetch_named (string field) throws SQLHeavy.Error {
       return this.fetch (this.field_index (field));
     }
 
@@ -85,7 +85,7 @@ namespace SQLHeavy {
      * @return the current row
      * @see fetch
      */
-    public GLib.ValueArray fetch_row () throws SQLHeavy.Error {
+    public virtual GLib.ValueArray fetch_row () throws SQLHeavy.Error {
       var fields = this.field_count;
       var data = new GLib.ValueArray (fields);
 
@@ -103,7 +103,7 @@ namespace SQLHeavy {
      * @return the field value
      * @see fetch
      */
-    public GLib.Value fetch_with_type (GLib.Type requested_type, int field = 0) throws SQLHeavy.Error {
+    public virtual GLib.Value fetch_with_type (GLib.Type requested_type, int field = 0) throws SQLHeavy.Error {
       var val = this.fetch (field);
       if ( val.holds (requested_type) )
         return val;
@@ -123,7 +123,7 @@ namespace SQLHeavy {
      * @see fetch_named_string
      * @see fetch
      */
-    public string? fetch_string (int field = 0) throws SQLHeavy.Error {
+    public virtual string? fetch_string (int field = 0) throws SQLHeavy.Error {
       return this.fetch_with_type (typeof (string), field).get_string ();
     }
 
@@ -135,7 +135,7 @@ namespace SQLHeavy {
      * @see fetch_string
      * @see fetch
      */
-    public string? fetch_named_string (string field) throws SQLHeavy.Error {
+    public virtual string? fetch_named_string (string field) throws SQLHeavy.Error {
       return this.fetch_string (this.field_index (field));
     }
 
@@ -147,7 +147,7 @@ namespace SQLHeavy {
      * @see fetch_named_int
      * @see fetch
      */
-    public int fetch_int (int field = 0) throws SQLHeavy.Error {
+    public virtual int fetch_int (int field = 0) throws SQLHeavy.Error {
       return this.fetch_with_type (typeof (int), field).get_int ();
     }
 
@@ -159,7 +159,7 @@ namespace SQLHeavy {
      * @see fetch_int
      * @see fetch
      */
-    public int fetch_named_int (string field) throws SQLHeavy.Error {
+    public virtual int fetch_named_int (string field) throws SQLHeavy.Error {
       return this.fetch_int (this.field_index (field));
     }
 
@@ -171,7 +171,7 @@ namespace SQLHeavy {
      * @see fetch_named_int64
      * @see fetch
      */
-    public int64 fetch_int64 (int field = 0) throws SQLHeavy.Error {
+    public virtual int64 fetch_int64 (int field = 0) throws SQLHeavy.Error {
       return this.fetch_with_type (typeof (int64), field).get_int64 ();
     }
 
@@ -183,7 +183,7 @@ namespace SQLHeavy {
      * @see fetch_int64
      * @see fetch
      */
-    public int64 fetch_named_int64 (string field) throws SQLHeavy.Error {
+    public virtual int64 fetch_named_int64 (string field) throws SQLHeavy.Error {
       return this.fetch_int64 (this.field_index (field));
     }
 
@@ -195,7 +195,7 @@ namespace SQLHeavy {
      * @see fetch_named_double
      * @see fetch
      */
-    public double fetch_double (int field = 0) throws SQLHeavy.Error {
+    public virtual double fetch_double (int field = 0) throws SQLHeavy.Error {
       return this.fetch_with_type (typeof (double), field).get_double ();
     }
 
@@ -207,7 +207,7 @@ namespace SQLHeavy {
      * @see fetch_double
      * @see fetch
      */
-    public double fetch_named_double (string field) throws SQLHeavy.Error {
+    public virtual double fetch_named_double (string field) throws SQLHeavy.Error {
       return this.fetch_double (this.field_index (field));
     }
 
@@ -219,7 +219,7 @@ namespace SQLHeavy {
      * @see fetch_named_blob
      * @see fetch
      */
-    public uint8[] fetch_blob (int field = 0) throws SQLHeavy.Error {
+    public virtual uint8[] fetch_blob (int field = 0) throws SQLHeavy.Error {
       return ((GLib.ByteArray) this.fetch_with_type (typeof (GLib.ByteArray), field).get_boxed ()).data;
     }
 
@@ -231,7 +231,7 @@ namespace SQLHeavy {
      * @see fetch_blob
      * @see fetch
      */
-    public uint8[] fetch_named_blob (string field) throws SQLHeavy.Error {
+    public virtual uint8[] fetch_named_blob (string field) throws SQLHeavy.Error {
       return this.fetch_blob (this.field_index (field));
     }
 
@@ -249,7 +249,7 @@ namespace SQLHeavy {
      *
      * @see put
      */
-    public void put_named (string field, GLib.Value value) throws SQLHeavy.Error {
+    public virtual void put_named (string field, GLib.Value value) throws SQLHeavy.Error {
       this.put (this.field_index (field), value);
     }
 
@@ -258,7 +258,7 @@ namespace SQLHeavy {
      *
      * @see put_named_string
      */
-    public void put_string (int field, string? value) throws SQLHeavy.Error {
+    public virtual void put_string (int field, string? value) throws SQLHeavy.Error {
       if ( value == null )
         this.put_null (field);
       else
@@ -270,7 +270,7 @@ namespace SQLHeavy {
      *
      * @see put_string
      */
-    public void put_named_string (string field, string? value) throws SQLHeavy.Error {
+    public virtual void put_named_string (string field, string? value) throws SQLHeavy.Error {
       this.put_string (this.field_index (field), value);
     }
 
@@ -279,7 +279,7 @@ namespace SQLHeavy {
      *
      * @see put_named_null
      */
-    public void put_null (int field) throws SQLHeavy.Error {
+    public virtual void put_null (int field) throws SQLHeavy.Error {
       this.put (field, GLib.Value (typeof (void)));
     }
 
@@ -288,7 +288,7 @@ namespace SQLHeavy {
      *
      * @see put_null
      */
-    public void put_named_null (string field) throws SQLHeavy.Error {
+    public virtual void put_named_null (string field) throws SQLHeavy.Error {
       this.put_null (this.field_index (field));
     }
 
@@ -297,7 +297,7 @@ namespace SQLHeavy {
      *
      * @see put_named_int
      */
-    public void put_int (int field, int value) throws SQLHeavy.Error {
+    public virtual void put_int (int field, int value) throws SQLHeavy.Error {
       this.put (field, value);
     }
 
@@ -306,7 +306,7 @@ namespace SQLHeavy {
      *
      * @see put_int
      */
-    public void put_named_int (string field, int value) throws SQLHeavy.Error {
+    public virtual void put_named_int (string field, int value) throws SQLHeavy.Error {
       this.put_int (this.field_index (field), value);
     }
 
@@ -315,7 +315,7 @@ namespace SQLHeavy {
      *
      * @see put_named_int64
      */
-    public void put_int64 (int field, int64 value) throws SQLHeavy.Error {
+    public virtual void put_int64 (int field, int64 value) throws SQLHeavy.Error {
       this.put (field, value);
     }
 
@@ -324,7 +324,7 @@ namespace SQLHeavy {
      *
      * @see put_int64
      */
-    public void put_named_int64 (string field, int64 value) throws SQLHeavy.Error {
+    public virtual void put_named_int64 (string field, int64 value) throws SQLHeavy.Error {
       this.put_int64 (this.field_index (field), value);
     }
 
@@ -333,7 +333,7 @@ namespace SQLHeavy {
      *
      * @see put_named_double
      */
-    public void put_double (int field, double value) throws SQLHeavy.Error {
+    public virtual void put_double (int field, double value) throws SQLHeavy.Error {
       this.put (field, value);
     }
 
@@ -342,7 +342,7 @@ namespace SQLHeavy {
      *
      * @see put_double
      */
-    public void put_named_double (string field, double value) throws SQLHeavy.Error {
+    public virtual void put_named_double (string field, double value) throws SQLHeavy.Error {
       this.put_double (this.field_index (field), value);
     }
 
@@ -351,7 +351,7 @@ namespace SQLHeavy {
      *
      * @see put_named_blob
      */
-    public void put_blob (int field, uint8[] value) throws SQLHeavy.Error {
+    public virtual void put_blob (int field, uint8[] value) throws SQLHeavy.Error {
       var ba = new GLib.ByteArray.sized (value.length);
       ba.append (value);
       this.put (field, ba);
@@ -362,7 +362,7 @@ namespace SQLHeavy {
      *
      * @see put_blob
      */
-    public void put_named_blob (string field, uint8[] value) throws SQLHeavy.Error {
+    public virtual void put_named_blob (string field, uint8[] value) throws SQLHeavy.Error {
       this.put_blob (this.field_index (field), value);
     }
 

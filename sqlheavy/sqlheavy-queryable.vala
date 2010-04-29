@@ -39,7 +39,7 @@ namespace SQLHeavy {
      *
      * @return a new transaction
      */
-    public Transaction begin_transaction () {
+    public virtual Transaction begin_transaction () {
       return new Transaction (this);
     }
 
@@ -48,7 +48,7 @@ namespace SQLHeavy {
      *
      * @param sql An SQL query.
      */
-    public void execute (string sql, ssize_t max_len = -1) throws Error {
+    public virtual void execute (string sql, ssize_t max_len = -1) throws Error {
       unowned string? s = sql;
 
       // Could probably use a bit of work.
@@ -74,7 +74,7 @@ namespace SQLHeavy {
      * @param sql An SQL query.
      * @return a new statement
      */
-    public SQLHeavy.Statement prepare (string sql) throws SQLHeavy.Error {
+    public virtual SQLHeavy.Statement prepare (string sql) throws SQLHeavy.Error {
       return new SQLHeavy.Statement (this, sql);
     }
 
@@ -83,7 +83,7 @@ namespace SQLHeavy {
      *
      * @param filename the location of the script
      */
-    public void run_script (string filename) throws Error {
+    public virtual void run_script (string filename) throws Error {
       try {
         var file = new GLib.MappedFile (filename, false);
         this.execute ((string)file.get_contents(), (ssize_t)file.get_length());
@@ -100,7 +100,7 @@ namespace SQLHeavy {
      * @see print_table
      * @see Statement.get_table
      */
-    public GLib.ValueArray get_table (string sql) throws SQLHeavy.Error {
+    public virtual GLib.ValueArray get_table (string sql) throws SQLHeavy.Error {
       return this.prepare (sql).get_table ();
     }
 
@@ -111,7 +111,7 @@ namespace SQLHeavy {
      * @see get_table
      * @see Queryable.print_table
      */
-    public void print_table (GLib.FileStream fd = GLib.stderr, string sql) throws SQLHeavy.Error {
+    public virtual void print_table (GLib.FileStream fd = GLib.stderr, string sql) throws SQLHeavy.Error {
       this.prepare (sql).print_table (fd);
     }
   }
