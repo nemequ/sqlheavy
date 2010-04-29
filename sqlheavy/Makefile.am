@@ -14,6 +14,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-error.vala \
 	sqlheavy-orm.vala \
 	sqlheavy-queryable.vala \
+	sqlheavy-record.vala \
 	sqlheavy-statement.vala \
 	sqlheavy-transaction.vala \
 	sqlheavy-transaction-stack.vala \
