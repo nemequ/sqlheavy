@@ -11,14 +11,18 @@ namespace SQLHeavy {
       [CCode (array_length = false, array_null_terminated = true)]
       private static string[] db;
       private static string? output_location = null;
+      private static bool properties = false;
+      private static bool document = false;
 
       private GLib.FileStream output;
       private int current_indent = 0;
 
       const GLib.OptionEntry[] options = {
-        { "", 0, 0, OptionArg.FILENAME_ARRAY, ref db, "Database", "DATABASE" },
-        { "namespace", 'n', 0, OptionArg.STRING, ref ns, "Namespace", "NAMESPACE" },
-        { "output", 'o', 0, OptionArg.FILENAME, ref output_location, "Output", "FILE" },
+        { "", 0, 0, GLib.OptionArg.FILENAME_ARRAY, ref db, "Database", "DATABASE" },
+        { "namespace", 'n', 0, GLib.OptionArg.STRING, ref ns, "Namespace", "NAMESPACE" },
+        { "output", 'o', 0, GLib.OptionArg.FILENAME, ref output_location, "Output", "FILE" },
+        { "properties", 'p', 0, GLib.OptionArg.NONE, ref properties, "Write properties instead of methods", null },
+        { "document", 'd', 0, GLib.OptionArg.NONE, ref document, "Write Valadoc comments", null },
         { null }
       };
 
@@ -37,57 +41,106 @@ namespace SQLHeavy {
         string? vala_name = null;
         string? getter_name = null;
         bool owned_get = false;
+        GLib.StringBuilder pretty_name = new GLib.StringBuilder.sized (name.length);
+
+        bool first = true;
+        foreach ( unowned string segment in name.split_set ("_-") ) {
+          if ( first ) {
+            pretty_name.append_unichar (segment[0].toupper ());
+            pretty_name.append (segment.offset (1));
+            first = false;
+          } else {
+            pretty_name.append (@" $(segment)");
+          }
+        }
 
         if ( data_type == typeof (string) ) {
           owned_get = true;
           vala_name = "string";
         } else if ( data_type == typeof (int64) ) {
           vala_name = "int64";
+        } else if ( data_type == typeof (double) ) {
+          vala_name = "double";
+        } else if ( data_type == typeof (GLib.ByteArray) ) {
+          vala_name = "uint8[]";
+          getter_name = "blob";
         } else {
           GLib.assert_not_reached ();
         }
 
-        this.write_line (@"public $(vala_name) $(name) {");
-        this.current_indent++;
+        if ( !properties ) {
+          if ( document ) {
+            this.write_line ("/**");
+            this.write_line (@" * Get $(pretty_name.str)");
+            this.write_line (" */");
+          }
+          this.write_line (@"public $(vala_name) get_$(name) () throws SQLHeavy.Error {");
+          this.current_indent++;
+          this.write_line (@"return this.fetch_named_$(getter_name ?? vala_name) (\"$(name)\");");
+          this.current_indent--;
+          this.write_line ("}");
 
-        this.write_indent ();
-        if ( owned_get )
-          this.output.puts ("owned ");
-        this.output.puts ("get {\n");
-        this.current_indent++;
+          this.output.putc ('\n');
 
-        this.write_line ("try {");
-        this.current_indent++;
-        this.write_line (@"return this.fetch_named_$(getter_name ?? vala_name) (\"$(name)\");");
-        this.current_indent--;
-        this.write_line ("catch ( SQLHeavy.Error e ) {");
-        this.current_indent++;
-        this.write_line (@"GLib.error (\"Unable to retrieve field `$(name)': %s\", e.message);");
-        this.current_indent--;
-        this.write_line ("}");
+          if ( document ) {
+            this.write_line ("/**");
+            this.write_line (@" * Set $(pretty_name.str)");
+            this.write_line (" */");
+          }
+          this.write_line (@"public void set_$(name) ($(vala_name) value) throws SQLHeavy.Error {");
+          this.current_indent++;
+          this.write_line (@"this.put_named_$(getter_name ?? vala_name) (\"$(name)\", value);");
+          this.current_indent--;
+          this.write_line ("}");
+        } else {
+          if ( document ) {
+            this.write_line ("/**");
+            this.write_line (@" * $(pretty_name.str)");
+            this.write_line (" */");
+          }
 
-        this.current_indent--;
-        this.write_line ("}");
+          this.write_line (@"public $(vala_name) $(name) {");
+          this.current_indent++;
 
-        this.write_indent ();
-        this.output.puts ("set {\n");
-        this.current_indent++;
+          this.write_indent ();
+          if ( owned_get )
+            this.output.puts ("owned ");
+          this.output.puts ("get {\n");
+          this.current_indent++;
 
-        this.write_line ("try {");
-        this.current_indent++;
-        this.write_line (@"this.put_named_$(getter_name ?? vala_name) (\"$(name)\", value);");
-        this.current_indent--;
-        this.write_line ("catch ( SQLHeavy.Error e ) {");
-        this.current_indent++;
-        this.write_line (@"GLib.error (\"Unable to set field `$(name)': %s\", e.message);");
-        this.current_indent--;
-        this.write_line ("}");
+          this.write_line ("try {");
+          this.current_indent++;
+          this.write_line (@"return this.fetch_named_$(getter_name ?? vala_name) (\"$(name)\");");
+          this.current_indent--;
+          this.write_line ("} catch ( SQLHeavy.Error e ) {");
+          this.current_indent++;
+          this.write_line (@"GLib.error (\"Unable to retrieve field `$(name)': %s\", e.message);");
+          this.current_indent--;
+          this.write_line ("}");
 
-        this.current_indent--;
-        this.write_line ("}");
+          this.current_indent--;
+          this.write_line ("}");
 
-        this.current_indent--;
-        this.write_line ("}");
+          this.write_indent ();
+          this.output.puts ("set {\n");
+          this.current_indent++;
+
+          this.write_line ("try {");
+          this.current_indent++;
+          this.write_line (@"this.put_named_$(getter_name ?? vala_name) (\"$(name)\", value);");
+          this.current_indent--;
+          this.write_line ("} catch ( SQLHeavy.Error e ) {");
+          this.current_indent++;
+          this.write_line (@"GLib.error (\"Unable to set field `$(name)': %s\", e.message);");
+          this.current_indent--;
+          this.write_line ("}");
+
+          this.current_indent--;
+          this.write_line ("}");
+
+          this.current_indent--;
+          this.write_line ("}");
+        }
       }
 
       private void visit_table (SQLHeavy.ORM.Table table) throws SQLHeavy.Error {
@@ -98,22 +151,32 @@ namespace SQLHeavy {
           class_name.append (segment.offset (1));
         }
 
-        this.write_line (@"public class $(class_name.str) : SQLHeavy.ORM.Record {");
+        this.write_line (@"public class $(class_name.str) : SQLHeavy.ORM.Row {");
         this.current_indent++;
 
         var field_count = table.field_count;
         for ( int idx = 0 ; idx < field_count ; idx++ ) {
           GLib.Type data_type;
 
-          string affinity = table.field_affinity (idx);
-          if ( affinity == "STRING" ||
-               affinity == "TEXT" ) {
-            data_type = typeof (string);
-          } else if ( affinity == "INTEGER" ) {
+          // Determination of Column Affinity
+          // http://www.sqlite.org/datatype3.html
+          string affinity = table.field_affinity (idx). up ();
+          if ( affinity.str ("INT") != null ) {
             data_type = typeof (int64);
+          } else if ( affinity.str ("CHAR") != null ||
+                      affinity.str ("CLOB") != null ||
+                      affinity.str ("TEXT") != null ||
+                      affinity == "STRING" ) {
+            data_type = typeof (string);
+          } else if ( affinity.str ("BLOB") != null ||
+                      affinity == "" ) {
+            data_type = typeof (GLib.ByteArray);
+          } else if ( affinity.str ("REAL") != null ||
+                      affinity.str ("FLOA") != null ||
+                      affinity.str ("DOUB") != null ) {
+            data_type = typeof (double);
           } else {
-            GLib.warning ("Unknown data type `%s', skipping field.", affinity);
-            continue;
+            data_type = typeof (int64);
           }
 
           write_field (data_type, table.field_name (idx));
@@ -121,10 +184,19 @@ namespace SQLHeavy {
           this.output.putc ('\n');
         }
 
-        this.write_line (@"public $(class_name.str) (SQLHeavy.Queryable queryable, int id = 0) {");
+        if ( document ) {
+            this.write_line ("/**");
+            this.write_line (@" * Create or load a $(class_name.str)");
+            this.write_line (" *");
+            this.write_line (" * @param queryable the queryable to use");
+            this.write_line (" * @param id the row ID to load, or 0 to create a new entry");
+            this.write_line (" */");
+          }
+        this.write_line (@"public $(class_name.str) (SQLHeavy.Queryable queryable, int id = 0) throws SQLHeavy.Error {");
         this.current_indent++;
 
-        this.write_line ("Object (queryable: queryable, id: id);");
+        this.write_line (@"var table = new SQLHeavy.ORM.Table (queryable, \"$(table.name)\");");
+        this.write_line ("Object (table: table, id: id);");
 
         this.current_indent--;
         this.write_line ("}");
@@ -146,7 +218,7 @@ namespace SQLHeavy {
         }
       }
 
-      public void generate () throws SQLHeavy.Error {
+      public void generate () throws SQLHeavy.Error, SQLHeavy.ORM.GeneratorError {
         if ( ns != null ) {
           foreach ( unowned string current_ns in ns.split (".") ) {
             this.write_line (@"namespace $(current_ns) {");
@@ -177,7 +249,6 @@ namespace SQLHeavy {
           opt_context.parse (ref args);
         } catch ( GLib.OptionError e ) {
           throw new GeneratorError.OPTION (e.message);
-          GLib.error (e.message);
         }
 
         if ( (this.output = GLib.FileStream.open (output_location ?? "/dev/stdout", "w+")) == null )
