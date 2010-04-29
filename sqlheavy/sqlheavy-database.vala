@@ -780,6 +780,11 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       new SQLHeavy.Backup (this, new SQLHeavy.Database (destination)).execute ();
     }
 
+    /**
+     * List all tables in the database
+     *
+     * @return a hash table of tables, with the key being the table name
+     */
     public GLib.HashTable<string, ORM.Table> get_tables () throws SQLHeavy.Error {
       var ht = new GLib.HashTable<string, ORM.Table>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
 

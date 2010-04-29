@@ -73,18 +73,32 @@ namespace SQLHeavy {
         }
       }
 
+      private FieldInfo field_info (int field) throws SQLHeavy.Error {
+        var iter = this.get_field_data ().get_iter_at_pos (field);
+        if ( iter == null )
+          throw new SQLHeavy.Error.RANGE ("Invalid field index (%d)", field);
+
+        return iter.get ();
+      }
+
       /**
        * Get the name of a field
        *
        * @param index index of the field
        * @return name of the field by index
        */
-      public string field_name (int index) throws SQLHeavy.Error {
-        var iter = this.get_field_data ().get_iter_at_pos (index);
-        if ( iter == null )
-          throw new SQLHeavy.Error.RANGE ("Invalid field index (%d)", index);
+      public string field_name (int field) throws SQLHeavy.Error {
+        return this.field_info (field).name;
+      }
 
-        return iter.get ().name;
+      /**
+       * The field affinity according to the schema
+       *
+       * @param field the field index
+       * @return the field affinity
+       */
+      public string field_affinity (int field) throws SQLHeavy.Error {
+        return this.field_info (field).affinity;
       }
 
       /**

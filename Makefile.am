@@ -3,6 +3,7 @@ NULL =
 SUBDIRS = \
 	sqlheavy \
 	examples \
+	utils \
 	docs \
 	$(NULL)
 
