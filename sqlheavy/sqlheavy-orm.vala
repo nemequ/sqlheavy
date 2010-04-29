@@ -1,12 +1,20 @@
 namespace SQLHeavy {
   /**
    * Basic ORM
-   *
-   * This namespace is highly EXPERIMENTAL—the API will change.
    */
   namespace ORM {
+    /**
+     * A database table
+     */
     public class Table : GLib.Object {
+      /**
+       * Table name
+       */
       public string name { get; construct; }
+
+      /**
+       * The queryable that this table is a member of
+       */
       public SQLHeavy.Queryable queryable { get; construct; }
 
       private class FieldInfo : GLib.Object {
@@ -51,6 +59,9 @@ namespace SQLHeavy {
         return (!) this._field_data;
       }
 
+      /**
+       * Number of fields (columns) in the table
+       */
       public int field_count {
         get {
           try {
@@ -62,6 +73,12 @@ namespace SQLHeavy {
         }
       }
 
+      /**
+       * Get the name of a field
+       *
+       * @param index index of the field
+       * @return name of the field by index
+       */
       public string field_name (int index) throws SQLHeavy.Error {
         var iter = this.get_field_data ().get_iter_at_pos (index);
         if ( iter == null )
@@ -70,6 +87,12 @@ namespace SQLHeavy {
         return iter.get ().name;
       }
 
+      /**
+       * Get the index of a field by name
+       *
+       * @param name name of the field
+       * @return index of the field
+       */
       public int field_index (string name) throws SQLHeavy.Error {
         if ( this._field_names == null )
           this.get_field_data ();
@@ -81,24 +104,45 @@ namespace SQLHeavy {
         return index;
       }
 
+      /**
+       * Load a table
+       *
+       * @param queryable the queryable to load the table from
+       * @param name the name of the table
+       */
       public Table (SQLHeavy.Queryable queryable, string name) throws SQLHeavy.Error {
         Object (queryable: queryable, name: name);
       }
     }
 
+    /**
+     * A table row
+     */
     public class Row : GLib.Object, SQLHeavy.Record {
+      /**
+       * The table that this row is a record of
+       */
       public Table table { get; construct; }
 
       private int64 _id = 0;
+      /**
+       * The row ID of this row, or 0 if it has not yet been inserted
+       */
       public int64 id {
         get { return this._id; }
         construct { this._id = value; }
       }
 
+      /**
+       * {@inheritDoc}
+       */
       public int field_count { get { return this.table.field_count; } }
 
       private GLib.Value?[]? values = null;
 
+      /**
+       * {@inheritDoc}
+       */
       public void save () throws SQLHeavy.Error {
         lock ( this.values ) {
           if ( this.values == null )
@@ -164,18 +208,30 @@ namespace SQLHeavy {
         }
       }
 
+      /**
+       * {@inheritDoc}
+       */
       public int field_index (string field) throws SQLHeavy.Error {
         return this.table.field_index (field);
       }
 
+      /**
+       * {@inheritDoc}
+       */
       public string field_name (int field) throws SQLHeavy.Error {
         return this.table.field_name (field);
       }
 
+      /**
+       * {@inheritDoc}
+       */
       public GLib.Type field_type (int field) throws SQLHeavy.Error {
         return this.fetch (field).type ();
       }
 
+      /**
+       * {@inheritDoc}
+       */
       public void put (int field, GLib.Value value) throws SQLHeavy.Error {
         var field_count = this.table.field_count;
 
@@ -190,6 +246,9 @@ namespace SQLHeavy {
         }
       }
 
+      /**
+       * {@inheritDoc}
+       */
       public GLib.Value fetch (int field) throws SQLHeavy.Error {
         if ( this.values != null && this.values[field] != null )
           return this.values[field];
@@ -202,6 +261,15 @@ namespace SQLHeavy {
         return stmt.fetch_result ();
       }
 
+      /**
+       * Create or load a row from a table
+       *
+       * Note that you must call {@link save} in order for a new row
+       * to be written to the queryable
+       *
+       * @param table the table to load the row from
+       * @param id row ID, or 0 to create a new row
+       */
       public Row (Table table, int64 id = 0) {
         Object (table: table, id: id);
       }
