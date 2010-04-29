@@ -234,5 +234,136 @@ namespace SQLHeavy {
     public uint8[] fetch_named_blob (string field) throws SQLHeavy.Error {
       return this.fetch_blob (this.field_index (field));
     }
+
+    /**
+     * Put a value into a field of a record
+     *
+     * @param field the index of the field
+     * @param value the value of the field
+     * @see put_named
+     */
+    public abstract void put (int field, GLib.Value value) throws SQLHeavy.Error;
+
+    /**
+     * Put a value into a named field of a record
+     *
+     * @see put
+     */
+    public void put_named (string field, GLib.Value value) throws SQLHeavy.Error {
+      this.put (this.field_index (field), value);
+    }
+
+    /**
+     * Put a string value into a field of a record
+     *
+     * @see put_named_string
+     */
+    public void put_string (int field, string? value) throws SQLHeavy.Error {
+      if ( value == null )
+        this.put_null (field);
+      else
+        this.put (field, (!) value);
+    }
+
+    /**
+     * Put a string value into a named field of a record
+     *
+     * @see put_string
+     */
+    public void put_named_string (string field, string? value) throws SQLHeavy.Error {
+      this.put_string (this.field_index (field), value);
+    }
+
+    /**
+     * Put a null value into a field of a record
+     *
+     * @see put_named_null
+     */
+    public void put_null (int field) throws SQLHeavy.Error {
+      this.put (field, GLib.Value (typeof (void)));
+    }
+
+    /**
+     * Put a null value into a named field of a record
+     *
+     * @see put_null
+     */
+    public void put_named_null (string field) throws SQLHeavy.Error {
+      this.put_null (this.field_index (field));
+    }
+
+    /**
+     * Put an integer value into a field of a record
+     *
+     * @see put_named_int
+     */
+    public void put_int (int field, int value) throws SQLHeavy.Error {
+      this.put (field, value);
+    }
+
+    /**
+     * Put an integer value into a named field of a record
+     *
+     * @see put_int
+     */
+    public void put_named_int (string field, int value) throws SQLHeavy.Error {
+      this.put_int (this.field_index (field), value);
+    }
+
+    /**
+     * Put a 64-bit integer value into a field of a record
+     *
+     * @see put_named_int64
+     */
+    public void put_int64 (int field, int64 value) throws SQLHeavy.Error {
+      this.put (field, value);
+    }
+
+    /**
+     * Put a 64-bit integer value into a named field of a record
+     *
+     * @see put_int64
+     */
+    public void put_named_int64 (string field, int64 value) throws SQLHeavy.Error {
+      this.put_int64 (this.field_index (field), value);
+    }
+
+    /**
+     * Put a double-precision floating point value into a field of a record
+     *
+     * @see put_named_double
+     */
+    public void put_double (int field, double value) throws SQLHeavy.Error {
+      this.put (field, value);
+    }
+
+    /**
+     * Put a double-precision floating point value into a named field of a record
+     *
+     * @see put_double
+     */
+    public void put_named_double (string field, double value) throws SQLHeavy.Error {
+      this.put_double (this.field_index (field), value);
+    }
+
+    /**
+     * Put a blob value into a field of a record
+     *
+     * @see put_named_blob
+     */
+    public void put_blob (int field, uint8[] value) throws SQLHeavy.Error {
+      var ba = new GLib.ByteArray.sized (value.length);
+      ba.append (value);
+      this.put (field, ba);
+    }
+
+    /**
+     * Put a blob value into a field of a record
+     *
+     * @see put_blob
+     */
+    public void put_named_blob (string field, uint8[] value) throws SQLHeavy.Error {
+      this.put_blob (this.field_index (field), value);
+    }
   }
 }
