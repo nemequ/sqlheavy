@@ -372,5 +372,10 @@ namespace SQLHeavy {
      * @see put
      */
     public abstract void save () throws SQLHeavy.Error;
+
+    /**
+     * Delete the record from the database
+     */
+    public abstract void delete () throws SQLHeavy.Error;
   }
 }

@@ -543,6 +543,16 @@ namespace SQLHeavy {
      * This function will always throw an error when called on a
      * {@link Statement}
      */
+    public void delete () throws SQLHeavy.Error {
+      throw new SQLHeavy.Error.READ_ONLY ("Cannot write to a read-only record.");
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * This function will always throw an error when called on a
+     * {@link Statement}
+     */
     public void put (int field, GLib.Value value) throws SQLHeavy.Error {
       throw new SQLHeavy.Error.READ_ONLY ("Cannot write to a read-only record.");
     }

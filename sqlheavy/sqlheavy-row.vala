@@ -133,6 +133,18 @@ namespace SQLHeavy {
     /**
      * {@inheritDoc}
      */
+    public void delete () throws SQLHeavy.Error {
+      if ( this._id > 0 ) {
+        var stmt = this.table.queryable.prepare (@"DELETE FROM `$(this.table.name)` WHERE `ROWID` = :id;");
+        stmt.bind_named_int64 (":id", this._id);
+        stmt.execute ();
+        this._id = 0;
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public GLib.Value fetch (int field) throws SQLHeavy.Error {
       if ( this.values != null && this.values[field] != null )
         return this.values[field];
@@ -141,7 +153,8 @@ namespace SQLHeavy {
       if ( this._id <= 0 )
         throw new SQLHeavy.Error.MISUSE ("Cannot read field `%s` from record not persisted to database.", field_name);
 
-      var stmt = this.table.queryable.prepare (@"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = $(this._id)");
+      var stmt = this.table.queryable.prepare (@"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = :id");
+      stmt.bind_named_int64 (":id", this._id);
       return stmt.fetch_result ();
     }
 
