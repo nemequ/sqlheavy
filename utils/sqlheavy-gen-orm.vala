@@ -3,7 +3,8 @@ namespace SQLHeavy {
     CONFIGURATION,
     METADATA,
     SYMBOL_RESOLVER,
-    DATABASE
+    DATABASE,
+    SELECTOR
   }
 
   public class Generator : GLib.Object {
@@ -18,7 +19,6 @@ namespace SQLHeavy {
     static bool write_properties;
 
     private Vala.CodeContext context = new Vala.CodeContext ();
-    private GLib.KeyFile? metadata = null;
     private GLib.SList<string> databases = new GLib.SList<string> ();
 
     const GLib.OptionEntry[] options = {
@@ -33,6 +33,8 @@ namespace SQLHeavy {
 
     private Vala.HashMap<string, Vala.HashMap <string, string>> cache =
       new Vala.HashMap<string, Vala.HashMap <string, string>> (GLib.str_hash, GLib.str_equal);
+    private Vala.HashMap<string, Vala.HashMap <string, string>> wildcard_cache =
+      new Vala.HashMap<string, Vala.HashMap <string, string>> (GLib.str_hash, GLib.str_equal);
 
     private Vala.HashMap <string, string> get_symbol_properties (string symbol) {
       var map = this.cache.get (symbol);
@@ -40,8 +42,12 @@ namespace SQLHeavy {
         return map;
 
       map = new Vala.HashMap<string,string> (GLib.str_hash, GLib.str_equal, GLib.str_equal);
-
-      if ( this.metadata != null ) {
+      foreach ( string selector in this.wildcard_cache.get_keys () ) {
+        if ( GLib.PatternSpec.match_simple (selector, symbol) ) {
+          var wmap = this.wildcard_cache.get (selector);
+          foreach ( string key in wmap.get_keys () )
+            map.set (key, wmap.get (key));
+        }
       }
 
       this.cache.set (symbol, map);
@@ -263,8 +269,8 @@ namespace SQLHeavy {
       var symbol = @"@$(GLib.Path.get_basename (db_symbol))/$(table.name)";
       var symbol_name = this.get_symbol_name (symbol);
 
-      if ( this.symbol_is_hidden (symbol) )
-        return;
+      if ( this.symbol_is_hidden (symbol) ) { }
+      //return;
 
       var cl = ns.scope.lookup (symbol_name) as Vala.Class;
 
@@ -282,8 +288,8 @@ namespace SQLHeavy {
     }
 
     private void visit_database (SQLHeavy.Database db) throws GeneratorError {
-      var symbol = GLib.Path.get_basename (db.filename).split (".", 2)[0];
-      var symbol_name = this.get_symbol_name (@"@$(symbol)");
+      var symbol = "@".concat (GLib.Path.get_basename (db.filename).split (".", 2)[0]);
+      var symbol_name = this.get_symbol_name (symbol);
       Vala.Namespace? ns = this.context.root.scope.lookup (symbol_name) as Vala.Namespace;
 
       if ( ns == null ) {
@@ -357,11 +363,72 @@ namespace SQLHeavy {
       }
     }
 
+    private static string parse_selector (string selector, out bool wildcard) throws GeneratorError {
+      wildcard = false;
+      string?[] real_selector = new string[3];
+      var segments = selector.split ("/", 3);
+
+      int pos = 0;
+      for ( int seg = 0 ; seg < segments.length ; seg++ ) {
+        var first_char = segments[seg].get_char ();
+
+        if ( first_char == '%' || first_char == '@' ) {
+          int dest_pos;
+          if ( first_char == '%' ) {
+            segments[seg] = segments[seg].offset (1);
+            dest_pos = 1;
+          }
+          else
+            dest_pos = 0;
+
+          while ( pos < dest_pos ) {
+            wildcard = true;
+            real_selector[pos] = "*";
+            pos++;
+          }
+        } else if ( pos == 0 && first_char != '*' ) {
+          wildcard = true;
+          real_selector[0] = "*";
+          real_selector[1] = "*";
+          pos = 2;
+        }
+
+        if ( segments[seg] == "*" )
+          wildcard = true;
+
+        if ( pos > 2 || real_selector[pos] != null )
+          throw new GeneratorError.SELECTOR ("Invalid selector (%s).", selector);
+        real_selector[pos] = segments[seg];
+        pos++;
+      }
+
+      return string.joinv ("/", real_selector);
+    }
+
+    private void parse_metadata () throws GeneratorError, GLib.KeyFileError {
+      var metadata = new GLib.KeyFile ();
+      metadata.load_from_file (metadata_location, GLib.KeyFileFlags.NONE);
+
+      foreach ( unowned string group in metadata.get_groups () ) {
+        bool is_wildcard;
+        var selector = parse_selector (group, out is_wildcard);
+
+        var cache = is_wildcard ? this.wildcard_cache : this.cache;
+        var properties = cache.get (selector);
+        if ( properties == null ) {
+          properties = new Vala.HashMap<string, string> (GLib.str_hash, GLib.str_equal, GLib.str_equal);
+          cache.set (selector, properties);
+        }
+
+        foreach ( unowned string key in metadata.get_keys (group) )
+          properties.set (key, metadata.get_string (group, key));
+      }
+    }
+
     public void configure () throws GeneratorError {
       if ( metadata_location != null ) {
         try {
-          this.metadata = new GLib.KeyFile ();
-          this.metadata.load_from_file (metadata_location, GLib.KeyFileFlags.NONE);
+          this.parse_metadata ();
         } catch ( GLib.KeyFileError e ) {
           throw new GeneratorError.CONFIGURATION ("Unable to load metadata file: %s", e.message);
         } catch ( GLib.FileError e ) {
