@@ -3,18 +3,29 @@
 sqlheavy-gen-orm \- SQLHeavy ORM Generator
 .SH SYNOPSIS
 .B valadoc
-[\fIOPTION...\fR] \fIDATABASE\fR...
+[\fIOPTION...\fR] \fISOURCE\fR...
 .SH DESCRIPTION
 This tool will generate a Vala file which provides an object for each table in the specified database(s), each of which extends the SQLHeavyRecord class.
+
+You should pass at least one SQLite database file, which it will examine to produce the output. Additionally, you can specifiy metadata files (which is a key file), as well as vala files to provide custom code in the output.
 .SH OPTIONS
 .TP
 .B --help
 .TP
-.B -n, --namespace=\fINAMESPACE\fR
-Namespace to write the classes to. To nest, separate namespaces with a dot (\".\").
-.TP
 .B -o, --output=\fIFILE\fR
 Write output to \fIFILE\fR (defaults to stdout)
+.TP
+.B -m, --metadata=\fIFILE\fR
+Load metadata from \fIFILE\fR
+.TP
+.B --vapidir=\fIDIRECTORY\fR
+Look for package bindings in \fIDIRECTORY\fR
+.TP
+.B --pkg=\fIPACKAGE\fR
+Include binding for PACKAGE
+.TP
+.B -o, --output=\fIFILE\fR
+Output to \fIFILE\fR (default is stdout)
 .TP
 .B -p, --properties
 Write properties instead of methods
