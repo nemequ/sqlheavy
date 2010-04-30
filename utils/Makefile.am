@@ -6,12 +6,14 @@ LDADD = \
 	$(GLIB_LIBS) \
 	$(GMODULE_LIBS) \
 	$(SQLITE3_LIBS) \
+	$(VALA_LIBS) \
 	$(NULL)
 
 bin_PROGRAMS = sqlheavy-gen-orm
 
 VALAFLAGS = \
 	--vapidir $(top_builddir)/sqlheavy \
+	--pkg vala-1.0 \
 	--pkg sqlheavy-1.0 \
 	$(NULL)
 
@@ -21,6 +23,7 @@ CFLAGS = \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(SQLITE3_CFLAGS) \
+	$(VALA_CFLAGS) \
 	$(NULL)
 
 sqlheavy_gen_orm_SOURCES = \
