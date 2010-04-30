@@ -1,0 +1,23 @@
+#summary Using the sqlheavy-gen-orm utility
+
+= Synopsis =
+{{{ sqlheavy-gen-orm [OPTION...] SOURCE... }}}
+
+= Description =
+This tool will generate a Vala file which provides an object for each table in the specified database(s), each of which extends the SQLHeavyRecord class.
+
+You should pass at least one SQLite database file, which it will examine to produce the output. Additionally,  you  can  specifiy  metadata  files (which is a key file), as well as vala files to provide custom code in the output.
+
+= Options =
+  * -o, --output=_FILE_
+  Write output to _FILE_ (defaults to stdout)
+  * -m, --metadata=FILE
+  Load metadata from FILE
+  * --vapidir=DIRECTORY
+  Look for package bindings in DIRECTORY
+  * --pkg=PACKAGE
+  Include binding for PACKAGE
+  * -o, --output=FILE
+  Output to FILE (default is stdout)
+  * -p, --properties
+  Write properties instead of methods
