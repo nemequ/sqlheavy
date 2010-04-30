@@ -177,6 +177,9 @@ namespace SQLHeavy {
           affinity[0] = "string";
         else if ( affinity[0] == "blob" )
           affinity[0] = "uint8[]";
+        else if ( affinity[0] == "timestamp" ||
+                  affinity[0] == "datetime" )
+          affinity[0] = "time_t";
 
         data_type = type_from_string (affinity[0]);
       }

@@ -236,6 +236,30 @@ namespace SQLHeavy {
     }
 
     /**
+     * Fetch a field from the result as a timestamp
+     *
+     * @param field field index
+     * @return the field value
+     * @see fetch_named_time_t
+     * @see fetch
+     */
+    public virtual time_t fetch_time_t (int field = 0) throws SQLHeavy.Error {
+      return (time_t) this.fetch_with_type (typeof (int64), field).get_int64 ();
+    }
+
+    /**
+     * Fetch a field from the result as an array of bytes by name
+     *
+     * @param field field name
+     * @return the field value
+     * @see fetch_time_t
+     * @see fetch
+     */
+    public virtual time_t fetch_named_time_t (string field) throws SQLHeavy.Error {
+      return this.fetch_time_t (this.field_index (field));
+    }
+
+    /**
      * Put a value into a field of a record
      *
      * @param field the index of the field
@@ -364,6 +388,24 @@ namespace SQLHeavy {
      */
     public virtual void put_named_blob (string field, uint8[] value) throws SQLHeavy.Error {
       this.put_blob (this.field_index (field), value);
+    }
+
+    /**
+     * Put a timestamp value into a field of a record
+     *
+     * @see put_named_time_t
+     */
+    public virtual void put_time_t (int field, time_t value) throws SQLHeavy.Error {
+      this.put_int64 (field, value);
+    }
+
+    /**
+     * Put a timestamp value into a named field of a record
+     *
+     * @see put_time_t
+     */
+    public virtual void put_named_time_t (string field, time_t value) throws SQLHeavy.Error {
+      this.put_time_t (this.field_index (field), value);
     }
 
     /**
