@@ -234,6 +234,13 @@ namespace SQLHeavy {
     }
 
     /**
+     * Register the triggers necessary for change notifications
+     */
+    public void register_notify_triggers () throws SQLHeavy.Error {
+      this.queryable.execute (@"CREATE TEMPORARY TRIGGER IF NOT EXISTS `__SQLHeavy_$(this.name)_update_notifier` AFTER UPDATE ON `$(this.name)` FOR EACH ROW BEGIN SELECT __SQLHeavy_notify (1, '$(this.name)', `OLD`.`ROWID`); END;");
+    }
+
+    /**
      * Load a table
      *
      * @param queryable the queryable to load the table from

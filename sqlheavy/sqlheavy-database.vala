@@ -15,6 +15,80 @@ namespace SQLHeavy {
       new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
 
     /**
+     * List of all SQLHeavy.Row objects, used for change notification
+     */
+    private GLib.HashTable <string, GLib.Sequence<unowned SQLHeavy.Row>> orm_rows = null;
+
+    /**
+     * Register a row for change notifications
+     *
+     * @param row the row to register
+     */
+    internal void register_orm_row (SQLHeavy.Row row) {
+      lock ( this.orm_rows ) {
+        if ( this.orm_rows == null ) {
+          this.orm_rows = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Row>> (GLib.str_hash, GLib.str_equal);
+
+          this.register_scalar_function ("__SQLHeavy_notify", 3, (ctx, args) => {
+              var operation = args.values[0].get_int64 ();
+              var table = args.values[1].get_string ();
+              var rowid = args.values[2].get_int64 ();
+
+              if ( operation == 1 ) {
+                lock ( this.orm_rows ) {
+                  unowned GLib.Sequence<unowned SQLHeavy.Row> l = this.orm_rows.lookup (@"$(table).$(rowid)");
+                  if ( l != null ) {
+                    for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
+                      unowned SQLHeavy.Row r = iter.get ();
+                      r.changed ();
+                    }
+                  }
+                }
+              }
+
+              return null;
+            });
+
+          try {
+            var tables = this.get_tables ();
+            foreach ( unowned SQLHeavy.Table table in tables.get_values () ) {
+              table.register_notify_triggers ();
+            }
+          } catch ( SQLHeavy.Error e ) {
+            GLib.warning ("Unable to register triggers for change notifications.");
+          }
+        }
+
+        var rowstr = @"$(row.table.name).$(row.id)";
+        unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.orm_rows.lookup (rowstr);
+        if ( list == null ) {
+          this.orm_rows.insert (rowstr, new GLib.Sequence<unowned SQLHeavy.Row> (null));
+          list = this.orm_rows.lookup (rowstr);
+        }
+        list.insert_sorted (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; });
+      }
+    }
+
+    /**
+     * Unregister a row from change notifications
+     *
+     * @row the row to unregister
+     */
+    internal void unregister_orm_row (SQLHeavy.Row row) {
+      var rowstr = @"$(row.table.name).$(row.id)";
+
+      lock ( this.orm_rows ) {
+        unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.orm_rows.lookup (rowstr);
+        if ( list != null ) {
+          var iter = list.search (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; }).prev ();
+          unowned SQLHeavy.Row r2 = iter.get ();
+          if ( (uint)row == (uint)r2 )
+            list.remove (iter);
+        }
+      }
+    }
+
+    /**
      * SQLite database for this SQLHeavy database
      */
     private unowned Sqlite.Database? db = null;
@@ -860,7 +934,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       var stmt = this.prepare ("SELECT `name` FROM `SQLITE_MASTER` WHERE `type` = 'table';");
       while ( stmt.step () ) {
         var table_name = stmt.fetch_string (0);
-        if ( !table_name.has_prefix ("sqlite_stat") )
+        if ( !table_name.has_prefix ("sqlite_") )
           ht.insert (table_name, new SQLHeavy.Table (this, table_name));
       }
 

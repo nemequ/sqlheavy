@@ -18,6 +18,11 @@ namespace SQLHeavy {
     }
 
     /**
+     * One or more field in this row has changed in the database
+     */
+    public signal void changed ();
+
+    /**
      * {@inheritDoc}
      */
     public int field_count { get { return this.table.field_count; } }
@@ -91,8 +96,12 @@ namespace SQLHeavy {
           stmt.bind_named_int64 (":ROWID", this._id);
           stmt.execute ();
         }
-        else
+        else {
+          var db = this.table.queryable.database;
+          db.unregister_orm_row (this);
           this._id = stmt.execute_insert ();
+          db.register_orm_row (this);
+        }
 
         this.values = null;
       }
@@ -180,6 +189,10 @@ namespace SQLHeavy {
       return new SQLHeavy.Row (foreign_table, this.fetch_named_int64 (field));
     }
 
+    construct {
+      this.table.queryable.database.register_orm_row (this);
+    }
+
     /**
      * Create or load a row from a table
      *
@@ -191,6 +204,10 @@ namespace SQLHeavy {
      */
     public Row (Table table, int64 id = 0) {
       Object (table: table, id: id);
+    }
+
+    ~ Row () {
+      this.table.queryable.database.unregister_orm_row (this);
     }
   }
 }
