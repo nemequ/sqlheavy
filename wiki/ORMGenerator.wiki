@@ -36,9 +36,9 @@ The format for the selectors is relatively straightforward. A forward slash ("/"
   The _baz_ column in the _bar_ table in any database
   * baz
   The _baz_ column in any table in any database
-  * @foo/*/baz
+  * @foo/`*`/baz
   The _baz_ column in any table in the foo database
-  * */%bar
+  * `*`/%bar
   The _bar_ table in any database
 
 == Properties ==
@@ -50,4 +50,4 @@ Properties are represented by key-value pairs. The following is a table of curre
 || hidden || bool || Y/Y/Y || Do create a binding for the specified symbol ||
 
 == Custom Vala ==
-In addition to providing one or more SQLite database as a basis for code generation, you can provide an existing *.vala file. Theoretically, this will allow you to place custom code in a separate file, so that you can use sqlheavy-gen-orm to update the generated code without losing whenever the database schema changes, and you will not lose any enhancements you made. The generated code will be merged into the custom vala file in order to generate the output.
+In addition to providing one or more SQLite database as a basis for code generation, you can provide an existing `*`.vala file. Theoretically, this will allow you to place custom code in a separate file, so that you can use sqlheavy-gen-orm to update the generated code without losing whenever the database schema changes, and you will not lose any enhancements you made. The generated code will be merged into the custom vala file in order to generate the output.
