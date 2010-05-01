@@ -27,6 +27,9 @@ namespace SQLHeavy {
      */
     public delegate void FinalizeFunc (UserFunction.Context ctx);
 
+    /**
+     * Context data for a user function
+     */
     [Compact]
     internal class UserFuncData : GLib.Object {
       public weak     Database         db;
@@ -36,6 +39,15 @@ namespace SQLHeavy {
       public          UserFunc?      func;
       public      FinalizeFunc?     final;
 
+      /**
+       * Create context data for a scalar function
+       *
+       * @param db database to create this function on
+       * @param name function name
+       * @param argc the number of arguments that this function accepts
+       * @param func callback to execute when the function is called
+       * @see Database.register_scalar_function
+       */
       public UserFuncData.scalar (Database db,
                                   string name,
                                   int argc,
@@ -48,6 +60,16 @@ namespace SQLHeavy {
         this.final = null;
       }
 
+      /**
+       * Create context data for an aggregate function
+       *
+       * @param db database to create this function on
+       * @param name function name
+       * @param argc the number of arguments that this function accepts
+       * @param func callback to execute once for each piece of data the function is called on
+       * @param final callback to execute after the func has been called for the last time
+       * @see Database.register_aggregate_function
+       */
       public UserFuncData.aggregate (Database db,
                                      string name,
                                      int argc,
@@ -69,6 +91,11 @@ namespace SQLHeavy {
     [CCode (cname = "g_boxed_free", cheader_filename = "glib.h")]
     private extern void g_boxed_free (GLib.Type type, void * ptr);
 
+    /**
+     * Free a boxed GValue, or do nothing if called on a null
+     *
+     * @param value the GValue to free
+     */
     private void g_boxed_value_free (void* value) {
       if ( value != null )
         g_boxed_free (typeof (GLib.Value), (void*)value);
@@ -78,10 +105,23 @@ namespace SQLHeavy {
      * Context used to manage a call to a user defined function
      */
     public class Context {
+      /**
+       * SQLite context for this SQLHeavy context
+       */
       private unowned Sqlite.Context? ctx = null;
+
+      /**
+       * Link to the pertinent {@link UserFuncData}
+       */
       private unowned UserFuncData? user_func_data = null;
 
       private unowned GLib.HashTable<string, GLib.Value?>? _data = null;
+      /**
+       * Map of user data
+       *
+       * @see set_user_data
+       * @see get_user_data
+       */
       private GLib.HashTable<string, GLib.Value?> data {
         get {
           if ( this._data == null ) {
@@ -136,6 +176,9 @@ namespace SQLHeavy {
         return this.data.lookup (key);
       }
 
+      /**
+       * Take a GValue and place the data in the result of the SQLite context
+       */
       internal void handle_result (GLib.Value? value) {
         if ( value == null )
           this.ctx.result_null ();
@@ -155,6 +198,9 @@ namespace SQLHeavy {
           GLib.critical ("Unknown return type (%s).", value.type_name ());
       }
 
+      /**
+       * Call the supplied user function callback
+       */
       internal void call_user_func (Sqlite.Value[] args) {
         try {
           var res = this.user_func_data.func (this, sqlite_value_array_to_g_value_array (args));
@@ -165,6 +211,9 @@ namespace SQLHeavy {
         }
       }
 
+      /**
+       * Call the supplied user finalize function callback
+       */
       internal void call_finalize_func () {
         if ( !this.user_func_data.is_scalar ) {
           this.user_func_data.final (this);
@@ -178,12 +227,18 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * The function callback supplied to the SQLite context
+     */
     private static void on_user_function_called (Sqlite.Context context,
                                                  [CCode (array_length_pos = 1.9)] Sqlite.Value[] args) {
       var ctx = new Context (context);
       ctx.call_user_func (args);
     }
 
+    /**
+     * The finalize function callback supplied to the SQLite context
+     */
     private static void on_user_finalize_called (Sqlite.Context context) {
       var ctx = new Context (context);
       ctx.call_finalize_func ();

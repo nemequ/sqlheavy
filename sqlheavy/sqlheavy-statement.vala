@@ -8,9 +8,19 @@ namespace SQLHeavy {
    * A prepared statement.
    */
   public class Statement : GLib.Object, Record {
+    /**
+     * Error code from the last completed SQLite operation
+     */
     private int error_code = Sqlite.OK;
+
+    /**
+     * Map of the names of fields to their index
+     */
     private GLib.HashTable<string, int?>? result_fields = null;
 
+    /**
+     * The amount of time (wall-clock) the query has spend execution.
+     */
     private GLib.Timer execution_timer = new GLib.Timer ();
 
     /**
@@ -41,6 +51,10 @@ namespace SQLHeavy {
      * The queryable this statement operates on.
      */
     public weak SQLHeavy.Queryable queryable { get; construct; }
+
+    /**
+     * The SQLite statement for this SQLHeavy statement
+     */
     private unowned Sqlite.Statement stmt;
 
     /**
@@ -117,8 +131,14 @@ namespace SQLHeavy {
     }
 
     /**
-     * Internal function to step the transaction, assumes relevant
-     * locks have been acquired.
+     * Internal function to step the transaction.
+     *
+     * This function assumes relevant locks have been acquired.
+     *
+     * @return true on success, false if the query is done executing
+     * @see step
+     * @see step_async
+     * @see execute
      */
     public bool step_internal () throws Error {
       if ( this.finished )
@@ -180,6 +200,7 @@ namespace SQLHeavy {
      *
      * @param steps the maximum number of times to call {@link step), or -1
      * @param cancellable a GCancellable, or null
+     * @return true if there is more data, false if the query is done
      */
     private async bool step_internal_async (int steps = 0, GLib.Cancellable? cancellable = null, bool capture_last_insert_id = false, out int64 last_insert_id = null) throws SQLHeavy.Error {
       SQLHeavy.Error? err = null;
@@ -260,6 +281,7 @@ namespace SQLHeavy {
     /**
      * Evaluate the statement asynchronously
      *
+     * @param cancellable optional cancellable for aborting the operation
      * @return true on success, false if the query is finished executing
      * @see Statement.step
      * @see Statement.execute_async
@@ -351,6 +373,12 @@ namespace SQLHeavy {
       return last_insert_id;
     }
 
+    /**
+     * Check to see that the specified index is valid, throw an error if not.
+     *
+     * @param field index of the field to check
+     * @return field
+     */
     private int fetch_check_index (int field) throws SQLHeavy.Error {
       if (field < 0 || field > this.field_count)
         throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));
@@ -393,7 +421,7 @@ namespace SQLHeavy {
      *
      * @param field index of the field
      * @return the table
-     * @see field_table
+     * @see field_origin_table
      */
     public string field_origin_table_name (int field) throws SQLHeavy.Error {
       return this.stmt.column_table_name (this.fetch_check_index (field));
@@ -404,7 +432,7 @@ namespace SQLHeavy {
      *
      * @param field index of the field
      * @return the table
-     * @see field_table_name
+     * @see field_origin_table_name
      */
     public SQLHeavy.Table field_origin_table (int field) throws SQLHeavy.Error {
       return new SQLHeavy.Table (this.queryable, this.field_origin_table_name (field));
@@ -414,8 +442,7 @@ namespace SQLHeavy {
      * Name of the column that is the origin of a field
      *
      * @param field index of the field
-     * @return the table
-     * @see field_table
+     * @return the table name
      */
     public string field_origin_name (int field) throws SQLHeavy.Error {
       return this.stmt.column_origin_name (this.fetch_check_index (field));
@@ -710,6 +737,14 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * Check to see that the specified field is valid, throw an error
+     * if it is otherwise
+     *
+     * @param field index of the field to check
+     * @return field that was checked
+     * @see fetch_check_index
+     */
     private int bind_check_index (int field) throws SQLHeavy.Error {
       if (field < 0 || field > this.parameter_count)
         throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));

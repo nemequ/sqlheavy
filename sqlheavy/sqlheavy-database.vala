@@ -8,11 +8,24 @@ namespace SQLHeavy {
    * A database.
    */
   public class Database : GLib.Object, Queryable {
+    /**
+     * List of registered user functions and their respective user data
+     */
     private GLib.HashTable <string, UserFunction.UserFuncData> user_functions =
       new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
 
+    /**
+     * SQLite database for this SQLHeavy database
+     */
     private unowned Sqlite.Database? db = null;
 
+    /**
+     * Return the {@link db}
+     *
+     * In Vala, internal properties are exposed in the C API, so this
+     * function allows other classes to access the {@link db} while
+     * keeping it private.
+     */
     internal unowned Sqlite.Database get_sqlite_db () {
       return (!) this.db;
     }
@@ -22,6 +35,13 @@ namespace SQLHeavy {
      */
     public SQLHeavy.Database database { get { return this; } }
 
+    /**
+     * Mutex to prevent us from executing queries from multiple
+     * transactions at once.
+     *
+     * @see lock
+     * @see unlock
+     */
     private Sqlite.Mutex? _transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
 
     /**
@@ -89,7 +109,15 @@ namespace SQLHeavy {
      */
     public signal void sql_executed (string sql);
 
+    /**
+     * Statement used to insert data into the profiling database
+     */
     private SQLHeavy.Statement? profiling_insert_stmt = null;
+
+    /**
+     * Callback which is attached to {@link Queryable.query_executed}
+     * to insert data into the profiling database
+     */
     private void profiling_cb (SQLHeavy.Statement stmt) {
       try {
         if ( this.profiling_insert_stmt == null )
@@ -195,6 +223,12 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      */
     public int64 last_insert_id { get { return this.db.last_insert_rowid (); } }
 
+    /**
+     * Retreive a PRAGMA as a string
+     *
+     * @param pragma the PRAGMA name. Note that this is used unescaped
+     * @return the value of the pragma, or null
+     */
     private string? pragma_get_string (string pragma) {
       try {
         var stmt = new SQLHeavy.Statement (this, "PRAGMA %s;".printf (pragma));
@@ -220,14 +254,32 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       }
     }
 
+    /**
+     * Retreive a PRAGMA as an int
+     *
+     * @param pragma the PRAGMA name. Note that this is used unescaped
+     * @return the value of the pragma, or null
+     */
     private int pragma_get_int (string pragma) {
       return this.pragma_get_string (pragma).to_int ();
     }
 
+    /**
+     * Retreive a PRAGMA as a boolean
+     *
+     * @param pragma the PRAGMA name. Note that this is used unescaped
+     * @return the value of the pragma, or null
+     */
     private bool pragma_get_bool (string pragma) {
       return this.pragma_get_int (pragma) != 0;
     }
 
+    /**
+     * Set a PRAGMA as a string
+     *
+     * @param pragma the PRAGMA name. Note that this is used unescaped
+     * @param the value of the pragma
+     */
     private void pragma_set_string (string pragma, string value) {
       try {
         var stmt = new SQLHeavy.Statement (this, "PRAGMA %s = %s;".printf (pragma, value));
@@ -238,10 +290,22 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       }
     }
 
+    /**
+     * Set a PRAGMA as an int
+     *
+     * @param pragma the PRAGMA name. Note that this is used unescaped
+     * @param the value of the pragma
+     */
     private void pragma_set_int (string pragma, int value) {
       this.pragma_set_string (pragma, "%d".printf(value));
     }
 
+    /**
+     * Set a PRAGMA as a boolean
+     *
+     * @param pragma the PRAGMA name. Note that this is used unescaped
+     * @param the value of the pragma
+     */
     private void pragma_set_bool (string pragma, bool value) {
       this.pragma_set_int (pragma, value ? 1 : 0);
     }
@@ -724,6 +788,11 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       this.db.create_function (name, argc, Sqlite.UTF8, ufc, UserFunction.on_user_function_called, null, null);
     }
 
+    /**
+     * Unregister a function, as specified by the user data
+     *
+     * @see user_functions
+     */
     private void unregister_function_context (UserFunction.UserFuncData ufc) {
       this.db.create_function (ufc.name, ufc.argc, Sqlite.UTF8, ufc, null, null, null);
     }
@@ -816,6 +885,9 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
         throw new SQLHeavy.Error.CAN_NOT_OPEN (sqlite_errstr (Sqlite.CANTOPEN));
     }
 
+    /**
+     * Destroy resources associated with this database
+     */
     ~ Database () {
       foreach ( unowned UserFunction.UserFuncData udf in this.user_functions.get_values () )
         this.unregister_function_context (udf);

@@ -22,6 +22,12 @@ namespace SQLHeavy {
      */
     public int field_count { get { return this.table.field_count; } }
 
+    /**
+     * Cache of values waiting to be written to the database
+     *
+     * @see Record.save
+     * @see Record.put
+     */
     private GLib.Value?[]? values = null;
 
     /**
