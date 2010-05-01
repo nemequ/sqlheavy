@@ -601,6 +601,20 @@ namespace SQLHeavy {
     }
 
     /**
+     * Fetch result row
+     *
+     * @return fields in the row
+     * @see fetch_result
+     * @see Record.fetch_row
+     */
+    public GLib.ValueArray fetch_result_row () throws SQLHeavy.Error {
+      this.step ();
+      var ret = this.fetch_row ();
+      this.reset ();
+      return ret;
+    }
+
+    /**
      * Fetch result as row in a foreign table
      *
      * @param field field index
