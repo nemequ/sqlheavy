@@ -389,6 +389,39 @@ namespace SQLHeavy {
     }
 
     /**
+     * Name of the table that is the origin of a field
+     *
+     * @param field index of the field
+     * @return the table
+     * @see field_table
+     */
+    public string field_table_name (int field) throws SQLHeavy.Error {
+      return this.stmt.column_table_name (this.fetch_check_index (field));
+    }
+
+    /**
+     * Table that is the origin of a field
+     *
+     * @param field index of the field
+     * @return the table
+     * @see field_table_name
+     */
+    public SQLHeavy.Table field_table (int field) throws SQLHeavy.Error {
+      new SQLHeavy.Table (this.queryable, this.field_table_name (field));
+    }
+
+    /**
+     * Name of the column that is the origin of a field
+     *
+     * @param field index of the field
+     * @return the table
+     * @see field_table
+     */
+    public string field_origin_name (int field) throws SQLHeavy.Error {
+      return this.stmt.column_origin_name (this.fetch_check_index (field));
+    }
+
+    /**
      * {@inheritDoc}
      */
     public GLib.Value fetch (int field) throws SQLHeavy.Error {
