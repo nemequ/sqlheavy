@@ -19,13 +19,6 @@ namespace SQLHeavy {
       public string affinity;
       public bool not_null;
 
-      public FieldInfo (int index, string name, string affinity, bool not_null) {
-        this.index = index;
-        this.name = name;
-        this.affinity = affinity;
-        this.not_null = not_null;
-      }
-
       public FieldInfo.from_stmt (SQLHeavy.Statement stmt) throws SQLHeavy.Error {
         this.index = stmt.fetch_int (0);
         this.name = stmt.fetch_string (1);
@@ -34,25 +27,72 @@ namespace SQLHeavy {
       }
     }
 
+    private class ForeignKeyInfo : GLib.Object {
+      public int id;
+      public int seq;
+      public string table;
+      public string from;
+      public string to;
+      // public string on_update;
+      // public string on_delete;
+      // public string match;
+
+      public ForeignKeyInfo.from_stmt (SQLHeavy.Statement stmt) throws SQLHeavy.Error {
+        this.id = stmt.fetch_int (0);
+        this.seq = stmt.fetch_int (1);
+        this.table = stmt.fetch_string (2);
+        this.from = stmt.fetch_string (3);
+        this.to = stmt.fetch_string (4);
+        // this.on_update = stmt.fetch_string (5);
+        // this.on_delete = stmt.fetch_string (6);
+        // this.match = stmt.fetch_string (7);
+      }
+    }
+
     private GLib.Sequence<FieldInfo>? _field_data = null;
     private GLib.HashTable<string, int?>? _field_names = null;
 
     private unowned GLib.Sequence<FieldInfo> get_field_data () throws SQLHeavy.Error {
-      if ( this._field_data == null ) {
-        this._field_data = new GLib.Sequence<FieldInfo> (GLib.g_object_unref);
-        this._field_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
+      lock ( this._field_data ) {
+        if ( this._field_data == null ) {
+          this._field_data = new GLib.Sequence<FieldInfo> (GLib.g_object_unref);
+          this._field_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
-        var stmt = this.queryable.prepare (@"PRAGMA table_info (`$(escape_string (this.name))`);");
-        while ( stmt.step () ) {
-          var row = new FieldInfo.from_stmt (stmt);
-          this._field_data.insert_sorted (row, (a, b) => {
-              return ((FieldInfo) a).index - ((FieldInfo) b).index;
-            });
-          this._field_names.insert (row.name, row.index);
+          var stmt = this.queryable.prepare (@"PRAGMA table_info (`$(escape_string (this.name))`);");
+          while ( stmt.step () ) {
+            var row = new FieldInfo.from_stmt (stmt);
+            this._field_data.insert_sorted (row, (a, b) => {
+                return ((FieldInfo) a).index - ((FieldInfo) b).index;
+              });
+            this._field_names.insert (row.name, row.index);
+          }
         }
       }
 
       return (!) this._field_data;
+    }
+
+    private GLib.Sequence<ForeignKeyInfo>? _foreign_key_data = null;
+    private GLib.HashTable<string, int?>? _foreign_key_names = null;
+
+    private unowned GLib.Sequence<ForeignKeyInfo> get_foreign_key_data () throws SQLHeavy.Error {
+      lock (this._foreign_key_data) {
+        if ( this._foreign_key_data == null ) {
+          this._foreign_key_data = new GLib.Sequence<ForeignKeyInfo> (GLib.g_object_unref);
+          this._foreign_key_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
+
+          var stmt = this.queryable.prepare (@"PRAGMA foreign_key_list (`$(escape_string (this.name))`);");
+          while ( stmt.step () ) {
+            var row = new ForeignKeyInfo.from_stmt (stmt);
+            this._foreign_key_data.insert_sorted (row, (a, b) => {
+                return ((ForeignKeyInfo) a).id - ((ForeignKeyInfo) b).id;
+              });
+            this._foreign_key_names.insert (row.from, row.id);
+          }
+        }
+      }
+
+      return (!) this._foreign_key_data;
     }
 
     /**
@@ -110,6 +150,85 @@ namespace SQLHeavy {
       var index = this._field_names.lookup (name);
       if ( index == null )
         throw new SQLHeavy.Error.RANGE ("Invalid field name (`%s')", name);
+
+      return index;
+    }
+
+    /**
+     * Number of foreign keys which reference a column in the table
+     */
+    public int foreign_key_count {
+      get {
+        try {
+          return this.get_foreign_key_data ().get_length ();
+        } catch ( SQLHeavy.Error e ) {
+          GLib.critical ("Unable to get number of foreign keys: %s (%d)", e.message, e.code);
+          return -1;
+        }
+      }
+    }
+
+    private ForeignKeyInfo foreign_key_info (int foreign_key) throws SQLHeavy.Error {
+      var iter = this.get_foreign_key_data ().get_iter_at_pos (foreign_key);
+      if ( iter == null )
+        throw new SQLHeavy.Error.RANGE ("Invalid foreign key index (%d)", foreign_key);
+
+      return iter.get ();
+    }
+
+    /**
+     * Retrieve the table of the foreign key references
+     *
+     * @param foreign_key the id of the foreign key
+     * @return the table name
+     */
+    public string foreign_key_table_name (int foreign_key) throws SQLHeavy.Error {
+      return this.foreign_key_info (foreign_key).table;
+    }
+
+    /**
+     * Retrieve the table of the foreign key references
+     *
+     * @param foreign_key the id of the foreign key
+     * @return the table name
+     */
+    public SQLHeavy.Table foreign_key_table (int foreign_key) throws SQLHeavy.Error {
+      return new SQLHeavy.Table (this.queryable, this.foreign_key_table_name (foreign_key));
+    }
+
+    /**
+     * Retrieve the column of the table of the foreign key
+     *
+     * @param foreign_key the id of the foreign key
+     * @return the column name
+     */
+    public string foreign_key_from (int foreign_key) throws SQLHeavy.Error {
+      return this.foreign_key_info (foreign_key).from;
+    }
+
+    /**
+     * Retrieve the column of which references the foreign key
+     *
+     * @param foreign_key the id of the foreign key
+     * @return the column name
+     */
+    public string foreign_key_to (int foreign_key) throws SQLHeavy.Error {
+      return this.foreign_key_info (foreign_key).to;
+    }
+
+    /**
+     * Retrieve the index of the foreign key
+     *
+     * @param foreign_key the name of the foreign key column
+     * @return the column index
+     */
+    public int foreign_key_index (string foreign_key) throws SQLHeavy.Error {
+      if ( this._foreign_key_names == null )
+        this.get_foreign_key_data ();
+
+      var index = this._foreign_key_names.lookup (foreign_key);
+      if ( index == null )
+        throw new SQLHeavy.Error.RANGE ("Invalid foreign key name (`%s')", foreign_key);
 
       return index;
     }

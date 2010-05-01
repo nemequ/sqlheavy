@@ -80,6 +80,26 @@ namespace SQLHeavy {
     }
 
     /**
+     * Fetch a row in a foreign table
+     *
+     * @param field the index of the field to return
+     * @return the value of the field
+     * @see fetch_named_foreign_row
+     */
+    public abstract SQLHeavy.Row fetch_foreign_row (int field) throws SQLHeavy.Error;
+
+    /**
+     * Fetch a row in a foreign table
+     *
+     * @param field the name of the field to return
+     * @return the value of the field
+     * @see fetch_foreign_row
+     */
+    public virtual SQLHeavy.Row fetch_named_foreign_row (string field) throws SQLHeavy.Error {
+      return this.fetch_foreign_row (this.field_index (field));
+    }
+
+    /**
      * Return a row from result
      *
      * @return the current row

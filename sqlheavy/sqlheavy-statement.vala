@@ -395,7 +395,7 @@ namespace SQLHeavy {
      * @return the table
      * @see field_table
      */
-    public string field_table_name (int field) throws SQLHeavy.Error {
+    public string field_origin_table_name (int field) throws SQLHeavy.Error {
       return this.stmt.column_table_name (this.fetch_check_index (field));
     }
 
@@ -406,8 +406,8 @@ namespace SQLHeavy {
      * @return the table
      * @see field_table_name
      */
-    public SQLHeavy.Table field_table (int field) throws SQLHeavy.Error {
-      new SQLHeavy.Table (this.queryable, this.field_table_name (field));
+    public SQLHeavy.Table field_origin_table (int field) throws SQLHeavy.Error {
+      return new SQLHeavy.Table (this.queryable, this.field_origin_table_name (field));
     }
 
     /**
@@ -463,6 +463,19 @@ namespace SQLHeavy {
       var res = new uint8[this.stmt.column_bytes(this.fetch_check_index (field))];
       GLib.Memory.copy (res, this.stmt.column_blob (field), res.length);
       return res;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public SQLHeavy.Row fetch_foreign_row (int field) throws SQLHeavy.Error {
+      var table = this.field_origin_table (field);
+      var foreign_key_idx = table.foreign_key_index (this.field_origin_name (field));
+      var foreign_table = table.foreign_key_table (foreign_key_idx);
+      var foreign_column = table.foreign_key_to (foreign_key_idx);
+      var stmt = this.queryable.prepare (@"SELECT `ROWID` FROM `$(foreign_table.name)` WHERE `$(foreign_column)` = :value;");
+      stmt.bind_int64 (1, this.fetch_int64 (field));
+      return new SQLHeavy.Row (foreign_table, stmt.fetch_result_int64 ());
     }
 
     /**
@@ -556,6 +569,21 @@ namespace SQLHeavy {
     public uint8[] fetch_result_blob (int field = 0) throws SQLHeavy.Error {
       this.step ();
       var ret = this.fetch_blob (field);
+      this.reset ();
+      return ret;
+    }
+
+    /**
+     * Fetch result as row in a foreign table
+     *
+     * @param field field index
+     * @return value of the field
+     * @see fetch_result
+     * @see Record.fetch_foreign_row
+     */
+    public SQLHeavy.Row fetch_result_foreign_row (int field = 0) throws SQLHeavy.Error {
+      this.step ();
+      var ret = this.fetch_foreign_row (field);
       this.reset ();
       return ret;
     }

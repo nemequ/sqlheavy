@@ -159,6 +159,22 @@ namespace SQLHeavy {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public SQLHeavy.Row fetch_foreign_row (int field) throws SQLHeavy.Error {
+      return this.fetch_named_foreign_row (this.field_name (field));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public SQLHeavy.Row fetch_named_foreign_row (string field) throws SQLHeavy.Error {
+      var foreign_key_idx = this.table.foreign_key_index (field);
+      var foreign_table = this.table.foreign_key_table (foreign_key_idx);
+      return new SQLHeavy.Row (foreign_table, this.fetch_named_int64 (field));
+    }
+
+    /**
      * Create or load a row from a table
      *
      * Note that you must call {@link save} in order for a new row
