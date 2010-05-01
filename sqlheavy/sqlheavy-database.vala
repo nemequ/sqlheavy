@@ -16,6 +16,11 @@ namespace SQLHeavy {
 
     /**
      * List of all SQLHeavy.Row objects, used for change notification
+     *
+     * It would be possible to simply connect a callback for each Row
+     * to the {@link Database.row_updated} signal and have it ignore
+     * other tables and rows, but that would result in the callback
+     * for every row being executed every time any row is executed.
      */
     private GLib.HashTable <string, GLib.Sequence<unowned SQLHeavy.Row>> orm_rows = null;
 
@@ -26,38 +31,9 @@ namespace SQLHeavy {
      */
     internal void register_orm_row (SQLHeavy.Row row) {
       lock ( this.orm_rows ) {
-        if ( this.orm_rows == null ) {
-          this.orm_rows = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Row>> (GLib.str_hash, GLib.str_equal);
-
-          this.register_scalar_function ("__SQLHeavy_notify", 3, (ctx, args) => {
-              var operation = args.values[0].get_int64 ();
-              var table = args.values[1].get_string ();
-              var rowid = args.values[2].get_int64 ();
-
-              if ( operation == 1 ) {
-                lock ( this.orm_rows ) {
-                  unowned GLib.Sequence<unowned SQLHeavy.Row> l = this.orm_rows.lookup (@"$(table).$(rowid)");
-                  if ( l != null ) {
-                    for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
-                      unowned SQLHeavy.Row r = iter.get ();
-                      r.changed ();
-                    }
-                  }
-                }
-              }
-
-              return null;
-            });
-
-          try {
-            var tables = this.get_tables ();
-            foreach ( unowned SQLHeavy.Table table in tables.get_values () ) {
-              table.register_notify_triggers ();
-            }
-          } catch ( SQLHeavy.Error e ) {
-            GLib.warning ("Unable to register triggers for change notifications.");
-          }
-        }
+        if ( this.orm_rows == null )
+          // TODO: free function for GLib.Sequence
+          this.orm_rows = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Row>>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, null);
 
         var rowstr = @"$(row.table.name).$(row.id)";
         unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.orm_rows.lookup (rowstr);
@@ -85,6 +61,31 @@ namespace SQLHeavy {
           if ( (uint)row == (uint)r2 )
             list.remove (iter);
         }
+      }
+    }
+
+    /**
+     * Callback provided to sqlite3_update_hook function
+     *
+     * See SQLite documentation at [[http://www.sqlite.org/c3ref/update_hook.html]]
+     */
+    private void update_hook_cb (Sqlite.Action action, string dbname, string table, int64 rowid) {
+      if ( action == Sqlite.Action.UPDATE ) {
+        lock ( this.orm_rows ) {
+          unowned GLib.Sequence<unowned SQLHeavy.Row> l = this.orm_rows.lookup (@"$(table).$(rowid)");
+          if ( l != null ) {
+            for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
+              unowned SQLHeavy.Row r = iter.get ();
+              r.changed ();
+            }
+          }
+        }
+
+        this.row_updated (table, rowid);
+      } else if ( action == Sqlite.Action.INSERT ) {
+        this.row_inserted (table, rowid);
+      } else if ( action == Sqlite.Action.DELETE ) {
+        this.row_deleted (table, rowid);
       }
     }
 
@@ -182,6 +183,30 @@ namespace SQLHeavy {
      * @see Queryable.query_executed
      */
     public signal void sql_executed (string sql);
+
+    /**
+     * A row in the database was updated
+     *
+     * @see row_inserted
+     * @see row_deleted
+     */
+    public signal void row_updated (string table_name, int64 row_id);
+
+    /**
+     * A new row was inserted into the database
+     *
+     * @see row_updated
+     * @see row_deleted
+     */
+    public signal void row_inserted (string table_name, int64 row_id);
+
+    /**
+     * A row was deleted from the database
+     *
+     * @see row_updated
+     * @see row_inserted
+     */
+    public signal void row_deleted (string table, int64 row_id);
 
     /**
      * Statement used to insert data into the profiling database
@@ -820,8 +845,10 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
 
       if ( sqlite3_open ((!) filename, out this.db, flags, null) != Sqlite.OK )
         this.db = null;
-      else
+      else {
         this.db.trace ((sql) => { this.sql_executed (sql); });
+        this.db.update_hook (this.update_hook_cb);
+      }
     }
 
     /**
