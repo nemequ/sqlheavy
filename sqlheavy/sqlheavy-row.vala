@@ -177,9 +177,12 @@ namespace SQLHeavy {
       if ( this.values != null && this.values[field] != null )
         return this.values[field];
 
+      if ( this.cache != null && this.cache[field] != null )
+        return this.cache[field];
+
       var field_name = this.table.field_name (field);
       if ( this._id <= 0 )
-        throw new SQLHeavy.Error.MISUSE ("Cannot read field `%s` from record not persisted to database.", field_name);
+        throw new SQLHeavy.Error.MISUSE ("Cannot read field `%s` from row not persisted to database.", field_name);
 
       var stmt = this.table.queryable.prepare (@"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = :id;");
       stmt.bind_int64 (1, this._id);
