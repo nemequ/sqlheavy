@@ -36,6 +36,19 @@ namespace SQLHeavy {
     private GLib.Value?[]? values = null;
 
     /**
+     * Cache of values for reading from the database
+     *
+     * When this row is changed, these values are compared with the
+     * new values to determine which fields have been altered.
+     */
+    private GLib.Value?[]? cache = null;
+
+    /**
+     * The specified field changed in the database
+     */
+    public signal void field_changed (int field);
+
+    /**
      * {@inheritDoc}
      */
     public void save () throws SQLHeavy.Error {
@@ -98,9 +111,9 @@ namespace SQLHeavy {
         }
         else {
           var db = this.table.queryable.database;
-          db.unregister_orm_row (this);
           this._id = stmt.execute_insert ();
           db.register_orm_row (this);
+          this.update_cache ();
         }
 
         this.values = null;
@@ -168,9 +181,9 @@ namespace SQLHeavy {
       if ( this._id <= 0 )
         throw new SQLHeavy.Error.MISUSE ("Cannot read field `%s` from record not persisted to database.", field_name);
 
-      var stmt = this.table.queryable.prepare (@"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = :id");
-      stmt.bind_named_int64 (":id", this._id);
-      return stmt.fetch_result ();
+      var stmt = this.table.queryable.prepare (@"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = :id;");
+      stmt.bind_int64 (1, this._id);
+      return stmt.fetch_result (0);
     }
 
     /**
@@ -189,8 +202,46 @@ namespace SQLHeavy {
       return new SQLHeavy.Row (foreign_table, this.fetch_named_int64 (field));
     }
 
+    /**
+     * Updates the cache of the row
+     */
+    internal void update_cache () throws SQLHeavy.Error {
+      lock ( this.cache ) {
+        var fc = this.field_count;
+        if ( this.cache == null )
+          this.cache = new GLib.Value[fc];
+
+        var stmt = this.table.queryable.prepare (@"SELECT * FROM `$(this.table.name)` WHERE `ROWID` = :id;");
+        stmt.bind_named_int64 (":id", this._id);
+        stmt.step_internal ();
+        var res = stmt.fetch_row ();
+
+        var fields_changed = new bool[fc];
+        int f = 0;
+        for ( f = 0 ; f < fc ; f++ ) {
+          if ( this.cache[f] == null || !value_equal (this.cache[f], res.values[f]) ) {
+            fields_changed[f] = this.cache[f] != null;
+            this.cache[f] = res.values[f];
+          } else {
+            fields_changed[f] = false;
+          }
+        }
+
+        for ( f = 0 ; f < fc ; f++ )
+          if ( fields_changed[f] )
+            this.field_changed (f);
+      }
+    }
+
     construct {
-      this.table.queryable.database.register_orm_row (this);
+      if ( this._id != 0 ) {
+        this.table.queryable.database.register_orm_row (this);
+        this.update_cache ();
+      }
+
+      this.changed.connect (() => {
+          this.table.queryable.database.add_step_unlock_notify_row (this);
+        });
     }
 
     /**

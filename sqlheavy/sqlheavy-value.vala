@@ -16,6 +16,28 @@ namespace SQLHeavy {
     }
   }
 
+  internal bool value_equal (GLib.Value a, GLib.Value b) {
+    var gtype = a.type ();
+    if ( !b.holds (gtype) )
+      return false;
+
+    if ( gtype == typeof (int64) )
+      return a.get_int64 () == a.get_int64 ();
+    else if ( gtype == typeof (string) )
+      return GLib.str_equal (a.get_string (), b.get_string ());
+    else if ( gtype == typeof (double) )
+      return a.get_double () == b.get_double ();
+    else if ( gtype == typeof (GLib.ByteArray) ) {
+      unowned GLib.ByteArray a1 = (GLib.ByteArray) a.get_boxed ();
+      unowned GLib.ByteArray b1 = (GLib.ByteArray) b.get_boxed ();
+      return (a1.len == b1.len) && (GLib.Memory.cmp (a1.data, b1.data, a1.len) == 0);
+    }
+    else {
+      GLib.critical ("sqlheavy_value_equal not implemented for %s type.", gtype.name ());
+      return false;
+    }
+  }
+
   // internal GLib.Type sqlite_type_string_to_g_type (string stype) throws SQLHeavy.Error {
   //   switch ( stype ) {
   //     case "INTEGER":

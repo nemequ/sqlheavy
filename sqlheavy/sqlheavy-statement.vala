@@ -140,7 +140,7 @@ namespace SQLHeavy {
      * @see step_async
      * @see execute
      */
-    public bool step_internal () throws Error {
+    internal bool step_internal () throws Error {
       if ( this.finished )
         return false;
 

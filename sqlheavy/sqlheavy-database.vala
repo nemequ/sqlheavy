@@ -5,6 +5,13 @@ namespace SQLHeavy {
   private extern static int sqlite3_close (Sqlite.Database db);
 
   /**
+   * Callback to be called after {@link Database.step_unlock} is called.
+   *
+   * @return false to remove the function from the list, true if you want it to be called again
+   */
+  internal delegate bool StepUnlockNotify ();
+
+  /**
    * A database.
    */
   public class Database : GLib.Object, Queryable {
@@ -162,6 +169,33 @@ namespace SQLHeavy {
      */
     internal void step_unlock () {
       this._step_lock.leave ();
+      lock ( this.needs_update_on_step_unlock ) {
+        var i = this.needs_update_on_step_unlock.get_begin_iter ();
+        while ( !i.is_end () ) {
+          i.get ().update_cache ();
+          unowned GLib.SequenceIter<SQLHeavy.Row> o = i;
+          i = i.next ();
+          this.needs_update_on_step_unlock.remove (o);
+        }
+      }
+    }
+
+    /**
+     * List of rows to update when the step lock is unlocked
+     *
+     * @see step_unlock
+     * @see _step_lock
+     */
+    private GLib.Sequence<SQLHeavy.Row> needs_update_on_step_unlock =
+      new GLib.Sequence<SQLHeavy.Row> (GLib.g_object_unref);
+
+    /**
+     * Add a callback to the {@link step_unlock_notify_callbacks} list.
+     *
+     * @param cb the callback to add
+     */
+    internal void add_step_unlock_notify_row (SQLHeavy.Row row) {
+      this.needs_update_on_step_unlock.append (row);
     }
 
     /**
