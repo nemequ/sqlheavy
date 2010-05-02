@@ -156,7 +156,7 @@ namespace SQLHeavy {
       return name == null ? null : type_from_string (name);
     }
 
-    private void visit_field (SQLHeavy.Table table, int field, Vala.Class cl) throws GeneratorError, SQLHeavy.Error {
+    private void parse_field (SQLHeavy.Table table, int field, Vala.Class cl, Vala.SwitchStatement signals) throws GeneratorError, SQLHeavy.Error {
       var db = table.queryable.database;
       var db_symbol = GLib.Path.get_basename (db.filename).split (".", 2)[0];
       var symbol = @"@$(GLib.Path.get_basename (db_symbol))/$(table.name)/$(table.field_name (field))";
@@ -187,7 +187,17 @@ namespace SQLHeavy {
       var data_type_get = data_type.copy ();
       data_type_get.value_owned = true;
 
+      var switch_section = new Vala.SwitchSection (null);
+      signals.add_section (switch_section);
+      switch_section.add_label (new Vala.SwitchLabel (new Vala.StringLiteral (@"\"$(name)\"")));
+      Vala.MethodCall emit_changed_notify;
+
       if ( !write_properties ) {
+        var changed_signal = new Vala.Signal (@"$(name)_changed", new Vala.VoidType ());
+        changed_signal.access = Vala.SymbolAccessibility.PUBLIC;
+        cl.add_signal (changed_signal);
+        emit_changed_notify = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"$(name)_changed"));
+
         {
           var get_method = new Vala.Method (@"get_$(name)", data_type_get);
           cl.add_method (get_method);
@@ -218,6 +228,8 @@ namespace SQLHeavy {
         }
       } else {
         Vala.PropertyAccessor get_accessor, set_accessor;
+        emit_changed_notify = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "notify_property"));
+        emit_changed_notify.add_argument (new Vala.StringLiteral (@"\"$(name)\""));
         {
           var block = new Vala.Block (null);
           var try_block = new Vala.Block (null);
@@ -262,18 +274,22 @@ namespace SQLHeavy {
         }
 
         var prop = new Vala.Property (name, data_type, get_accessor, set_accessor);
+        prop.access = Vala.SymbolAccessibility.PUBLIC;
         cl.add_property (prop);
       }
+
+      switch_section.add_statement (new Vala.ExpressionStatement (emit_changed_notify));
+      switch_section.add_statement (new Vala.BreakStatement (null));
     }
 
-    private void visit_table (SQLHeavy.Table table, Vala.Namespace ns) throws GeneratorError, SQLHeavy.Error {
+    private void parse_table (SQLHeavy.Table table, Vala.Namespace ns) throws GeneratorError, SQLHeavy.Error {
       var db = table.queryable.database;
       var db_symbol = GLib.Path.get_basename (db.filename).split (".", 2)[0];
       var symbol = @"@$(GLib.Path.get_basename (db_symbol))/$(table.name)";
       var symbol_name = this.get_symbol_name (symbol);
 
-      if ( this.symbol_is_hidden (symbol) ) { }
-      //return;
+      if ( this.symbol_is_hidden (symbol) )
+        return;
 
       var cl = ns.scope.lookup (symbol_name) as Vala.Class;
 
@@ -285,12 +301,36 @@ namespace SQLHeavy {
 
       cl.add_base_type (type_from_string ("SQLHeavy.Row"));
 
+      Vala.SwitchStatement signals_switch;
+      {
+        var register_notify = new Vala.Method ("register_for_change_notifications", new Vala.VoidType ());
+        register_notify.access = Vala.SymbolAccessibility.PRIVATE;
+        register_notify.add_parameter (new Vala.FormalParameter ("field", type_from_string ("int")));
+
+        var block = new Vala.Block (null);
+        var get_field_name = new Vala.MethodCall (new Vala.MemberAccess (null, "field_name"));
+        get_field_name.add_argument (new Vala.MemberAccess (null, "field"));
+        var field_name = new Vala.LocalVariable (type_from_string ("string"), "field_name", get_field_name);
+        block.add_statement (new Vala.DeclarationStatement (field_name, null));
+
+        signals_switch = new Vala.SwitchStatement (new Vala.StringLiteral ("field_name"), null);
+        block.add_statement (signals_switch);
+        register_notify.body = block;
+
+        cl.add_method (register_notify);
+      }
+
+      var con = new Vala.Constructor (null);
+      con.body = new Vala.Block (null);
+      con.body.add_statement (new Vala.ExpressionStatement (new Vala.MethodCall (new Vala.StringLiteral ("register_for_change_notifications"))));
+      cl.constructor = con;
+
       for ( var field = 0 ; field < table.field_count ; field++ ) {
-        this.visit_field (table, field, cl);
+        this.parse_field (table, field, cl, signals_switch);
       }
     }
 
-    private void visit_database (SQLHeavy.Database db) throws GeneratorError {
+    private void parse_database (SQLHeavy.Database db) throws GeneratorError {
       var symbol = "@".concat (GLib.Path.get_basename (db.filename).split (".", 2)[0]);
       var symbol_name = this.get_symbol_name (symbol);
       Vala.Namespace? ns = this.context.root.scope.lookup (symbol_name) as Vala.Namespace;
@@ -306,7 +346,7 @@ namespace SQLHeavy {
       try {
         var tables = db.get_tables ();
         foreach ( unowned SQLHeavy.Table table in tables.get_values () ) {
-          this.visit_table (table, ns);
+          this.parse_table (table, ns);
         }
       } catch ( SQLHeavy.Error e ) {
         throw new GeneratorError.DATABASE ("Database error: %s", e.message);
@@ -324,7 +364,7 @@ namespace SQLHeavy {
         } catch ( SQLHeavy.Error e ) {
           throw new GeneratorError.CONFIGURATION ("Unable to open database: %s", e.message);
         }
-        this.visit_database (db);
+        this.parse_database (db);
       }
 
       var resolver = new Vala.SymbolResolver ();
