@@ -331,7 +331,9 @@ namespace SQLHeavy {
      * @see put_named_null
      */
     public virtual void put_null (int field) throws SQLHeavy.Error {
-      this.put (field, GLib.Value (typeof (void)));
+      var gv = GLib.Value (typeof (void *));
+      gv.set_pointer (null);
+      this.put (field, gv);
     }
 
     /**

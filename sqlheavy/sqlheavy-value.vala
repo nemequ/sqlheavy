@@ -8,7 +8,7 @@ namespace SQLHeavy {
       case Sqlite.FLOAT:
         return typeof (double);
       case Sqlite.NULL:
-        return typeof (void);
+        return typeof (void*);
       case Sqlite.BLOB:
         return typeof (GLib.ByteArray);
       default:
@@ -31,7 +31,8 @@ namespace SQLHeavy {
       unowned GLib.ByteArray a1 = (GLib.ByteArray) a.get_boxed ();
       unowned GLib.ByteArray b1 = (GLib.ByteArray) b.get_boxed ();
       return (a1.len == b1.len) && (GLib.Memory.cmp (a1.data, b1.data, a1.len) == 0);
-    }
+    } else if ( gtype == typeof (void*) )
+      return a.get_pointer () == b.get_pointer ();
     else {
       GLib.critical ("sqlheavy_value_equal not implemented for %s type.", gtype.name ());
       return false;
@@ -78,6 +79,8 @@ namespace SQLHeavy {
       var ba = new GLib.ByteArray.sized (blob.length);
       ba.append (blob);
       gval = ba;
+    } else if ( gtype == typeof (void*) ) {
+      gval.set_pointer (null);
     }
 
     return gval;
