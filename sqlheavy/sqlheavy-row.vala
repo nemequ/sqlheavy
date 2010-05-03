@@ -258,15 +258,24 @@ namespace SQLHeavy {
       if ( this._id != 0 )
         this.table.queryable.database.register_orm_row (this);
 
-      if ( this.enable_cache )
-        this.update_cache ();
+      if ( this.enable_cache ) {
+        try {
+          this.update_cache ();
+        } catch ( SQLHeavy.Error e ) {
+          GLib.warning ("Unable to initialize cache: %s", e.message);
+        }
+      }
 
       this.changed.connect (() => {
           this.table.queryable.database.add_step_unlock_notify_row (this);
         });
 
       this.notify["enable-cache"].connect ((pspec) => {
-          this.update_cache ();
+          try {
+            this.update_cache ();
+          } catch ( SQLHeavy.Error e ) {
+            GLib.warning ("Unable to %s cache: %s", this.enable_cache ? "enable" : "disable", e.message);
+          }
         });
     }
 

@@ -172,7 +172,11 @@ namespace SQLHeavy {
       lock ( this.needs_update_on_step_unlock ) {
         var i = this.needs_update_on_step_unlock.get_begin_iter ();
         while ( !i.is_end () ) {
-          i.get ().update_cache ();
+          try {
+            i.get ().update_cache ();
+          } catch ( SQLHeavy.Error e ) {
+            GLib.warning ("Unable to update row cache: %s", e.message);
+          }
           unowned GLib.SequenceIter<SQLHeavy.Row> o = i;
           i = i.next ();
           this.needs_update_on_step_unlock.remove (o);
