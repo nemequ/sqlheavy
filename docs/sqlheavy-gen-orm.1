@@ -29,6 +29,42 @@ Output to \fIFILE\fR (default is stdout)
 .TP
 .B -p, --properties
 Write properties instead of methods
+.SH METADATA FORMAT
+The concept of the metadata files is similar to that of vapigen (in fact, the entire sqlheavy-gen-orm tool is largely inspired by vapigen), but it uses the key file format so that it can use the GLib Key-Value file parser. Databases, tables, and columns are all represented by groups, each of which may have any number of properties (the key value pairs).
+.SS Selectors
+The format for the selectors is relatively straightforward. A forward slash ("/") is used as the separator character, and prepending an @ to a token means that token refers to a database, and prepending a % means that token refers to a table. The database name is the name of the database file, not including the last dot character and anything following it (i.e., the extension). An asterisk can be used as a wildcard. Several examples, as well as an explanation of each:
+.TP
+.B @foo/bar/baz
+The baz symbol in the bar table in the foo database.
+.TP
+.B @foo
+The foo database
+.TP
+.B %bar/baz
+The baz column in the bar table in any database
+.TP
+.B baz
+The baz column in any table in any database
+.TP
+.B \@foo/*/baz
+The baz column in any table in the foo database
+.TP
+.B */\%bar
+The bar table in any database
+.SS Properties
+Properties are represented by key-value pairs. The following is a table of currently implemented properties:
+.TS
+box, tab(:);
+c | c | c | c
+l | l | l | l.
+Name:Type:Usable for database/table/column:Purpose
+=
+name:string:Y/Y/Y:Rename the symbol
+type:string:N/N/Y:Set the Vala type of the column
+hidden:bool:Y/Y/Y:Do not create a binding for the symbol
+.TE
+.SS Custom Vala
+In addition to providing one or more SQLite database as a basis for code generation, you can provide an existing *.vala file. Theoretically, this will allow you to place custom code in a separate file, so that you can use sqlheavy-gen-orm to update the generated code without losing whenever the database schema changes, and you will not lose any enhancements you made. The generated code will be merged into the custom vala file in order to generate the output.
 .SH HOMEPAGE AND BUG REPORT
 http://code.google.com/p/sqlheavy
 .SH AUTHORS
