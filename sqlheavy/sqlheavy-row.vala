@@ -44,6 +44,13 @@ namespace SQLHeavy {
     private GLib.Value?[]? cache = null;
 
     /**
+     * Whether or not to enable caching for this row
+     *
+     * Caching is required for field-level change notifications.
+     */
+    public bool enable_cache { get; construct set; default = true; }
+
+    /**
      * The specified field changed in the database
      */
     public signal void field_changed (int field);
@@ -177,7 +184,7 @@ namespace SQLHeavy {
       if ( this.values != null && this.values[field] != null )
         return this.values[field];
 
-      if ( this.cache != null && this.cache[field] != null )
+      if ( this.enable_cache && this.cache[field] != null )
         return this.cache[field];
 
       var field_name = this.table.field_name (field);
@@ -210,9 +217,20 @@ namespace SQLHeavy {
      */
     internal void update_cache () throws SQLHeavy.Error {
       lock ( this.cache ) {
-        var fc = this.field_count;
-        if ( this.cache == null )
-          this.cache = new GLib.Value[fc];
+        if ( this._id == 0 )
+          return;
+
+        int fc;
+
+        if ( !this.enable_cache ) {
+          this.cache = null;
+          return;
+        } else {
+          fc = this.field_count;
+
+          if ( this.cache == null )
+            this.cache = new GLib.Value[fc];
+        }
 
         var stmt = this.table.queryable.prepare (@"SELECT * FROM `$(this.table.name)` WHERE `ROWID` = :id;");
         stmt.bind_named_int64 (":id", this._id);
@@ -237,13 +255,18 @@ namespace SQLHeavy {
     }
 
     construct {
-      if ( this._id != 0 ) {
+      if ( this._id != 0 )
         this.table.queryable.database.register_orm_row (this);
+
+      if ( this.enable_cache )
         this.update_cache ();
-      }
 
       this.changed.connect (() => {
           this.table.queryable.database.add_step_unlock_notify_row (this);
+        });
+
+      this.notify["enable-cache"].connect ((pspec) => {
+          this.update_cache ();
         });
     }
 
