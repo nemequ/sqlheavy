@@ -101,7 +101,6 @@ namespace SQLHeavy {
    * preferable to use prepared statements.
    *
    * @see Statement.bind_string
-   * @see Statement.bind_named_string
    */
   public static string escape_string (string str) {
     return str.replace ("'", "''");

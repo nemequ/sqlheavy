@@ -50,7 +50,7 @@ private static int main (string[] args) {
       if ( (i & 0xffff) == 0xffff )
         GLib.debug ("%d...", i);
 
-      stmt.bind_named_int (":value", i);
+      stmt.bind_int (":value", i);
       stmt.execute ();
     }
     trans.commit ();

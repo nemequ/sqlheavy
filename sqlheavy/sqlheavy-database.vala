@@ -262,10 +262,10 @@ namespace SQLHeavy {
 
         unowned SQLHeavy.Statement pstmt = (!) this.profiling_insert_stmt;
         pstmt.auto_clear = true;
-        pstmt.bind_named_string (":sql", stmt.sql);
-        pstmt.bind_named_double (":clock", stmt.execution_time_elapsed ());
-        pstmt.bind_named_int64 (":fullscan_step", stmt.full_scan_steps);
-        pstmt.bind_named_int64 (":sort", stmt.sort_operations);
+        pstmt.bind_string (":sql", stmt.sql);
+        pstmt.bind_double (":clock", stmt.execution_time_elapsed ());
+        pstmt.bind_int64 (":fullscan_step", stmt.full_scan_steps);
+        pstmt.bind_int64 (":sort", stmt.sort_operations);
         pstmt.execute ();
         pstmt.reset ();
       }

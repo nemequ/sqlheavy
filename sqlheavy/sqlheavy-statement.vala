@@ -501,7 +501,7 @@ namespace SQLHeavy {
       var foreign_table = table.foreign_key_table (foreign_key_idx);
       var foreign_column = table.foreign_key_to (foreign_key_idx);
       var stmt = this.queryable.prepare (@"SELECT `ROWID` FROM `$(foreign_table.name)` WHERE `$(foreign_column)` = :value;");
-      stmt.bind_int64 (1, this.fetch_int64 (field));
+      stmt.bind_index_int64 (1, this.fetch_int64 (field));
       return new SQLHeavy.Row (foreign_table, stmt.fetch_result_int64 ());
     }
 
@@ -515,7 +515,7 @@ namespace SQLHeavy {
      * @param field the index of the field to fetch
      * @return the value of the field
      * @see step
-     * @see fetch
+     * @see Record.fetch
      * @see reset
      */
     public GLib.Value? fetch_result (int field = 0) throws SQLHeavy.Error {
@@ -531,7 +531,7 @@ namespace SQLHeavy {
      * @param field field index
      * @return value of the field
      * @see fetch_result
-     * @see fetch_string
+     * @see Record.fetch_string
      */
     public string? fetch_result_string (int field = 0) throws SQLHeavy.Error {
       this.step ();
@@ -546,7 +546,7 @@ namespace SQLHeavy {
      * @param field field index
      * @return value of the field
      * @see fetch_result
-     * @see fetch_int
+     * @see Record.fetch_int
      */
     public int fetch_result_int (int field = 0) throws SQLHeavy.Error {
       this.step ();
@@ -561,7 +561,7 @@ namespace SQLHeavy {
      * @param field field index
      * @return value of the field
      * @see fetch_result
-     * @see fetch_int64
+     * @see Record.fetch_int64
      */
     public int64 fetch_result_int64 (int field = 0) throws SQLHeavy.Error {
       this.step ();
@@ -576,7 +576,7 @@ namespace SQLHeavy {
      * @param field field index
      * @return value of the field
      * @see fetch_result
-     * @see fetch_time_t
+     * @see Record.fetch_time_t
      */
     public int64 fetch_result_time_t (int field = 0) throws SQLHeavy.Error {
       this.step ();
@@ -591,7 +591,7 @@ namespace SQLHeavy {
      * @param field field index
      * @return value of the field
      * @see fetch_result
-     * @see fetch_double
+     * @see Record.fetch_double
      */
     public double fetch_result_double (int field = 0) throws SQLHeavy.Error {
       this.step ();
@@ -804,13 +804,13 @@ namespace SQLHeavy {
     }
 
     /**
-     * Bind a value to the specified parameter
+     * Bind a value to the specified parameter index
      *
      * @param field name of the parameter
      * @param value value to bind
-     * @see bind_named
+     * @see bind
      */
-    public void bind (int field, GLib.Value? value) throws SQLHeavy.Error {
+    public void bind_index (int field, GLib.Value? value) throws SQLHeavy.Error {
       this.bind_check_index (field);
 
       if ( value == null )
@@ -834,159 +834,159 @@ namespace SQLHeavy {
     }
 
     /**
-     * Bind a value to the specified parameter by name
+     * Bind a value to the specified parameter
      *
      * @param field name of the parameter
      * @param value value to bind
-     * @see bind
+     * @see bind_index
      */
-    public void bind_named (string name, GLib.Value? value) throws SQLHeavy.Error {
-      this.bind (this.bind_get_index (name), value);
+    public void bind (string name, GLib.Value? value) throws SQLHeavy.Error {
+      this.bind_index (this.bind_get_index (name), value);
+    }
+
+    /**
+     * Bind an int value to the specified parameter index
+     *
+     * @param field index of the parameter
+     * @param value value to bind
+     * @see bind_int
+     * @see bind_index
+     */
+    public void bind_index_int (int field, int value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_int (this.bind_check_index (field), value), this.queryable);
     }
 
     /**
      * Bind an int value to the specified parameter
      *
-     * @param field index of the parameter
+     * @param field name of the parameter
      * @param value value to bind
-     * @see bind_named_int
+     * @see bind_index_int
      * @see bind
      */
-    public void bind_int (int field, int value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_int (this.bind_check_index (field), value), this.queryable);
+    public void bind_int (string field, int value) throws SQLHeavy.Error {
+      this.bind_index_int (this.bind_get_index (field), value);
     }
 
     /**
-     * Bind an int value to the specified named parameter
+     * Bind an int64 value to the specified parameter index
      *
-     * @param field name of the parameter
+     * @param field index of the parameter
      * @param value value to bind
-     * @see bind_int
-     * @see bind
+     * @see bind_int64
+     * @see bind_index
      */
-    public void bind_named_int (string field, int value) throws SQLHeavy.Error {
-      this.bind_int (this.bind_get_index (field), value);
+    public void bind_index_int64 (int field, int64 value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_int64 (this.bind_check_index (field), value), this.queryable);
     }
 
     /**
      * Bind an int64 value to the specified parameter
      *
-     * @param field index of the parameter
-     * @param value value to bind
-     * @see bind_named_int64
-     * @see bind
-     */
-    public void bind_int64 (int field, int64 value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_int64 (this.bind_check_index (field), value), this.queryable);
-    }
-
-    /**
-     * Bind an int64 value to the specified named parameter
-     *
      * @param field name of the parameter
      * @param value value to bind
-     * @see bind_int64
+     * @see bind_index_int64
      * @see bind
      */
-    public void bind_named_int64 (string field, int64 value) throws SQLHeavy.Error {
-      this.bind_int64 (this.bind_get_index (field), value);
+    public void bind_int64 (string field, int64 value) throws SQLHeavy.Error {
+      this.bind_index_int64 (this.bind_get_index (field), value);
     }
 
     /**
-     * Bind a string value to the specified parameter
+     * Bind a string value to the specified parameter index
      *
      * @param field index of the parameter
      * @param value value to bind
-     * @see bind_named_string
-     * @see bind
+     * @see bind_string
+     * @see bind_index
      */
-    public void bind_string (int field, string? value) throws SQLHeavy.Error {
+    public void bind_index_string (int field, string? value) throws SQLHeavy.Error {
       if ( value == null )
-        this.bind_null (field);
+        this.bind_index_null (field);
       else
         error_if_not_ok (this.stmt.bind_text (this.bind_check_index (field), (!) value), this.queryable);
     }
 
     /**
-     * Bind a string value to the specified named parameter
+     * Bind a string value to the specified parameter
      *
      * @param field name of the parameter
      * @param value value to bind
-     * @see bind_string
+     * @see bind_index_string
      * @see bind
      */
-    public void bind_named_string (string field, string? value) throws SQLHeavy.Error {
-      this.bind_string (this.bind_get_index (field), value);
+    public void bind_string (string field, string? value) throws SQLHeavy.Error {
+      this.bind_index_string (this.bind_get_index (field), value);
+    }
+
+    /**
+     * Bind null to the specified parameter index
+     *
+     * @param field index of the parameter
+     * @see bind_null
+     * @see bind_index
+     */
+    public void bind_index_null (int field) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_null (this.bind_check_index (field)), this.queryable);
     }
 
     /**
      * Bind null to the specified parameter
      *
-     * @param field index of the parameter
-     * @see bind_named_null
+     * @param field name of the parameter
+     * @see bind_index_null
      * @see bind
      */
-    public void bind_null (int field) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_null (this.bind_check_index (field)), this.queryable);
+    public void bind_null (string field) throws SQLHeavy.Error {
+      this.bind_index_null (this.bind_get_index (field));
     }
 
     /**
-     * Bind null to the specified named parameter
+     * Bind a double value to the specified parameter index
      *
-     * @param field name of the parameter
-     * @see bind_null
-     * @see bind
+     * @param field index of the parameter
+     * @param value value to bind
+     * @see bind_double
+     * @see bind_index
      */
-    public void bind_named_null (string field) throws SQLHeavy.Error {
-      this.bind_null (this.bind_get_index (field));
+    public void bind_index_double (int field, double value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_double (this.bind_check_index (field), value), this.queryable);
     }
 
     /**
      * Bind an double value to the specified parameter
      *
-     * @param field index of the parameter
+     * @param field name of the parameter
      * @param value value to bind
-     * @see bind_named_double
+     * @see bind_index_double
      * @see bind
      */
-    public void bind_double (int field, double value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_double (this.bind_check_index (field), value), this.queryable);
+    public void bind_double (string field, double value) throws SQLHeavy.Error {
+      this.bind_index_double (this.bind_get_index (field), value);
     }
 
     /**
-     * Bind an double value to the specified named parameter
+     * Bind a byte array value to the specified parameter index
      *
-     * @param field name of the parameter
+     * @param field index of the parameter
      * @param value value to bind
-     * @see bind_double
-     * @see bind
+     * @see bind_blob
+     * @see bind_index
      */
-    public void bind_named_double (string field, double value) throws SQLHeavy.Error {
-      this.bind_double (this.bind_get_index (field), value);
+    public void bind_index_blob (int field, uint8[] value) throws SQLHeavy.Error {
+      error_if_not_ok (this.stmt.bind_blob (field, GLib.Memory.dup (value, value.length), value.length, GLib.g_free), this.queryable);
     }
 
     /**
      * Bind a byte array value to the specified parameter
      *
-     * @param field index of the parameter
-     * @param value value to bind
-     * @see bind_named_blob
-     * @see bind
-     */
-    public void bind_blob (int field, uint8[] value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_blob (field, GLib.Memory.dup (value, value.length), value.length, GLib.g_free), this.queryable);
-    }
-
-    /**
-     * Bind a byte array value to the specified named parameter
-     *
      * @param field name of the parameter
      * @param value value to bind
-     * @see bind_blob
+     * @see bind_index_blob
      * @see bind
      */
-    public void bind_named_blob (string field, uint8[] value) throws SQLHeavy.Error {
-      this.bind_blob (this.bind_get_index (field), value);
+    public void bind_blob (string field, uint8[] value) throws SQLHeavy.Error {
+      this.bind_index_blob (this.bind_get_index (field), value);
     }
 
     ~ Statement () {
