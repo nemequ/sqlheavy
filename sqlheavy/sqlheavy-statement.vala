@@ -571,6 +571,21 @@ namespace SQLHeavy {
     }
 
     /**
+     * Fetch result as a time_t
+     *
+     * @param field field index
+     * @return value of the field
+     * @see fetch_result
+     * @see fetch_time_t
+     */
+    public int64 fetch_result_time_t (int field = 0) throws SQLHeavy.Error {
+      this.step ();
+      var ret = (time_t) this.fetch_int64 (field);
+      this.reset ();
+      return ret;
+    }
+
+    /**
      * Fetch result as a double
      *
      * @param field field index
