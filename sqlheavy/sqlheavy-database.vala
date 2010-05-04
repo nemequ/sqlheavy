@@ -28,8 +28,17 @@ namespace SQLHeavy {
      * to the {@link Database.row_updated} signal and have it ignore
      * other tables and rows, but that would result in the callback
      * for every row being executed every time any row is executed.
+     *
+     * @see orm_tables
      */
     private GLib.HashTable <string, GLib.Sequence<unowned SQLHeavy.Row>> orm_rows = null;
+
+    /**
+     * List of all SQLHeavy.Table objects, used for change notification
+     *
+     * @see orm_rows
+     */
+    private GLib.HashTable <string, GLib.Sequence<unowned SQLHeavy.Table>> orm_tables = null;
 
     /**
      * Register a row for change notifications
@@ -53,6 +62,27 @@ namespace SQLHeavy {
     }
 
     /**
+     * Register a table for change notifications
+     *
+     * @param table the table to register
+     */
+    internal void register_orm_table (SQLHeavy.Table table) {
+      lock ( this.orm_tables ) {
+        if ( this.orm_tables == null )
+          // TODO: free function for GLib.Sequence
+          this.orm_tables = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Table>>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, null);
+
+        var tblname = table.name;
+        unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (tblname);
+        if ( list == null ) {
+          this.orm_tables.insert (tblname, new GLib.Sequence<unowned SQLHeavy.Table> (null));
+          list = this.orm_tables.lookup (tblname);
+        }
+        list.insert_sorted (table, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; });
+      }
+    }
+
+    /**
      * Unregister a row from change notifications
      *
      * @row the row to unregister
@@ -66,6 +96,23 @@ namespace SQLHeavy {
           var iter = list.search (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; }).prev ();
           unowned SQLHeavy.Row r2 = iter.get ();
           if ( (uint)row == (uint)r2 )
+            list.remove (iter);
+        }
+      }
+    }
+
+    /**
+     * Unregister a row from change notifications
+     *
+     * @row the row to unregister
+     */
+    internal void unregister_orm_table (SQLHeavy.Table table) {
+      lock ( this.orm_tables ) {
+        unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (table.name);
+        if ( list != null ) {
+          var iter = list.search (table, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; }).prev ();
+          unowned SQLHeavy.Table t2 = iter.get ();
+          if ( (uint)table == (uint)t2 )
             list.remove (iter);
         }
       }
@@ -87,12 +134,32 @@ namespace SQLHeavy {
             }
           }
         }
+      } else if ( action == Sqlite.Action.INSERT ||
+                  action == Sqlite.Action.DELETE ) {
+        lock ( this.orm_tables ) {
+          unowned GLib.Sequence<unowned SQLHeavy.Table> l = this.orm_tables.lookup (table);
+          if ( l != null ) {
+            for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
+              unowned SQLHeavy.Table t = iter.get ();
+              if ( action == Sqlite.Action.INSERT )
+                t.row_inserted (rowid);
+              else
+                t.row_deleted (rowid);
+            }
+          }
+        }
 
-        this.row_updated (table, rowid);
-      } else if ( action == Sqlite.Action.INSERT ) {
-        this.row_inserted (table, rowid);
-      } else if ( action == Sqlite.Action.DELETE ) {
-        this.row_deleted (table, rowid);
+        lock ( this.orm_rows ) {
+          if ( this.orm_rows != null ) {
+            unowned GLib.Sequence<unowned SQLHeavy.Row> l = this.orm_rows.lookup (@"$(table).$(rowid)");
+            if ( l != null ) {
+              for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
+                unowned SQLHeavy.Row r = iter.get ();
+                r.on_delete ();
+              }
+            }
+          }
+        }
       }
     }
 
@@ -221,30 +288,6 @@ namespace SQLHeavy {
      * @see Queryable.query_executed
      */
     public signal void sql_executed (string sql);
-
-    /**
-     * A row in the database was updated
-     *
-     * @see row_inserted
-     * @see row_deleted
-     */
-    public signal void row_updated (string table_name, int64 row_id);
-
-    /**
-     * A new row was inserted into the database
-     *
-     * @see row_updated
-     * @see row_deleted
-     */
-    public signal void row_inserted (string table_name, int64 row_id);
-
-    /**
-     * A row was deleted from the database
-     *
-     * @see row_updated
-     * @see row_inserted
-     */
-    public signal void row_deleted (string table, int64 row_id);
 
     /**
      * Statement used to insert data into the profiling database

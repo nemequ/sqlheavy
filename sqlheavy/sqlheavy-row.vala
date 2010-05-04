@@ -19,8 +19,17 @@ namespace SQLHeavy {
 
     /**
      * One or more field in this row has changed in the database
+     *
+     * @see put
      */
     public signal void changed ();
+
+    /**
+     * The row was deleted from the database
+     *
+     * @see delete
+     */
+    public signal void deleted ();
 
     /**
      * {@inheritDoc}
@@ -165,15 +174,21 @@ namespace SQLHeavy {
       }
     }
 
+    internal void on_delete () {
+      this._id = 0;
+      this.deleted ();
+    }
+
     /**
      * {@inheritDoc}
+     *
+     * @see deleted
      */
     public void delete () throws SQLHeavy.Error {
       if ( this._id > 0 ) {
         var stmt = this.table.queryable.prepare (@"DELETE FROM `$(this.table.name)` WHERE `ROWID` = :id;");
         stmt.bind_int64 (":id", this._id);
         stmt.execute ();
-        this._id = 0;
       }
     }
 

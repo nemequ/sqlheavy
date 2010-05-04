@@ -13,6 +13,16 @@ namespace SQLHeavy {
      */
     public SQLHeavy.Queryable queryable { get; construct; }
 
+    /**
+     * A new row was inserted into the table
+     */
+    public signal void row_inserted (int64 row_id);
+
+    /**
+     * A row was deleted from the table
+     */
+    public signal void row_deleted (int64 row_id);
+
     private class FieldInfo : GLib.Object {
       public int index;
       public string name;
@@ -238,6 +248,10 @@ namespace SQLHeavy {
      */
     public void register_notify_triggers () throws SQLHeavy.Error {
       this.queryable.execute (@"CREATE TEMPORARY TRIGGER IF NOT EXISTS `__SQLHeavy_$(this.name)_update_notifier` AFTER UPDATE ON `$(this.name)` FOR EACH ROW BEGIN SELECT __SQLHeavy_notify (1, '$(this.name)', `OLD`.`ROWID`); END;");
+    }
+
+    construct {
+      this.queryable.database.register_orm_table (this);
     }
 
     /**
