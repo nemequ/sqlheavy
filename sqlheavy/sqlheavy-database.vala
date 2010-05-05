@@ -24,11 +24,6 @@ namespace SQLHeavy {
     /**
      * List of all SQLHeavy.Row objects, used for change notification
      *
-     * It would be possible to simply connect a callback for each Row
-     * to the {@link Database.row_updated} signal and have it ignore
-     * other tables and rows, but that would result in the callback
-     * for every row being executed every time any row is executed.
-     *
      * @see orm_tables
      */
     private GLib.HashTable <string, GLib.Sequence<unowned SQLHeavy.Row>> orm_rows = null;
@@ -85,7 +80,7 @@ namespace SQLHeavy {
     /**
      * Unregister a row from change notifications
      *
-     * @row the row to unregister
+     * @param row the row to unregister
      */
     internal void unregister_orm_row (SQLHeavy.Row row) {
       var rowstr = @"$(row.table.name).$(row.id)";
@@ -104,7 +99,7 @@ namespace SQLHeavy {
     /**
      * Unregister a row from change notifications
      *
-     * @row the row to unregister
+     * @param row the row to unregister
      */
     internal void unregister_orm_table (SQLHeavy.Table table) {
       lock ( this.orm_tables ) {
@@ -261,7 +256,7 @@ namespace SQLHeavy {
       new GLib.Sequence<SQLHeavy.Row> (GLib.g_object_unref);
 
     /**
-     * Add a callback to the {@link step_unlock_notify_callbacks} list.
+     * Add a callback to the {@link needs_update_on_step_unlock} list.
      *
      * @param cb the callback to add
      */

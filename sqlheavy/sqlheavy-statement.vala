@@ -198,7 +198,7 @@ namespace SQLHeavy {
     /**
      * Handle asynchronous execution
      *
-     * @param steps the maximum number of times to call {@link step), or -1
+     * @param steps the maximum number of times to call {@link step}, or -1
      * @param cancellable a GCancellable, or null
      * @return true if there is more data, false if the query is done
      */

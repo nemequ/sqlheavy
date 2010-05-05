@@ -89,7 +89,7 @@ namespace SQLHeavy {
    * Convert an SQLHeavy.Error to an SQLite error code. This function
    * is used to convert errors thrown by user defined functions.
    *
-   * @e SQLHeavy error
+   * @param e SQLHeavy error
    */
   internal int sqlite_code_from_error (SQLHeavy.Error e) {
     if ( e is Error.INTERNAL )
