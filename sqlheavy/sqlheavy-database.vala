@@ -1,4 +1,7 @@
 namespace SQLHeavy {
+  [CCode (cname = "g_sequence_free")]
+  internal extern static void g_sequence_free (GLib.Sequence seq);
+
   /**
    * A database.
    */
@@ -31,8 +34,7 @@ namespace SQLHeavy {
     internal void register_orm_row (SQLHeavy.Row row) {
       lock ( this.orm_rows ) {
         if ( this.orm_rows == null )
-          // TODO: free function for GLib.Sequence
-          this.orm_rows = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Row>>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, null);
+          this.orm_rows = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Row>>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, (GLib.DestroyNotify) g_sequence_free);
 
         var rowstr = @"$(row.table.name).$(row.id)";
         unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.orm_rows.lookup (rowstr);
@@ -52,8 +54,7 @@ namespace SQLHeavy {
     internal void register_orm_table (SQLHeavy.Table table) {
       lock ( this.orm_tables ) {
         if ( this.orm_tables == null )
-          // TODO: free function for GLib.Sequence
-          this.orm_tables = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Table>>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, null);
+          this.orm_tables = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Table>>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, (GLib.DestroyNotify) g_sequence_free);
 
         var tblname = table.name;
         unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (tblname);
