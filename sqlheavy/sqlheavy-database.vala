@@ -1,16 +1,4 @@
 namespace SQLHeavy {
-  [CCode (cname = "sqlite3_open_v2", cheader_filename = "sqlite3.h")]
-  private extern static int sqlite3_open (string filename, out unowned Sqlite.Database db, int flags = Sqlite.OPEN_READWRITE | Sqlite.OPEN_CREATE, string? zVfs = null);
-  [CCode (cname = "sqlite3_close", cheader_filename = "sqlite3.h")]
-  private extern static int sqlite3_close (Sqlite.Database db);
-
-  /**
-   * Callback to be called after {@link Database.step_unlock} is called.
-   *
-   * @return false to remove the function from the list, true if you want it to be called again
-   */
-  internal delegate bool StepUnlockNotify ();
-
   /**
    * A database.
    */
@@ -161,7 +149,7 @@ namespace SQLHeavy {
     /**
      * SQLite database for this SQLHeavy database
      */
-    private unowned Sqlite.Database? db = null;
+    private Sqlite.Database? db = null;
 
     /**
      * Return the {@link db}
@@ -919,7 +907,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       if ( (this.mode & SQLHeavy.FileMode.CREATE) == SQLHeavy.FileMode.CREATE )
         flags |= Sqlite.OPEN_CREATE;
 
-      if ( sqlite3_open ((!) filename, out this.db, flags, null) != Sqlite.OK )
+      if ( Sqlite.Database.open_v2 ((!) filename, out this.db, flags, null) != Sqlite.OK )
         this.db = null;
       else {
         this.db.trace ((sql) => { this.sql_executed (sql); });
@@ -1068,9 +1056,6 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
     ~ Database () {
       foreach ( unowned UserFunction.UserFuncData udf in this.user_functions.get_values () )
         this.unregister_function_context (udf);
-
-      if ( this.db != null )
-        sqlite3_close ((!) this.db);
     }
   }
 }
