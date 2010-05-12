@@ -82,7 +82,11 @@ namespace SQLHeavy {
     /**
      * A thread error was encountered
      */
-    THREAD
+    THREAD,
+    /**
+     * A transaction error was encountered
+     */
+    TRANSACTION
   }
 
   /**

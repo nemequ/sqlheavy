@@ -12,6 +12,7 @@ noinst_PROGRAMS = \
 	async \
 	backup \
 	common-functions \
+	dbpool \
 	orm \
 	$(NULL)
 
@@ -38,6 +39,10 @@ backup_SOURCES = \
 
 common_functions_SOURCES = \
 	common-functions.vala \
+	$(NULL)
+
+dbpool_SOURCES = \
+	dbpool.vala \
 	$(NULL)
 
 orm_SOURCES = \

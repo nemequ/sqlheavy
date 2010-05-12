@@ -24,7 +24,7 @@ namespace SQLHeavy {
     /**
      * {@inheritDoc}
      */
-    public SQLHeavy.Database database { get { return this.parent.database; } }
+    public SQLHeavy.Database database { owned get { return this.parent.database; } }
 
     private Sqlite.Mutex? _transaction_lock = new Sqlite.Mutex (Sqlite.MUTEX_FAST);
 
@@ -42,35 +42,38 @@ namespace SQLHeavy {
       this._transaction_lock.leave ();
     }
 
-    private void resolve (bool commit) {
-      if ( this.status != TransactionStatus.UNRESOLVED ) {
-        GLib.warning ("Refusing to resolve an already resolved transaction.");
-        return;
-      }
+    /**
+     * The transaction has been resolved (committed or rolled back)
+     *
+     * @param committed whether the transaction was committed or rolled back
+     */
+    public signal void resolved (SQLHeavy.TransactionStatus status);
 
-      try {
-        this.execute ("%s SAVEPOINT 'SQLHeavy-0x%x';".printf (commit ? "RELEASE" : "ROLLBACK TRANSACTION TO", (uint)this));
-      }
-      catch ( SQLHeavy.Error e ) {
-        GLib.critical ("Unable to resolve transaction: %s (%d)", e.message, e.code);
-        return;
-      }
+    /**
+     *
+     */
+    private void resolve (bool commit) throws SQLHeavy.Error {
+      if ( this.status != TransactionStatus.UNRESOLVED )
+        throw new SQLHeavy.Error.TRANSACTION ("Refusing to resolve an already resolved transaction.");
+
+      this.execute ("%s SAVEPOINT 'SQLHeavy-0x%x';".printf (commit ? "RELEASE" : "ROLLBACK TRANSACTION TO", (uint)this));
 
       this.status = commit ? TransactionStatus.COMMITTED : TransactionStatus.ROLLED_BACK;
       this.parent.@unlock ();
+      this.resolved (this.status);
     }
 
     /**
      * Commit the transaction to the database
      */
-    public void commit () {
+    public void commit () throws SQLHeavy.Error {
       this.resolve (true);
     }
 
     /**
      * Rollback the transaction
      */
-    public void rollback () {
+    public void rollback () throws SQLHeavy.Error {
       this.resolve (false);
     }
 
@@ -79,6 +82,8 @@ namespace SQLHeavy {
         GLib.warning ("Destroying an unresolved transaction.");
     }
 
+    private SQLHeavy.Error? err = null;
+
     construct {
       this.parent.@lock ();
 
@@ -86,6 +91,7 @@ namespace SQLHeavy {
         this.execute ("SAVEPOINT 'SQLHeavy-0x%x';".printf ((uint)this));
       }
       catch ( SQLHeavy.Error e ) {
+        this.err = e;
         GLib.critical ("Unable to create transaction: %s (%d)", e.message, e.code);
         this.parent.@unlock ();
       }
@@ -96,8 +102,10 @@ namespace SQLHeavy {
      *
      * @param parent The queryable to create the transaction on top of
      */
-    public Transaction (SQLHeavy.Queryable parent) {
+    public Transaction (SQLHeavy.Queryable parent) throws SQLHeavy.Error {
       Object (parent: parent);
+      if ( this.err != null )
+        throw this.err;
     }
   }
 }

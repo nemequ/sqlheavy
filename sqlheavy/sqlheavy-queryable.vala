@@ -11,7 +11,7 @@ namespace SQLHeavy {
     /**
      * Database
      */
-    public abstract SQLHeavy.Database database { get; }
+    public abstract SQLHeavy.Database database { owned get; }
 
     /**
      * Signal which is emitted when a query finished executing.
@@ -39,7 +39,7 @@ namespace SQLHeavy {
      *
      * @return a new transaction
      */
-    public virtual Transaction begin_transaction () {
+    public virtual Transaction begin_transaction () throws SQLHeavy.Error {
       return new Transaction (this);
     }
 

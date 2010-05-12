@@ -110,6 +110,9 @@ namespace SQLHeavy {
     private void update_hook_cb (Sqlite.Action action, string dbname, string table, int64 rowid) {
       if ( action == Sqlite.Action.UPDATE ) {
         lock ( this.orm_rows ) {
+          if ( this.orm_rows == null )
+            return;
+
           unowned GLib.Sequence<unowned SQLHeavy.Row> l = this.orm_rows.lookup (@"$(table).$(rowid)");
           if ( l != null ) {
             for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
@@ -121,6 +124,9 @@ namespace SQLHeavy {
       } else if ( action == Sqlite.Action.INSERT ||
                   action == Sqlite.Action.DELETE ) {
         lock ( this.orm_tables ) {
+          if ( this.orm_tables == null )
+            return;
+
           unowned GLib.Sequence<unowned SQLHeavy.Table> l = this.orm_tables.lookup (table);
           if ( l != null ) {
             for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
@@ -166,7 +172,7 @@ namespace SQLHeavy {
     /**
      * {@inheritDoc}
      */
-    public SQLHeavy.Database database { get { return this; } }
+    public SQLHeavy.Database database { owned get { return this; } }
 
     /**
      * Mutex to prevent us from executing queries from multiple
@@ -605,14 +611,10 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_incremental_vacuum]]
      *
      * @param pages the number of pages to remove
+     * @see vacuum
      */
-    public void incremental_vacuum (int pages) {
-      try {
-        this.execute ("PRAGMA incremental_vacuum(%d);".printf(pages));
-      }
-      catch ( SQLHeavy.Error e ) {
-        GLib.critical ("Unable to run incremental vacuum: %s", e.message);
-      }
+    public void incremental_vacuum (int pages) throws SQLHeavy.Error {
+      this.execute ("PRAGMA incremental_vacuum(%d);".printf(pages));
     }
 
     /**
@@ -911,8 +913,12 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       if ( Sqlite.Database.open_v2 ((!) filename, out this.db, flags, null) != Sqlite.OK )
         this.db = null;
       else {
-        this.db.trace ((sql) => { this.sql_executed (sql); });
+        this.db.trace ((sql) => {
+            GLib.debug ("0x%x: %s", (uint) this, sql);
+            this.sql_executed (sql);
+          });
         this.db.update_hook (this.update_hook_cb);
+        this.db.busy_timeout (int.MAX);
       }
     }
 

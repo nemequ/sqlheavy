@@ -147,15 +147,11 @@ namespace SQLHeavy {
       if ( !this.active ) {
         this.active = true;
         this.execution_timer.reset ();
-        this.execution_timer.start ();
-        this.error_code = this.stmt.step ();
-        this.execution_timer.stop ();
       }
-      else {
-        this.execution_timer.start ();
-        this.error_code = this.stmt.step ();
-        this.execution_timer.stop ();
-      }
+
+      this.execution_timer.start ();
+      this.error_code = this.stmt.step ();
+      this.execution_timer.stop ();
 
       int ec = this.error_code;
       this.error_code = Sqlite.OK;

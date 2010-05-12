@@ -20,7 +20,7 @@ namespace SQLHeavy {
     /**
      * {@inheritDoc}
      */
-    public SQLHeavy.Database database { get { return this.patriarch.database; } }
+    public SQLHeavy.Database database { owned get { return this.patriarch.database; } }
 
     /**
      * {@inheritDoc}
@@ -39,7 +39,7 @@ namespace SQLHeavy {
     /**
      * Add a transaction to the stack
      */
-    public void push () {
+    public void push () throws SQLHeavy.Error {
       this.stack.prepend (this.active_queryable.begin_transaction ());
       this.stack_length++;
     }
@@ -50,7 +50,7 @@ namespace SQLHeavy {
      * @param commit whether to commit or rollback the transaction
      * @return true on success, false on failure (e.g., stack is empty)
      */
-    public bool pop (bool commit) {
+    public bool pop (bool commit) throws SQLHeavy.Error {
       if ( this.stack_length > 0 ) {
         if ( commit )
           this.stack.data.commit ();
@@ -70,7 +70,7 @@ namespace SQLHeavy {
      *
      * @param commit whether to commit or rollback the transactions
      */
-    public void pop_all (bool commit) {
+    public void pop_all (bool commit) throws SQLHeavy.Error {
       while ( this.stack_length > 0 )
         this.pop (commit);
     }
@@ -78,7 +78,7 @@ namespace SQLHeavy {
     /**
      * {@inheritDoc}
      */
-    public void execute (string sql, ssize_t max_len = -1) throws Error {
+    public void execute (string sql, ssize_t max_len = -1) throws SQLHeavy.Error {
       this.active_queryable.execute (sql, max_len);
     }
 
@@ -92,7 +92,7 @@ namespace SQLHeavy {
     /**
      * {@inheritDoc}
      */
-    public void run_script (string filename) throws Error {
+    public void run_script (string filename) throws SQLHeavy.Error {
       this.active_queryable.run_script (filename);
     }
 
