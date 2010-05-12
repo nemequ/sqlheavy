@@ -611,7 +611,6 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
      * See SQLite documentation at: [[http://sqlite.org/pragma.html#pragma_incremental_vacuum]]
      *
      * @param pages the number of pages to remove
-     * @see vacuum
      */
     public void incremental_vacuum (int pages) throws SQLHeavy.Error {
       this.execute ("PRAGMA incremental_vacuum(%d);".printf(pages));
