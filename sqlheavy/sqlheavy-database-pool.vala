@@ -108,6 +108,20 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public void execute (string sql, ssize_t max_len = -1) throws Error {
+      this.database.execute (sql, max_len);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public SQLHeavy.Statement prepare (string sql) throws SQLHeavy.Error {
+      return this.database.prepare (sql);
+    }
+
     public DatabasePool (string filename) {
       Object (filename: filename);
     }

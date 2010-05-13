@@ -21,9 +21,7 @@ private async void execute_queries (SQLHeavy.Transaction trans, int source) {
 private static int main (string[] args) {
   try {
     var pool = new SQLHeavy.DatabasePool ("foo.db");
-    var trans = pool.begin_transaction ();
-    trans.execute ("CREATE TABLE IF NOT EXISTS `foo` ( `source` INT, `iter` INT );");
-    trans.commit ();
+    pool.execute ("CREATE TABLE IF NOT EXISTS `foo` ( `source` INT, `iter` INT );");
 
     for ( int source = 0 ; source < 8 ; source++ ) {
       execute_queries.begin (pool.begin_transaction (), source);

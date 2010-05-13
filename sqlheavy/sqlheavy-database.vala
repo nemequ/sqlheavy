@@ -912,10 +912,7 @@ CREATE TRIGGER IF NOT EXISTS `queries_insert`
       if ( Sqlite.Database.open_v2 ((!) filename, out this.db, flags, null) != Sqlite.OK )
         this.db = null;
       else {
-        this.db.trace ((sql) => {
-            GLib.debug ("0x%x: %s", (uint) this, sql);
-            this.sql_executed (sql);
-          });
+        this.db.trace ((sql) => { this.sql_executed (sql); });
         this.db.update_hook (this.update_hook_cb);
         this.db.busy_timeout (int.MAX);
       }
