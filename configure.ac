@@ -77,6 +77,8 @@ AS_IF([test "x$enable_valadoc" != "xno"], [
 
 AM_CONDITIONAL(ENABLE_VALADOC, test x$found_valadoc = xyes)
 
+GOBJECT_INTROSPECTION_CHECK([0.6.4])
+
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h])
 

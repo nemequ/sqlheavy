@@ -27,7 +27,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 
 if HAVE_INTROSPECTION
 GIR_VALAFLAGS = \
-	--gir sqlheavy-@SQLHEAVY_API_VERSION@.gir \
+	--gir SQLHeavy-@SQLHEAVY_API_VERSION@.gir \
 	--library sqlheavy-1.0 \
 	$(NULL)
 else
@@ -68,7 +68,7 @@ if HAVE_INTROSPECTION
 
 girdir = $(INTROSPECTION_GIRDIR)
 gir_DATA = \
-	sqlheavy-$(SQLHEAVY_API_VERSION).gir \
+	SQLHeavy-$(SQLHEAVY_API_VERSION).gir \
 	$(NULL)
 
 typelibsdir = $(INTROSPECTION_TYPELIBDIR)

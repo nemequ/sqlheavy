@@ -1,11 +1,12 @@
 .deps
 .libs
-SQLHeavy.gir
 SQLHeavy.h
 *-internal.*
 *.c
+*.gir
 *.la
 *.lo
 *.o
 *.stamp
+*.typelib
 *.vapi
