@@ -44,15 +44,15 @@ namespace SQLHeavy {
     /**
      * Open database for reading.
      */
-    READ = 0x01,
+    READ = 1,
     /**
      * Open database for writing.
      */
-    WRITE = 0x02,
+    WRITE = 2,
     /**
      * Create database if it doesn't yet exist.
      */
-    CREATE = 0x04
+    CREATE = 4
   }
 
   /**
