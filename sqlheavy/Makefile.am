@@ -53,6 +53,13 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_CFLAGS = \
 	$(SQLITE3_CFLAGS) \
 	$(NULL)
 
+libsqlheavy_@SQLHEAVY_API_VERSION@_la_LDFLAGS = \
+	$(GIO_LIBS) \
+	$(GLIB_LIBS) \
+	$(GMODULE_LIBS) \
+	$(SQLITE3_LIBS) \
+	$(NULL)
+
 sqlheavyincludedir = $(includedir)/sqlheavy/sqlheavy-$(SQLHEAVY_API_VERSION)
 sqlheavyinclude_HEADERS = \
 	SQLHeavy.h \
