@@ -8,7 +8,7 @@ m4_define([sqlheavy_micro], [1])
 m4_define([sqlheavy_version], [sqlheavy_major.sqlheavy_minor.sqlheavy_micro])
 m4_define([sqlheavy_api_version], [1.0])
 
-AC_PREREQ([2.65])
+AC_PREREQ([2.64])
 AC_INIT([SQLHeavy], [sqlheavy_version], [evan@coeus-group.com]. [sqlheavy])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([dist-bzip2])
