@@ -172,6 +172,10 @@ namespace SQLHeavy {
      */
     MEMORY,
     /**
+     * Use a write-ahead log instead of a rollback journal
+     */
+    WAL,
+    /**
      * Disable the journal completely
      */
     OFF;
@@ -189,6 +193,8 @@ namespace SQLHeavy {
         return MEMORY;
       else if ( mode == OFF.to_string () )
         return OFF;
+      else if ( mode == WAL.to_string () )
+        return WAL;
       else
         return DELETE;
     }
@@ -203,6 +209,8 @@ namespace SQLHeavy {
           return "PERSIST";
         case MEMORY:
           return "MEMORY";
+        case WAL:
+          return "WAL";
         case OFF:
           return "OFF";
         default:
