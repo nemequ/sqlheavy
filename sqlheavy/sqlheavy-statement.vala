@@ -708,24 +708,29 @@ namespace SQLHeavy {
      * @see get_table
      * @see Queryable.print_table
      */
-    public void print_table (GLib.FileStream fd = GLib.stderr) throws SQLHeavy.Error {
+    public void print_table (GLib.FileStream? fd = null) throws SQLHeavy.Error {
       var field_names = this.field_names ();
-      var field_lengths = new size_t[field_names.length];
+      var field_lengths = new long[field_names.length];
+      var data = new GLib.GenericArray<GLib.GenericArray <string>> ();
+
+      if ( fd == null )
+        fd = GLib.stderr;
       int field = 0;
-      var data = new GLib.PtrArray ();
 
       for ( field = 0 ; field < field_lengths.length ; field++ )
-        field_lengths[field] = field_names[field].size ();
+        field_lengths[field] = field_names[field].len ();
 
       while ( this.step () ) {
-        var row_data = new GLib.PtrArray.sized (field_lengths.length);
-        data.add (g_ptr_array_ref (row_data));
+        var row_data = new GLib.GenericArray<string> ();
+        data.add (row_data);
+
         for ( field = 0 ; field < field_names.length ; field++ ) {
           var cell = this.fetch_string (field);
-          var cell_l = cell.size ();
+          var cell_l = cell.len ();
           if ( field_lengths[field] < cell_l )
             field_lengths[field] = cell_l;
-          row_data.add (GLib.Memory.dup (cell, (uint) cell_l + 1));
+
+          row_data.add (cell);
         }
       }
 
@@ -741,22 +746,18 @@ namespace SQLHeavy {
       fd.puts (sep.str);
       fd.putc ('|');
       for ( field = 0 ; field < field_names.length ; field++ ) {
-        field_fmt[field] = " %%%llds |".printf (field_lengths[field]);
+        field_fmt[field] = " %%%lds |".printf (field_lengths[field]);
         fd.printf (field_fmt[field], field_names[field]);
       }
       fd.putc ('\n');
       fd.puts (sep.str);
 
-      for ( var row = 0 ; row < data.len ; row++ ) {
+      for ( var row_n = 0 ; row_n < data.length ; row_n++ ) {
+        var row_data = data[row_n];
+
         fd.putc ('|');
-
-        unowned GLib.PtrArray row_data = (GLib.PtrArray)data.index (row);
-        for ( field = 0 ; field < field_names.length ; field++ ) {
-          fd.printf (field_fmt[field], (string) row_data.index (field));
-          GLib.g_free (row_data.index (field));
-        }
-        g_ptr_array_unref (row_data);
-
+        for ( var col_n = 0 ; col_n < row_data.length ; col_n++ )
+          fd.printf (field_fmt[col_n], row_data[col_n]);
         fd.putc ('\n');
         fd.puts (sep.str);
       }

@@ -1,9 +1,4 @@
 namespace SQLHeavy {
-  [CCode (cname = "g_ptr_array_ref")]
-  private static extern unowned GLib.PtrArray g_ptr_array_ref (GLib.PtrArray array);
-  [CCode (cname = "g_ptr_array_unref")]
-  private static extern void g_ptr_array_unref (GLib.PtrArray array);
-
   /**
    * Interface on which queries may be run
    */
@@ -107,12 +102,13 @@ namespace SQLHeavy {
     /**
      * Print the result set to a file stream
      *
+     * @param sql the query
      * @param fd the stream to print to
      * @see get_table
      * @see Queryable.print_table
      */
-    public virtual void print_table (GLib.FileStream fd = GLib.stderr, string sql) throws SQLHeavy.Error {
-      this.prepare (sql).print_table (fd);
+    public virtual void print_table (string sql, GLib.FileStream? fd = null) throws SQLHeavy.Error {
+      this.prepare (sql).print_table ();
     }
   }
 }
