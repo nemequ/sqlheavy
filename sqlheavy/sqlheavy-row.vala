@@ -117,7 +117,7 @@ namespace SQLHeavy {
         for ( field = 0 ; field < field_count ; field++ ) {
           if ( this.values[field] != null ) {
             var field_name = this.table.field_name (field);
-            stmt.bind (@":$(field_name)", this.values[field]);
+            stmt.bind_value (@":$(field_name)", this.values[field]);
           }
         }
 

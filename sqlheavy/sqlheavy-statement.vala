@@ -837,7 +837,7 @@ namespace SQLHeavy {
      * @param value value to bind
      * @see bind_index
      */
-    public void bind (string name, GLib.Value? value) throws SQLHeavy.Error {
+    public void bind_value (string name, GLib.Value? value) throws SQLHeavy.Error {
       this.bind_index (this.bind_get_index (name), value);
     }
 
