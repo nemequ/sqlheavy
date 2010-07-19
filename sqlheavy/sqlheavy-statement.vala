@@ -805,7 +805,7 @@ namespace SQLHeavy {
      *
      * @param field name of the parameter
      * @param value value to bind
-     * @see bind
+     * @see bind_value
      */
     public void bind_index (int field, GLib.Value? value) throws SQLHeavy.Error {
       this.bind_check_index (field);
@@ -859,7 +859,7 @@ namespace SQLHeavy {
      * @param field name of the parameter
      * @param value value to bind
      * @see bind_index_int
-     * @see bind
+     * @see bind_value
      */
     public void bind_int (string field, int value) throws SQLHeavy.Error {
       this.bind_index_int (this.bind_get_index (field), value);
@@ -883,7 +883,7 @@ namespace SQLHeavy {
      * @param field name of the parameter
      * @param value value to bind
      * @see bind_index_int64
-     * @see bind
+     * @see bind_value
      */
     public void bind_int64 (string field, int64 value) throws SQLHeavy.Error {
       this.bind_index_int64 (this.bind_get_index (field), value);
@@ -910,7 +910,7 @@ namespace SQLHeavy {
      * @param field name of the parameter
      * @param value value to bind
      * @see bind_index_string
-     * @see bind
+     * @see bind_value
      */
     public void bind_string (string field, string? value) throws SQLHeavy.Error {
       this.bind_index_string (this.bind_get_index (field), value);
@@ -932,7 +932,7 @@ namespace SQLHeavy {
      *
      * @param field name of the parameter
      * @see bind_index_null
-     * @see bind
+     * @see bind_value
      */
     public void bind_null (string field) throws SQLHeavy.Error {
       this.bind_index_null (this.bind_get_index (field));
@@ -956,7 +956,7 @@ namespace SQLHeavy {
      * @param field name of the parameter
      * @param value value to bind
      * @see bind_index_double
-     * @see bind
+     * @see bind_value
      */
     public void bind_double (string field, double value) throws SQLHeavy.Error {
       this.bind_index_double (this.bind_get_index (field), value);
@@ -980,7 +980,7 @@ namespace SQLHeavy {
      * @param field name of the parameter
      * @param value value to bind
      * @see bind_index_blob
-     * @see bind
+     * @see bind_value
      */
     public void bind_blob (string field, uint8[] value) throws SQLHeavy.Error {
       this.bind_index_blob (this.bind_get_index (field), value);
