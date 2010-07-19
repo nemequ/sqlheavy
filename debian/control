@@ -3,7 +3,7 @@ Priority: extra
 Maintainer: Evan Nemerson <evan@coeus-group.com>
 Build-Depends: debhelper (>= 7.0.50),
                autotools-dev,
-               valac (>= 0.8.1),
+               valac (>= 0.9.2),
                valadoc (>= 0.2),
                libglib2.0-dev (>= 2.22.0),
                libsqlite3-dev (>= 3.6.23.1)
