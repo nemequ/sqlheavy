@@ -11,15 +11,20 @@ private static int main (string[] args) {
 
     row.put_named_double ("bar", prng.next_double ());
     row.save ();
-    GLib.debug ("bar = %g", row.fetch_named_double ("bar"));
+    GLib.debug ("bar = %g", row.get_double ("bar"));
 
     row.put_named_double ("bar", prng.next_double ());
-    // Note that fetch_named_field will return the value we just set,
+    // Note that get_field will return the value we just set,
     // even though it hasn't yet been saved.
-    GLib.debug ("bar = %g", row.fetch_named_double ("bar"));
+    GLib.debug ("bar = %g", row.get_double ("bar"));
     row.save ();
     // Now we make a trip to the database to get the value.
-    GLib.debug ("bar = %g", row.fetch_named_double ("bar"));
+    GLib.debug ("bar = %g", row.get_double ("bar"));
+
+    GLib.debug ("...");
+    int64 row_id = row.id;
+    GLib.debug ("ID: %lld", row_id);
+    GLib.debug ("bar = %g", (double) table[row_id]["bar"]);
   } catch ( SQLHeavy.Error e ) {
     GLib.error (e.message);
   }

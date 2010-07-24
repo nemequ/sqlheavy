@@ -63,7 +63,7 @@ namespace SQLHeavy {
      *
      * @param field the index of the field to return.
      * @return the value of the field
-     * @see fetch_named
+     * @see get
      * @see fetch_row
      */
     public abstract GLib.Value fetch (int field) throws SQLHeavy.Error;
@@ -75,7 +75,7 @@ namespace SQLHeavy {
      * @return the field value
      * @see fetch
      */
-    public virtual GLib.Value? fetch_named (string field) throws SQLHeavy.Error {
+    public virtual GLib.Value? get (string field) throws SQLHeavy.Error {
       return this.fetch (this.field_index (field));
     }
 
@@ -84,7 +84,7 @@ namespace SQLHeavy {
      *
      * @param field the index of the field to return
      * @return the value of the field
-     * @see fetch_named_foreign_row
+     * @see get_foreign_row
      */
     public abstract SQLHeavy.Row fetch_foreign_row (int field) throws SQLHeavy.Error;
 
@@ -95,7 +95,7 @@ namespace SQLHeavy {
      * @return the value of the field
      * @see fetch_foreign_row
      */
-    public virtual SQLHeavy.Row fetch_named_foreign_row (string field) throws SQLHeavy.Error {
+    public virtual SQLHeavy.Row get_foreign_row (string field) throws SQLHeavy.Error {
       return this.fetch_foreign_row (this.field_index (field));
     }
 
@@ -140,7 +140,7 @@ namespace SQLHeavy {
      *
      * @param field field index
      * @return the field value
-     * @see fetch_named_string
+     * @see get_string
      * @see fetch
      */
     public virtual string? fetch_string (int field = 0) throws SQLHeavy.Error {
@@ -155,7 +155,7 @@ namespace SQLHeavy {
      * @see fetch_string
      * @see fetch
      */
-    public virtual string? fetch_named_string (string field) throws SQLHeavy.Error {
+    public virtual string? get_string (string field) throws SQLHeavy.Error {
       return this.fetch_string (this.field_index (field));
     }
 
@@ -164,7 +164,7 @@ namespace SQLHeavy {
      *
      * @param field field index
      * @return the field value
-     * @see fetch_named_int
+     * @see get_int
      * @see fetch
      */
     public virtual int fetch_int (int field = 0) throws SQLHeavy.Error {
@@ -179,7 +179,7 @@ namespace SQLHeavy {
      * @see fetch_int
      * @see fetch
      */
-    public virtual int fetch_named_int (string field) throws SQLHeavy.Error {
+    public virtual int get_int (string field) throws SQLHeavy.Error {
       return this.fetch_int (this.field_index (field));
     }
 
@@ -188,7 +188,7 @@ namespace SQLHeavy {
      *
      * @param field field index
      * @return the field value
-     * @see fetch_named_int64
+     * @see get_int64
      * @see fetch
      */
     public virtual int64 fetch_int64 (int field = 0) throws SQLHeavy.Error {
@@ -203,7 +203,7 @@ namespace SQLHeavy {
      * @see fetch_int64
      * @see fetch
      */
-    public virtual int64 fetch_named_int64 (string field) throws SQLHeavy.Error {
+    public virtual int64 get_int64 (string field) throws SQLHeavy.Error {
       return this.fetch_int64 (this.field_index (field));
     }
 
@@ -212,7 +212,7 @@ namespace SQLHeavy {
      *
      * @param field field index
      * @return the field value
-     * @see fetch_named_double
+     * @see get_double
      * @see fetch
      */
     public virtual double fetch_double (int field = 0) throws SQLHeavy.Error {
@@ -227,7 +227,7 @@ namespace SQLHeavy {
      * @see fetch_double
      * @see fetch
      */
-    public virtual double fetch_named_double (string field) throws SQLHeavy.Error {
+    public virtual double get_double (string field) throws SQLHeavy.Error {
       return this.fetch_double (this.field_index (field));
     }
 
@@ -236,7 +236,7 @@ namespace SQLHeavy {
      *
      * @param field field index
      * @return the field value
-     * @see fetch_named_blob
+     * @see get_blob
      * @see fetch
      */
     public virtual uint8[] fetch_blob (int field = 0) throws SQLHeavy.Error {
@@ -251,7 +251,7 @@ namespace SQLHeavy {
      * @see fetch_blob
      * @see fetch
      */
-    public virtual uint8[] fetch_named_blob (string field) throws SQLHeavy.Error {
+    public virtual uint8[] get_blob (string field) throws SQLHeavy.Error {
       return this.fetch_blob (this.field_index (field));
     }
 
@@ -260,7 +260,7 @@ namespace SQLHeavy {
      *
      * @param field field index
      * @return the field value
-     * @see fetch_named_time_t
+     * @see get_time_t
      * @see fetch
      */
     public virtual time_t fetch_time_t (int field = 0) throws SQLHeavy.Error {
@@ -275,7 +275,7 @@ namespace SQLHeavy {
      * @see fetch_time_t
      * @see fetch
      */
-    public virtual time_t fetch_named_time_t (string field) throws SQLHeavy.Error {
+    public virtual time_t get_time_t (string field) throws SQLHeavy.Error {
       return this.fetch_time_t (this.field_index (field));
     }
 

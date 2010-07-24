@@ -69,6 +69,7 @@ namespace SQLHeavy {
           this._field_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
           var stmt = this.queryable.prepare (@"PRAGMA table_info (`$(escape_string (this.name))`);");
+
           while ( stmt.step () ) {
             var row = new FieldInfo.from_stmt (stmt);
             this._field_data.insert_sorted (row, (a, b) => {
@@ -241,6 +242,16 @@ namespace SQLHeavy {
         throw new SQLHeavy.Error.RANGE ("Invalid foreign key name (`%s')", foreign_key);
 
       return index;
+    }
+
+    /**
+     * Return the row with the specified ID
+     *
+     * @param id the id (ROWID) of the requested row
+     * @return the reqested row
+     */
+    public new SQLHeavy.Row get (int64 id) throws SQLHeavy.Error {
+      return new SQLHeavy.Row (this, id);
     }
 
     /**
