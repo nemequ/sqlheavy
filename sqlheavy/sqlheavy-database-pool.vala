@@ -42,6 +42,9 @@ namespace SQLHeavy {
      */
     public int max_pool_size { get; construct; }
 
+    /**
+     * The number of database connections currently in use in this pool
+     */
     public int pool_size {
       get {
         lock ( this.available_pool ) {
@@ -52,6 +55,9 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public SQLHeavy.Transaction begin_transaction () throws SQLHeavy.Error {
       SQLHeavy.Database? db = null;
 
@@ -79,7 +85,14 @@ namespace SQLHeavy {
      */
     public string filename { get; construct; }
 
+    /**
+     * No effect, only present to satisfy Queryable interface
+     */
     public void @lock () { }
+
+    /**
+     * No effect, only present to satisfy Queryable interface
+     */
     public void unlock () { }
 
     /**
@@ -122,6 +135,9 @@ namespace SQLHeavy {
       return this.database.prepare (sql);
     }
 
+    /**
+     * Create a new database pool.
+     */
     public DatabasePool (string filename) {
       Object (filename: filename);
     }
