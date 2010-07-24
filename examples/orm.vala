@@ -9,11 +9,11 @@ private static int main (string[] args) {
     var row = new SQLHeavy.Row (table);
     var prng = new GLib.Rand ();
 
-    row.put_named_double ("bar", prng.next_double ());
+    row.set_double ("bar", prng.next_double ());
     row.save ();
     GLib.debug ("bar = %g", row.get_double ("bar"));
 
-    row.put_named_double ("bar", prng.next_double ());
+    row.set_double ("bar", prng.next_double ());
     // Note that get_field will return the value we just set,
     // even though it hasn't yet been saved.
     GLib.debug ("bar = %g", row.get_double ("bar"));
@@ -21,9 +21,8 @@ private static int main (string[] args) {
     // Now we make a trip to the database to get the value.
     GLib.debug ("bar = %g", row.get_double ("bar"));
 
-    GLib.debug ("...");
     int64 row_id = row.id;
-    GLib.debug ("ID: %lld", row_id);
+    table[row_id]["bar"] = prng.next_double ();
     GLib.debug ("bar = %g", (double) table[row_id]["bar"]);
   } catch ( SQLHeavy.Error e ) {
     GLib.error (e.message);

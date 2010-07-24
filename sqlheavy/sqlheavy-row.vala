@@ -8,6 +8,11 @@ namespace SQLHeavy {
      */
     public Table table { get; construct; }
 
+    /**
+     * Whether the row should automatically save itself when destroyed
+     */
+    public bool auto_save { get; set; default = true; }
+
     private int64 _id = 0;
     /**
      * The row ID of this row, or 0 if it has not yet been inserted
@@ -308,6 +313,9 @@ namespace SQLHeavy {
     }
 
     ~ Row () {
+      if ( this.auto_save )
+        this.save ();
+
       this.table.queryable.database.unregister_orm_row (this);
     }
   }
