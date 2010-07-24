@@ -229,7 +229,7 @@ namespace SQLHeavy {
       } else {
         Vala.PropertyAccessor get_accessor, set_accessor;
         emit_changed_notify = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "notify_property"));
-        emit_changed_notify.add_argument (new Vala.StringLiteral (@"\"$(name)\""));
+        emit_changed_notify.add_argument (new Vala.StringLiteral ("\"" + name.replace ("_", "-") + "\""));
         {
           var block = new Vala.Block (null);
           var try_block = new Vala.Block (null);
