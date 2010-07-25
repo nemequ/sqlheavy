@@ -12,13 +12,13 @@ LDADD = \
 bin_PROGRAMS = sqlheavy-gen-orm
 
 VALAFLAGS = \
-	--vapidir $(top_builddir)/sqlheavy \
+	--vapidir $(top_srcdir)/sqlheavy \
 	--pkg vala-1.0 \
 	--pkg sqlheavy-1.0 \
 	$(NULL)
 
-CFLAGS = \
-	-I$(top_builddir)/sqlheavy \
+AM_CFLAGS = \
+	-I$(top_srcdir)/sqlheavy \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \

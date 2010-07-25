@@ -74,12 +74,10 @@ vapi_DATA = \
 if HAVE_INTROSPECTION
 
 girdir = $(INTROSPECTION_GIRDIR)
-gir_DATA = \
-	SQLHeavy-$(SQLHEAVY_API_VERSION).gir \
-	$(NULL)
+# gir_DATA = SQLHeavy-$(SQLHEAVY_API_VERSION).gir
 
 typelibsdir = $(INTROSPECTION_TYPELIBDIR)
-typelibs_DATA = $(gir_DATA:.gir=.typelib)
+# typelibs_DATA = $(gir_DATA:.gir=.typelib)
 
 %.typelib: %.gir $(INTROSPECTION_COMPILER)
 	LD_LIBRARY_PATH=.libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} \
@@ -93,3 +91,14 @@ CLEANFILES += \
 	$(NULL)
 
 endif # HAVE_INTROSPECTION
+
+MAINTAINERCLEANFILES = \
+	SQLHeavy.h \
+	SQLHeavy-@SQLHEAVY_API_VERSION@.gir \
+	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
+	$(NULL)
+
+EXTRA_DIST = \
+	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
+	sqlheavy-@SQLHEAVY_API_VERSION@.deps \
+	$(NULL)

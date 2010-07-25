@@ -17,12 +17,12 @@ noinst_PROGRAMS = \
 	$(NULL)
 
 VALAFLAGS = \
-	--vapidir $(top_builddir)/sqlheavy \
+	--vapidir $(top_srcdir)/sqlheavy \
 	--pkg sqlheavy-1.0 \
 	$(NULL)
 
-CFLAGS = \
-	-I$(top_builddir)/sqlheavy \
+INCLUDES = \
+	-I$(top_srcdir)/sqlheavy \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
