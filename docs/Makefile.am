@@ -20,6 +20,7 @@ VALADOC_FLAGS = --force \
 		$(top_srcdir)/sqlheavy/sqlheavy-database-pool.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-enums.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-error.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-profiling-database.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-queryable.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-record.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-row.vala \

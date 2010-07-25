@@ -5,6 +5,7 @@ SUBDIRS = \
 	examples \
 	utils \
 	docs \
+	data \
 	$(NULL)
 
 ACLOCAL_AMFLAGS=-I m4

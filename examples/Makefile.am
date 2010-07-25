@@ -18,7 +18,7 @@ noinst_PROGRAMS = \
 
 VALAFLAGS = \
 	--vapidir $(top_srcdir)/sqlheavy \
-	--pkg sqlheavy-1.0 \
+	--pkg sqlheavy-$(SQLHEAVY_API_VERSION) \
 	$(NULL)
 
 INCLUDES = \

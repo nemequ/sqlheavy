@@ -91,10 +91,13 @@ AC_CHECK_HEADERS([stdlib.h string.h])
 # Checks for library functions.
 
 AC_CONFIG_FILES([Makefile
+                 data/Makefile
+                 data/schemas/Makefile
+                 data/schemas/profiling/Makefile
+                 docs/Makefile
+                 examples/Makefile
                  sqlheavy/Makefile
                  sqlheavy/sqlheavy-version.vala
                  sqlheavy-$SQLHEAVY_API_VERSION.pc
-                 utils/Makefile
-                 docs/Makefile
-                 examples/Makefile])
+                 utils/Makefile])
 AC_OUTPUT

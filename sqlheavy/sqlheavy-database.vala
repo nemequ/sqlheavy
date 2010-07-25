@@ -280,27 +280,12 @@ namespace SQLHeavy {
     public signal void sql_executed (string sql);
 
     /**
-     * Statement used to insert data into the profiling database
-     */
-    private SQLHeavy.Statement? profiling_insert_stmt = null;
-
-    /**
      * Callback which is attached to {@link Queryable.query_executed}
      * to insert data into the profiling database
      */
     private void profiling_cb (SQLHeavy.Statement stmt) {
       try {
-        if ( this.profiling_insert_stmt == null )
-          this.profiling_insert_stmt = this.profiling_data.prepare ("INSERT INTO `queries` (`sql`, `clock`, `fullscan_step`, `sort`) VALUES (:sql, :clock, :fullscan_step, :sort);");
-
-        unowned SQLHeavy.Statement pstmt = (!) this.profiling_insert_stmt;
-        pstmt.auto_clear = true;
-        pstmt.bind_string (":sql", stmt.sql);
-        pstmt.bind_double (":clock", stmt.execution_time_elapsed ());
-        pstmt.bind_int64 (":fullscan_step", stmt.full_scan_steps);
-        pstmt.bind_int64 (":sort", stmt.sort_operations);
-        pstmt.execute ();
-        pstmt.reset ();
+        this.profiling_data.insert (stmt);
       }
       catch ( SQLHeavy.Error e ) {
         GLib.warning ("Unable to insert profiling information: %s (%d)", e.message, e.code);
@@ -313,7 +298,7 @@ namespace SQLHeavy {
      * Enabling profiling while this is null will cause the database
      * to be created in :memory:
      */
-    public SQLHeavy.Database? profiling_data { get; set; default = null; }
+    public SQLHeavy.ProfilingDatabase? profiling_data { get; set; default = null; }
 
     /**
      * Whether profiling is enabled.
@@ -324,12 +309,11 @@ namespace SQLHeavy {
      * available from and SQLite profiling callback.
      *
      * @see Statement.execution_time_elapsed
+     * @see ProfilingDatabase
      */
     public bool enable_profiling {
       get { return this.profiling_data != null; }
       set {
-        this.profiling_insert_stmt = null;
-
         if ( value == false ) {
           this.profiling_data = null;
           this.query_executed.disconnect (this.profiling_cb);
@@ -337,30 +321,7 @@ namespace SQLHeavy {
         else {
           try {
             if ( this.profiling_data == null )
-              this.profiling_data = new SQLHeavy.Database ();
-
-            this.profiling_data.execute ("""
-CREATE TABLE IF NOT EXISTS `queries` (
-  `sql` TEXT UNIQUE NOT NULL,
-  `executions` INTEGER UNSIGNED DEFAULT 1,
-  `clock` FLOAT UNSIGNED NOT NULL,
-  `fullscan_step` INTEGER UNSIGNED,
-  `sort` INTEGER UNSIGNED
-);
-
-CREATE TRIGGER IF NOT EXISTS `queries_insert`
-  BEFORE INSERT ON `queries`
-  WHEN (SELECT COUNT(*) FROM `queries` WHERE `sql` = NEW.`sql`) > 0
-  BEGIN
-    UPDATE `queries`
-      SET
-        `executions` = `executions` + 1,
-        `clock` = `clock` + NEW.`clock`,
-        `fullscan_step` = `fullscan_step` + NEW.`fullscan_step`,
-        `sort` = `sort` + NEW.`sort`
-      WHERE `sql` = NEW.`sql`;
-    SELECT RAISE(IGNORE);
-  END;""");
+              this.profiling_data = new SQLHeavy.ProfilingDatabase ();
           }
           catch ( SQLHeavy.Error e ) {
             GLib.warning ("Unable to enable profiling: %s (%d)", e.message, e.code);
