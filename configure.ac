@@ -8,8 +8,11 @@ m4_define([sqlheavy_micro], [1])
 m4_define([sqlheavy_version], [sqlheavy_major.sqlheavy_minor.sqlheavy_micro])
 m4_define([sqlheavy_api_version], [0.1])
 
+m4_define([sqlheavy_name], [sqlheavy])
+
 AC_PREREQ([2.64])
-AC_INIT([SQLHeavy], [sqlheavy_version], [evan@coeus-group.com]. [sqlheavy])
+AC_INIT([SQLHeavy], [sqlheavy_version], [evan@coeus-group.com]. [sqlheavy_name])
+AC_CONFIG_HEADERS([sqlheavy/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
@@ -24,6 +27,10 @@ AC_SUBST(SQLHEAVY_MINOR_VERSION)
 AC_SUBST(SQLHEAVY_MICRO_VERSION)
 AC_SUBST(SQLHEAVY_VERSION)
 AC_SUBST(SQLHEAVY_API_VERSION)
+
+AX_DEFINE_DIR([SQL_HEAVY_CONFIG_PATH_PREFIX], [prefix], [sqlheavy installation prefix])
+AX_DEFINE_DIR([SQL_HEAVY_CONFIG_PATH_DATA], [datadir], [sqlheavy data directory])
+AX_DEFINE_DIR([SQL_HEAVY_CONFIG_PATH_PACKAGE_DATA], [datadir]/[sqlheavy_name], [sqlheavy package data directory])
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 

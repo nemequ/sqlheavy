@@ -21,9 +21,9 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-transaction.vala \
 	sqlheavy-transaction-stack.vala \
 	sqlheavy-user-functions.vala \
-	sqlheavy-versioned-database.vala \
 	sqlheavy-value.vala \
 	sqlheavy-version.vala \
+	sqlheavy-versioned-database.vala \
 	$(NULL)
 
 if HAVE_INTROSPECTION
@@ -41,6 +41,8 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	-H SQLHeavy.h \
 	--internal-header sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
+	--vapidir $(top_srcdir)/sqlheavy \
+	--pkg config \
 	--pkg gio-2.0 \
 	--pkg glib-2.0 \
 	--pkg gobject-2.0 \
@@ -101,6 +103,7 @@ MAINTAINERCLEANFILES = \
 
 
 EXTRA_DIST = \
+	config.vapi \
 	sqlheavy-version.vala.in \
 	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	sqlheavy-@SQLHEAVY_API_VERSION@.deps \

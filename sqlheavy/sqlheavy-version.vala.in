@@ -4,5 +4,6 @@ namespace SQLHeavy {
     public const int MINOR = @SQLHEAVY_MINOR_VERSION@;
     public const int MICRO = @SQLHEAVY_MICRO_VERSION@;
     public const string STRING = "@SQLHEAVY_VERSION@";
+    public const string API = "@SQLHEAVY_API_VERSION@";
   }
 }

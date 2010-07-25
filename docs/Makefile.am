@@ -7,6 +7,8 @@ EXTRA_DIST = sqlheavy-gen-orm.1
 if ENABLE_VALADOC
 
 VALADOC_FLAGS = --force \
+		--vapidir $(top_srcdir)/sqlheavy \
+		--pkg config \
 		--pkg sqlite3 \
 		--pkg gio-2.0 \
 		-b $(top_srcdir)/sqlheavy \
@@ -26,8 +28,9 @@ VALADOC_FLAGS = --force \
 		$(top_srcdir)/sqlheavy/sqlheavy-transaction.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-transaction-stack.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-user-functions.vala \
-		$(top_srcdir)/sqlheavy/sqlheavy-versioned-database.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-value.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-version.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-versioned-database.vala \
 		$(NULL)
 
 valadoc:
