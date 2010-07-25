@@ -6,7 +6,7 @@ m4_define([sqlheavy_minor], [0])
 m4_define([sqlheavy_micro], [1])
 
 m4_define([sqlheavy_version], [sqlheavy_major.sqlheavy_minor.sqlheavy_micro])
-m4_define([sqlheavy_api_version], [1.0])
+m4_define([sqlheavy_api_version], [0.1])
 
 AC_PREREQ([2.64])
 AC_INIT([SQLHeavy], [sqlheavy_version], [evan@coeus-group.com]. [sqlheavy])
