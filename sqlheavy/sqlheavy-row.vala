@@ -179,6 +179,20 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * Put a value into a named field of a record
+     *
+     * This function is basically an alias of {@link put} for easy
+     * access via []
+     *
+     * @param field name of the field to put data into
+     * @param value value to put into the field
+     * @see put
+     */
+    public new virtual void set (string field, GLib.Value value) throws SQLHeavy.Error {
+      this.put (this.field_index (field), value);
+    }
+
     internal void on_delete () {
       this._id = 0;
       this.deleted ();

@@ -833,11 +833,25 @@ namespace SQLHeavy {
     /**
      * Bind a value to the specified parameter
      *
-     * @param field name of the parameter
+     * @param name name of the parameter
      * @param value value to bind
      * @see bind_index
      */
     public void bind_value (string name, GLib.Value? value) throws SQLHeavy.Error {
+      this.bind_index (this.bind_get_index (name), value);
+    }
+
+    /**
+     * Bind a value to the specified parameter
+     *
+     * This function is basically an alias for {@link bind_value} to
+     * allow easy access via []
+     *
+     * @param name name of the parameter
+     * @param value value to bind
+     * @see bind_index
+     */
+    public new virtual void set (string name, GLib.Value value) throws SQLHeavy.Error {
       this.bind_index (this.bind_get_index (name), value);
     }
 
