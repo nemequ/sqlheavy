@@ -1,0 +1,8 @@
+namespace SQLHeavy {
+  namespace Version {
+    public const int MAJOR = @SQLHEAVY_MAJOR_VERSION@;
+    public const int MINOR = @SQLHEAVY_MINOR_VERSION@;
+    public const int MICRO = @SQLHEAVY_MICRO_VERSION@;
+    public const string STRING = "@SQLHEAVY_VERSION@";
+  }
+}

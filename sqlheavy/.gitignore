@@ -1,6 +1,7 @@
 .deps
 .libs
 SQLHeavy.h
+sqlheavy-version.vala
 *-internal.*
 *.c
 *.gir

@@ -23,6 +23,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-user-functions.vala \
 	sqlheavy-versioned-database.vala \
 	sqlheavy-value.vala \
+	sqlheavy-version.vala \
 	$(NULL)
 
 if HAVE_INTROSPECTION
@@ -98,7 +99,9 @@ MAINTAINERCLEANFILES = \
 	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	$(NULL)
 
+
 EXTRA_DIST = \
+	sqlheavy-version.vala.in \
 	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	sqlheavy-@SQLHEAVY_API_VERSION@.deps \
 	$(NULL)
