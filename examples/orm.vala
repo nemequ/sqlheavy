@@ -13,13 +13,13 @@ private static int main (string[] args) {
     row.save ();
     GLib.debug ("bar = %g", row.get_double ("bar"));
 
-    row.set_double ("bar", prng.next_double ());
+    row["bar"] = prng.next_double ();
     // Note that get_field will return the value we just set,
     // even though it hasn't yet been saved.
     GLib.debug ("bar = %g", row.get_double ("bar"));
     row.save ();
     // Now we make a trip to the database to get the value.
-    GLib.debug ("bar = %g", row.get_double ("bar"));
+    GLib.debug ("bar = %g", (double) row["bar"]);
 
     int64 row_id = row.id;
     table[row_id]["bar"] = prng.next_double ();

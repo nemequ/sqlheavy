@@ -9,6 +9,16 @@ namespace SQLHeavy {
     public abstract void put (int field, GLib.Value value) throws SQLHeavy.Error;
 
     /**
+     * Put a value into a named field of a record
+     *
+     * @param field the name of the field
+     * @param value the value of the field
+     */
+    public virtual void set (string field, GLib.Value value) throws SQLHeavy.Error {
+      this.put (this.field_index (field), value);
+    }
+
+    /**
      * Put a string value into a field of a record
      *
      * @param field index of the field to put data into
