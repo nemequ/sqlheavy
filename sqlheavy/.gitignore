@@ -1,6 +1,7 @@
 .deps
 .libs
 SQLHeavy.h
+sqlheavy-0.1.vapi
 sqlheavy-version.vala
 *-internal.*
 *.c
@@ -10,4 +11,4 @@ sqlheavy-version.vala
 *.o
 *.stamp
 *.typelib
-*.vapi
+
