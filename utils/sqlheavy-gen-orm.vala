@@ -205,7 +205,7 @@ namespace SQLHeavy {
           get_method.add_error_type (type_from_string ("SQLHeavy.Error"));
 
           var block = new Vala.Block (null);
-          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"fetch_named_$(data_type_get.to_string ())"));
+          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"get_$(data_type_get.to_string ())"));
           call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\""));
           block.add_statement (new Vala.ReturnStatement (call));
 
@@ -220,7 +220,7 @@ namespace SQLHeavy {
           set_method.add_error_type (type_from_string ("SQLHeavy.Error"));
 
           var block = new Vala.Block (null);
-          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"put_named_$(data_type.to_string ())"));
+          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"set_$(data_type.to_string ())"));
           call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\""));
           block.add_statement (new Vala.ExpressionStatement (call));
 
@@ -236,7 +236,7 @@ namespace SQLHeavy {
           var catch_block = new Vala.Block (null);
           var try_stmt = new Vala.TryStatement (try_block, null, null);
 
-          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"fetch_named_$(data_type_get.to_string ())"));
+          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"get_$(data_type_get.to_string ())"));
           call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\""));
           try_block.add_statement (new Vala.ReturnStatement (call));
 
@@ -257,7 +257,7 @@ namespace SQLHeavy {
           var catch_block = new Vala.Block (null);
           var try_stmt = new Vala.TryStatement (try_block, null, null);
 
-          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"put_named_$(data_type_get.to_string ())"));
+          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"set_$(data_type_get.to_string ())"));
           call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\""));
           call.add_argument (new Vala.MemberAccess (null, "value"));
           try_block.add_statement (new Vala.ExpressionStatement (call));
