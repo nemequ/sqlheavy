@@ -1,11 +1,11 @@
 private async void execute_queries (SQLHeavy.Transaction trans, int source) {
   try {
     var stmt = trans.prepare ("INSERT INTO `foo` (`source`, `iter`) VALUES (:source, :iter);");
-    stmt.bind_int (":source", source);
+    stmt.set_int (":source", source);
 
     for ( int i = 0 ; i < 0xff ; i++ ) {
       try {
-        stmt.bind_int (":iter", i);
+        stmt.set_int (":iter", i);
         yield stmt.execute_async ();
       } catch ( SQLHeavy.Error ep ) {
         GLib.error (ep.message);

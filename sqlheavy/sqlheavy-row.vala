@@ -122,12 +122,12 @@ namespace SQLHeavy {
         for ( field = 0 ; field < field_count ; field++ ) {
           if ( this.values[field] != null ) {
             var field_name = this.table.field_name (field);
-            stmt.bind_value (@":$(field_name)", this.values[field]);
+            stmt.set (@":$(field_name)", this.values[field]);
           }
         }
 
         if ( this._id > 0 ) {
-          stmt.bind_int64 (":ROWID", this._id);
+          stmt.set_int64 (":ROWID", this._id);
           stmt.execute ();
         }
         else {
@@ -192,7 +192,7 @@ namespace SQLHeavy {
     public void delete () throws SQLHeavy.Error {
       if ( this._id > 0 ) {
         var stmt = this.table.queryable.prepare (@"DELETE FROM `$(this.table.name)` WHERE `ROWID` = :id;");
-        stmt.bind_int64 (":id", this._id);
+        stmt.set_int64 (":id", this._id);
         stmt.execute ();
       }
     }
@@ -212,7 +212,7 @@ namespace SQLHeavy {
         throw new SQLHeavy.Error.MISUSE ("Cannot read field `%s` from row not persisted to database.", field_name);
 
       var stmt = this.table.queryable.prepare (@"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = :id;");
-      stmt.bind_int64 (":id", this._id);
+      stmt.set_int64 (":id", this._id);
       return stmt.fetch_result (0);
     }
 
@@ -253,7 +253,7 @@ namespace SQLHeavy {
         }
 
         var stmt = this.table.queryable.prepare (@"SELECT * FROM `$(this.table.name)` WHERE `ROWID` = :id;");
-        stmt.bind_int64 (":id", this._id);
+        stmt.set_int64 (":id", this._id);
         stmt.step_internal ();
         var res = stmt.fetch_row ();
 

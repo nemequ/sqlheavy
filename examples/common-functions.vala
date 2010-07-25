@@ -12,7 +12,7 @@ private static int main (string[] args) {
 
     GLib.stdout.puts ("Testing cryptographic hashes...\n");
     var stmt = db.prepare ("SELECT MD5(:data), SHA1(:data), SHA256(:data);");
-    stmt.bind_string (":data", test_string);
+    stmt.set_string (":data", test_string);
     stmt.step ();
     GLib.stdout.printf ("   MD5: %s\n", stmt.fetch_string (0));
     GLib.stdout.printf ("  SHA1: %s\n", stmt.fetch_string (1));
@@ -23,11 +23,11 @@ private static int main (string[] args) {
     var data = (uint8[]) test_string.to_utf8 ();
     GLib.stdout.printf ("Original size: %d bytes\n", (int) test_string.size ());
     stmt = db.prepare ("SELECT COMPRESS(:data);");
-    stmt.bind_blob (":data", data);
+    stmt.set_blob (":data", data);
     var compressed = stmt.fetch_result_blob ();
     GLib.stdout.printf ("Compressed size: %d bytes\n", compressed.length);
     stmt = db.prepare ("SELECT DECOMPRESS(:data);");
-    stmt.bind_blob (":data", compressed);
+    stmt.set_blob (":data", compressed);
     GLib.stdout.puts ("Decompression " + (stmt.fetch_result_string () == test_string ? "successful" : "failed") + ".\n");
   }
   catch ( SQLHeavy.Error e ) {

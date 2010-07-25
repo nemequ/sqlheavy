@@ -4,10 +4,10 @@ namespace SQLHeavy {
 
     public void insert (SQLHeavy.Statement stmt) throws SQLHeavy.Error {
       lock ( this.stmt ) {
-        this.stmt.bind_string (":sql", stmt.sql);
-        this.stmt.bind_double (":clock", stmt.execution_time_elapsed ());
-        this.stmt.bind_int64 (":fullscan_step", stmt.full_scan_steps);
-        this.stmt.bind_int64 (":sort", stmt.sort_operations);
+        this.stmt.set_string (":sql", stmt.sql);
+        this.stmt.set_double (":clock", stmt.execution_time_elapsed ());
+        this.stmt.set_int64 (":fullscan_step", stmt.full_scan_steps);
+        this.stmt.set_int64 (":sort", stmt.sort_operations);
         this.stmt.execute ();
         this.stmt.reset ();
       }
