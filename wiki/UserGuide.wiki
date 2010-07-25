@@ -127,7 +127,7 @@ With the exception of some optimizations to avoid excessive locking and unlockin
 
 === Retrieving Results ===
 
-After calling the `Statement.step` method, you will probably want to actually read some fields from the result set. Although SQLHeavy provides a few convenience methods, such as `Statement.get_table` (which will put all results into a `GLib.ValueArray` of `GLib.ValueArray`s) and `Statement.print_table` (which will write the result set to a file stream), you will most likely want to use the `Record.fetch*` and `Record.get*` methods (the `Statement` class implements the `Record` interface), which are analagous to SQLite's sqlite3_column_* methods:
+After calling the `Statement.step` method, you will probably want to actually read some fields from the result set. Although SQLHeavy provides a few convenience methods, such as `Statement.get_table` (which will put all results into a `GLib.ValueArray` of `GLib.ValueArray`s) and `Statement.print_table` (which will write the result set to a file stream), you will most likely want to use the `Record.fetch*` and `Record.get*` methods (the `Statement` class implements the `Record` interface), which are analagous to SQLite's `sqlite3_column_*` methods:
 
 {{{
 for ( int record = 1 ; stmt.step () ; record++ ) {
