@@ -973,9 +973,22 @@ namespace SQLHeavy {
      *
      * @param destination the location to write the backup to
      * @see SQLHeavy.Backup
+     * @see backup_async
      */
     public void backup (string destination) throws SQLHeavy.Error {
       new SQLHeavy.Backup (this, new SQLHeavy.Database (destination)).execute ();
+    }
+
+    /**
+     * Backup database asynchronously
+     *
+     * @param destination the location to write the backup to
+     * @see SQLHeavy.Backup
+     * @see backup
+     */
+    public async void backup_async (string destination) throws SQLHeavy.Error {
+      var backup = new SQLHeavy.Backup (this, new SQLHeavy.Database (destination));
+      yield backup.execute_async ();
     }
 
     /**
