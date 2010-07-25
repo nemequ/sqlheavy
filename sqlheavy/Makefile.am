@@ -13,6 +13,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-database-pool.vala \
 	sqlheavy-enums.vala \
 	sqlheavy-error.vala \
+	sqlheavy-mutable-record.vala \
 	sqlheavy-profiling-database.vala \
 	sqlheavy-queryable.vala \
 	sqlheavy-record.vala \

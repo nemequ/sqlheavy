@@ -2,7 +2,7 @@ namespace SQLHeavy {
   /**
    * A table row
    */
-  public class Row : GLib.Object, SQLHeavy.Record {
+  public class Row : GLib.Object, SQLHeavy.Record, SQLHeavy.MutableRecord {
     /**
      * The table that this row is a record of
      */
