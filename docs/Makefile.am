@@ -28,7 +28,6 @@ VALADOC_FLAGS = --force \
 		$(top_srcdir)/sqlheavy/sqlheavy-statement.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-table.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-transaction.vala \
-		$(top_srcdir)/sqlheavy/sqlheavy-transaction-stack.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-user-functions.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-value.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-version.vala \

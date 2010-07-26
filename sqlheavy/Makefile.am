@@ -21,7 +21,6 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-statement.vala \
 	sqlheavy-table.vala \
 	sqlheavy-transaction.vala \
-	sqlheavy-transaction-stack.vala \
 	sqlheavy-user-functions.vala \
 	sqlheavy-value.vala \
 	sqlheavy-version.vala \
