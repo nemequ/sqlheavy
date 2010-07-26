@@ -222,11 +222,16 @@ row["baz"] = 3.141592654;
 row.save ();
 }}}
 
-For a simplistic example of using the `Table` and `Row` classes, see the [http://gitorious.org/sqlheavy/sqlheavy/blobs/master/examples/orm.vala ORM example]
+The `Row` class will also provide change notifications at the row level (via the `Row.changed` signal) and the field level (via the `Row.field-changed` signal).
+
+
+For a basic example of using the `Table` and `Row` classes, see the [http://gitorious.org/sqlheavy/sqlheavy/blobs/master/examples/orm.vala ORM example].
 
 == ORM Generator ==
 
-The ORM generator provides a compile time binding to a specific database, with classes extending the `Row` class named after tables in the database. For information on how to use sqlheavy-gen-orm, see the man page distributed with SQLHeavy, or the [ORMGenerator] wiki page. To give you a taste, though, here is one class generated from the ~/.liferea_1.6/liferea.db file on my computer:
+The ORM generator provides a compile time binding to a specific database, with classes extending the `Row` class named after tables in the database. For information on how to use sqlheavy-gen-orm, see the man page distributed with SQLHeavy, or the [ORMGenerator] wiki page.
+
+The following is a class generated from a Liferea database:
 
 {{{
 public class AttentionStat : SQLHeavy.Row {
