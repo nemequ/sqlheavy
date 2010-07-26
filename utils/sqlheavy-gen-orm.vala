@@ -245,6 +245,9 @@ namespace SQLHeavy {
           error_call.add_argument (new Vala.MemberAccess (new Vala.MemberAccess (null, "e"), "message"));
           catch_block.add_statement (new Vala.ExpressionStatement (error_call));
 
+          var anr = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "assert_not_reached"));
+          catch_block.add_statement (new Vala.ExpressionStatement (anr));
+
           try_stmt.add_catch_clause (new Vala.CatchClause (type_from_string ("SQLHeavy.Error"), "e", catch_block, null));
           block.add_statement (try_stmt);
 
@@ -303,15 +306,29 @@ namespace SQLHeavy {
 
       Vala.SwitchStatement signals_switch;
       {
-        var register_notify = new Vala.Method ("register_for_change_notifications", new Vala.VoidType ());
+        var register_notify = new Vala.Method ("emit_change_notification", new Vala.VoidType ());
         register_notify.access = Vala.SymbolAccessibility.PRIVATE;
         register_notify.add_parameter (new Vala.FormalParameter ("field", type_from_string ("int")));
 
         var block = new Vala.Block (null);
-        var get_field_name = new Vala.MethodCall (new Vala.MemberAccess (null, "field_name"));
-        get_field_name.add_argument (new Vala.MemberAccess (null, "field"));
-        var field_name = new Vala.LocalVariable (type_from_string ("string"), "field_name", get_field_name);
+        var try_block = new Vala.Block (null);
+        var catch_block = new Vala.Block (null);
+        var try_stmt = new Vala.TryStatement (try_block, null, null);
+
+        var field_name = new Vala.LocalVariable (type_from_string ("string"), "field_name", new Vala.StringLiteral ("null"));
         block.add_statement (new Vala.DeclarationStatement (field_name, null));
+
+        block.add_statement (try_stmt);
+        var get_field_name = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "field_name"));
+        get_field_name.add_argument (new Vala.MemberAccess (null, "field"));
+        try_block.add_statement (new Vala.ExpressionStatement (new Vala.Assignment (new Vala.StringLiteral ("field_name"), get_field_name)));
+
+        var warn_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "warning"));
+        warn_call.add_argument (new Vala.StringLiteral ("\"" + "Unknown field: %d" + "\""));
+        warn_call.add_argument (new Vala.MemberAccess (null, "field"));
+        catch_block.add_statement (new Vala.ExpressionStatement (warn_call));
+        catch_block.add_statement (new Vala.ReturnStatement ());
+        try_stmt.add_catch_clause (new Vala.CatchClause (type_from_string ("SQLHeavy.Error"), "e", catch_block, null));
 
         signals_switch = new Vala.SwitchStatement (new Vala.StringLiteral ("field_name"), null);
         block.add_statement (signals_switch);
@@ -322,7 +339,11 @@ namespace SQLHeavy {
 
       var con = new Vala.Constructor (null);
       con.body = new Vala.Block (null);
-      con.body.add_statement (new Vala.ExpressionStatement (new Vala.MethodCall (new Vala.StringLiteral ("register_for_change_notifications"))));
+
+      var conn_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "field_changed"), "connect"));
+      conn_call.add_argument (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "emit_change_notification"));
+
+      con.body.add_statement (new Vala.ExpressionStatement (conn_call));
       cl.constructor = con;
 
       for ( var field = 0 ; field < table.field_count ; field++ ) {
