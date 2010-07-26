@@ -234,9 +234,16 @@ The ORM generator provides a compile time binding to a specific database, with c
 The following is a class generated from a Liferea database:
 
 {{{
-public class AttentionStat : SQLHeavy.Row {
-  private void register_for_change_notifications (int field) {
-    string? field_name = field_name (field);
+public class AttentionStats : SQLHeavy.Row {
+  private void emit_change_notification (int field) {
+    string? field_name = null;
+    try {
+      field_name = this.field_name (field);
+    } catch (SQLHeavy.Error e) {
+      GLib.warning ("Unknown field: %d", field);
+      return;
+    }
+
     switch (field_name) {
       case "category_id":
         {
@@ -262,8 +269,10 @@ public class AttentionStat : SQLHeavy.Row {
         return this.get_string ("category_id");
       } catch (SQLHeavy.Error e) {
         GLib.error ("Unable to retrieve `category_id': %s", e.message);
+        GLib.assert_not_reached ();
       }
     }
+
     set {
       try {
         this.set_string ("category_id", value);
@@ -279,8 +288,11 @@ public class AttentionStat : SQLHeavy.Row {
         return this.get_string ("category_name");
       } catch (SQLHeavy.Error e) {
         GLib.error ("Unable to retrieve `category_name': %s", e.message);
+        GLib.assert_not_reached ();
       }
-    } set {
+    }
+
+    set {
       try {
         this.set_string ("category_name", value);
       } catch (SQLHeavy.Error e) {
@@ -295,8 +307,11 @@ public class AttentionStat : SQLHeavy.Row {
         return this.get_int ("count");
       } catch (SQLHeavy.Error e) {
         GLib.error ("Unable to retrieve `count': %s", e.message);
+        GLib.assert_not_reached ();
       }
-    } set {
+    }
+
+    set {
       try {
         this.set_int ("count", value);
       } catch (SQLHeavy.Error e) {
@@ -306,7 +321,7 @@ public class AttentionStat : SQLHeavy.Row {
   }
 
   construct {
-    register_for_change_notifications ();
+    this.field_changed.connect (this.emit_change_notification);
   }
 }
 }}}
