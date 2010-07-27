@@ -13,7 +13,7 @@ namespace SQLHeavy {
      *
      * @see Database.sql_executed
      */
-    public signal void query_executed (SQLHeavy.Statement stmt);
+    public signal void query_executed (SQLHeavy.Query query);
 
     /**
      * Lock the queryable and refuse to run any queries against it.

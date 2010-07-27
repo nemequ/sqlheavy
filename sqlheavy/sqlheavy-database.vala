@@ -313,19 +313,6 @@ namespace SQLHeavy {
     public signal void sql_executed (string sql);
 
     /**
-     * Callback which is attached to {@link Queryable.query_executed}
-     * to insert data into the profiling database
-     */
-    private void profiling_cb (SQLHeavy.Statement stmt) {
-      try {
-        this.profiling_data.insert (stmt);
-      }
-      catch ( SQLHeavy.Error e ) {
-        GLib.warning ("Unable to insert profiling information: %s (%d)", e.message, e.code);
-      }
-    }
-
-    /**
      * Database to store profiling data in.
      *
      * Enabling profiling while this is null will cause the database
@@ -349,7 +336,6 @@ namespace SQLHeavy {
       set {
         if ( value == false ) {
           this.profiling_data = null;
-          this.query_executed.disconnect (this.profiling_cb);
         }
         else {
           try {
@@ -360,8 +346,6 @@ namespace SQLHeavy {
             GLib.warning ("Unable to enable profiling: %s (%d)", e.message, e.code);
             return;
           }
-
-          this.query_executed.connect (this.profiling_cb);
         }
       }
     }

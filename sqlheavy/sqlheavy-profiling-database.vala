@@ -1,22 +1,25 @@
 namespace SQLHeavy {
   public class ProfilingDatabase : SQLHeavy.VersionedDatabase {
-    private SQLHeavy.Statement stmt;
+    private SQLHeavy.Query query;
 
-    public void insert (SQLHeavy.Statement stmt) throws SQLHeavy.Error {
-      lock ( this.stmt ) {
-        this.stmt.set_string (":sql", stmt.sql);
-        this.stmt.set_double (":clock", stmt.execution_time_elapsed ());
-        this.stmt.set_int64 (":fullscan_step", stmt.full_scan_steps);
-        this.stmt.set_int64 (":sort", stmt.sort_operations);
-        this.stmt.execute ();
-        this.stmt.reset ();
+    internal void insert (SQLHeavy.QueryResult query_result) {
+      lock ( this.query ) {
+        try {
+          this.query.set_string (":sql", query_result.query.sql);
+          this.query.set_double (":clock", query_result.execution_time);
+          this.query.set_int64 (":fullscan_step", query_result.full_scan_steps);
+          this.query.set_int64 (":sort", query_result.sort_operations);
+          this.query.execute ();
+        } catch ( SQLHeavy.Error e ) {
+          GLib.warning ("Unable to insert entry into profiling database: %s", e.message);
+        }
       }
     }
 
     construct {
       try {
-        this.stmt = this.prepare ("INSERT INTO `queries` (`sql`, `clock`, `fullscan_step`, `sort`) VALUES (:sql, :clock, :fullscan_step, :sort);");
-        this.stmt.auto_clear = true;
+        this.query = new SQLHeavy.Query (this, "INSERT INTO `queries` (`sql`, `clock`, `fullscan_step`, `sort`) VALUES (:sql, :clock, :fullscan_step, :sort);");
+        this.query.auto_clear = true;
       }
       catch ( SQLHeavy.Error e ) {
         GLib.warning ("Unable to insert profiling information: %s (%d)", e.message, e.code);

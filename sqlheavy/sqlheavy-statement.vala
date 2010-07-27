@@ -118,9 +118,6 @@ namespace SQLHeavy {
      * Reset the statement, allowing for another execution.
      */
     public void reset () {
-      if ( this.active )
-        this.queryable.query_executed (this);
-
       if ( this.auto_clear )
         this.clear_bindings ();
 
@@ -163,7 +160,6 @@ namespace SQLHeavy {
       else if ( ec == Sqlite.DONE ) {
         this.finished = true;
         this.active = false;
-        this.queryable.query_executed (this);
         return false;
       }
       else {

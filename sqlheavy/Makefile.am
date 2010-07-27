@@ -15,8 +15,11 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-error.vala \
 	sqlheavy-mutable-record.vala \
 	sqlheavy-profiling-database.vala \
+	sqlheavy-query.vala \
 	sqlheavy-queryable.vala \
+	sqlheavy-query-result.vala \
 	sqlheavy-record.vala \
+	sqlheavy-record-set.vala \
 	sqlheavy-row.vala \
 	sqlheavy-statement.vala \
 	sqlheavy-table.vala \
