@@ -86,7 +86,15 @@ namespace SQLHeavy {
     /**
      * A transaction error was encountered
      */
-    TRANSACTION
+    TRANSACTION,
+    /**
+     * Feature not supported
+     *
+     * This is triggered when trying to make use of a feature only
+     * present in a later version of SQLite than is currently in
+     * use. For example, WAL in SQLite < 3.7.0.
+     */
+    FEATURE_NOT_SUPPORTED
   }
 
   /**

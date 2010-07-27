@@ -2,6 +2,13 @@ namespace SQLHeavy {
   [CCode (cname = "g_sequence_free")]
   internal extern static void g_sequence_free (GLib.Sequence seq);
 
+  [CCode (has_target = false)]
+  private delegate int WALCheckpointFunc (Sqlite.Database db, string? dbname);
+  [CCode (instance_pos = 0)]
+  private delegate int WALHookCallback (Sqlite.Database db, string dbname, int pages);
+  [CCode (has_target = false)]
+  private delegate int WALHookFunc (Sqlite.Database db, WALHookCallback hook);
+
   /**
    * A database.
    */
@@ -25,6 +32,32 @@ namespace SQLHeavy {
      * @see orm_rows
      */
     private GLib.HashTable <string, GLib.Sequence<unowned SQLHeavy.Table>> orm_tables = null;
+
+    /**
+     * Write-ahead logging auto checkpoint interval
+     */
+    public int wal_auto_checkpoint { get; set; default = 10; }
+
+    /**
+     * Emitted when data is committed to the write-ahead log
+     *
+     * @see journal_mode
+     */
+    public virtual signal void wal_committed (string db_name, int pages) {
+      if ( this.wal_auto_checkpoint > 0 &&
+           this.wal_auto_checkpoint <= pages ) {
+        this.try_wal_checkpoint ();
+      }
+    }
+
+    // Work around for b.g.o. #625360
+    private void try_wal_checkpoint () {
+      try {
+        this.wal_checkpoint ();
+      } catch ( SQLHeavy.Error e ) {
+        GLib.critical ("Unable to auto-checkpoint: %s", e.message);
+      }
+    }
 
     /**
      * Register a row for change notifications
@@ -586,7 +619,25 @@ namespace SQLHeavy {
      */
     public SQLHeavy.JournalMode journal_mode {
       get { return SQLHeavy.JournalMode.from_string (this.pragma_get_string ("journal_mode")); }
-      set { this.pragma_set_string ("journal_mode", value.to_string ()); }
+      set {
+        if ( value == SQLHeavy.JournalMode.WAL ) {
+          if ( Sqlite.libversion_number () < 3007000 ) {
+            GLib.warning ("SQLite-%s does not support write-ahead logging.", Sqlite.libversion ());
+            return;
+          }
+
+          var mod = GLib.Module.open (null, GLib.ModuleFlags.BIND_LAZY | GLib.ModuleFlags.BIND_LOCAL);
+          void* sqlite3_wal_hook;
+          GLib.assert (mod.symbol ("sqlite3_wal_hook", out sqlite3_wal_hook));
+
+          ((WALHookFunc) sqlite3_wal_hook) (this.db, (db, dbname, pages) => {
+              this.wal_committed (dbname, pages);
+              return Sqlite.OK;
+            });
+        }
+
+        this.pragma_set_string ("journal_mode", value.to_string ());
+      }
     }
 
     /**
@@ -989,6 +1040,25 @@ namespace SQLHeavy {
     public async void backup_async (string destination) throws SQLHeavy.Error {
       var backup = new SQLHeavy.Backup (this, new SQLHeavy.Database (destination));
       yield backup.execute_async ();
+    }
+
+    /**
+     * Checkpoint the specified database
+     *
+     * See SQLite documentation at [[http://sqlite.org/wal.html#ckpt]]
+     *
+     * @see journal_mode
+     */
+    public void wal_checkpoint (string? database = null) throws SQLHeavy.Error {
+      if ( Sqlite.libversion_number () < 3007000 )
+        throw new SQLHeavy.Error.FEATURE_NOT_SUPPORTED ("Write-ahead logging features are only available in SQLite >= 3.7.0, you are using %s", Sqlite.libversion ());
+
+      var mod = GLib.Module.open (null, GLib.ModuleFlags.BIND_LAZY | GLib.ModuleFlags.BIND_LOCAL);
+
+      void* sqlite3_wal_checkpoint;
+      GLib.assert (mod.symbol ("sqlite3_wal_checkpoint", out sqlite3_wal_checkpoint));
+
+      error_if_not_ok (((WALCheckpointFunc) sqlite3_wal_checkpoint) (this.db, database), this);
     }
 
     /**

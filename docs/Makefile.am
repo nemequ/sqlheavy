@@ -11,6 +11,7 @@ VALADOC_FLAGS = --force \
 		--pkg config \
 		--pkg sqlite3 \
 		--pkg gio-2.0 \
+		--pkg gmodule-2.0 \
 		-b $(top_srcdir)/sqlheavy \
 		--package-name SQLHeavy \
 		--package-version @SQLHEAVY_VERSION@ \
