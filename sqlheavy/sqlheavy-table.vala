@@ -29,11 +29,11 @@ namespace SQLHeavy {
       public string affinity;
       public bool not_null;
 
-      public FieldInfo.from_stmt (SQLHeavy.Statement stmt) throws SQLHeavy.Error {
-        this.index = stmt.fetch_int (0);
-        this.name = stmt.fetch_string (1);
-        this.affinity = stmt.fetch_string (2);
-        this.not_null = stmt.fetch_int (3) > 0;
+      public FieldInfo.from_query_result (SQLHeavy.QueryResult query_result) throws SQLHeavy.Error {
+        this.index = query_result.fetch_int (0);
+        this.name = query_result.fetch_string (1);
+        this.affinity = query_result.fetch_string (2);
+        this.not_null = query_result.fetch_int (3) > 0;
       }
     }
 
@@ -47,15 +47,15 @@ namespace SQLHeavy {
       // public string on_delete;
       // public string match;
 
-      public ForeignKeyInfo.from_stmt (SQLHeavy.Statement stmt) throws SQLHeavy.Error {
-        this.id = stmt.fetch_int (0);
-        this.seq = stmt.fetch_int (1);
-        this.table = stmt.fetch_string (2);
-        this.from = stmt.fetch_string (3);
-        this.to = stmt.fetch_string (4);
-        // this.on_update = stmt.fetch_string (5);
-        // this.on_delete = stmt.fetch_string (6);
-        // this.match = stmt.fetch_string (7);
+      public ForeignKeyInfo.from_query_result (SQLHeavy.QueryResult query_result) throws SQLHeavy.Error {
+        this.id = query_result.fetch_int (0);
+        this.seq = query_result.fetch_int (1);
+        this.table = query_result.fetch_string (2);
+        this.from = query_result.fetch_string (3);
+        this.to = query_result.fetch_string (4);
+        // this.on_update = query_result.fetch_string (5);
+        // this.on_delete = query_result.fetch_string (6);
+        // this.match = query_result.fetch_string (7);
       }
     }
 
@@ -68,14 +68,16 @@ namespace SQLHeavy {
           this._field_data = new GLib.Sequence<FieldInfo> (GLib.g_object_unref);
           this._field_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
-          var stmt = this.queryable.prepare (@"PRAGMA table_info (`$(escape_string (this.name))`);");
+          var result = new SQLHeavy.Query (this.queryable, @"PRAGMA table_info (`$(escape_string (this.name))`);").execute ();
 
-          while ( stmt.step () ) {
-            var row = new FieldInfo.from_stmt (stmt);
+          while ( !result.finished ) {
+            var row = new FieldInfo.from_query_result (result);
             this._field_data.insert_sorted (row, (a, b) => {
                 return ((FieldInfo) a).index - ((FieldInfo) b).index;
               });
             this._field_names.insert (row.name, row.index);
+
+            result.next ();
           }
         }
       }
@@ -92,13 +94,16 @@ namespace SQLHeavy {
           this._foreign_key_data = new GLib.Sequence<ForeignKeyInfo> (GLib.g_object_unref);
           this._foreign_key_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
-          var stmt = this.queryable.prepare (@"PRAGMA foreign_key_list (`$(escape_string (this.name))`);");
-          while ( stmt.step () ) {
-            var row = new ForeignKeyInfo.from_stmt (stmt);
+          var result = new SQLHeavy.Query (this.queryable, @"PRAGMA foreign_key_list (`$(escape_string (this.name))`);").execute ();
+
+          while ( !result.finished ) {
+            var row = new ForeignKeyInfo.from_query_result (result);
             this._foreign_key_data.insert_sorted (row, (a, b) => {
                 return ((ForeignKeyInfo) a).id - ((ForeignKeyInfo) b).id;
               });
             this._foreign_key_names.insert (row.from, row.id);
+
+            result.next ();
           }
         }
       }
