@@ -1,5 +1,7 @@
 .deps
 .libs
+config.h
+config.h.in
 SQLHeavy.h
 sqlheavy-0.1.vapi
 sqlheavy-version.vala
