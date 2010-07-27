@@ -26,7 +26,7 @@ namespace SQLHeavy {
       }
     }
 
-    private bool next_internal () throws SQLHeavy.Error {
+    internal bool next_internal () throws SQLHeavy.Error {
       unowned Sqlite.Statement stmt = this.query.get_statement ();
 
       if ( this.finished )
@@ -147,6 +147,11 @@ namespace SQLHeavy {
       this._field_count = stmt.column_count ();
     }
 
+    internal QueryResult.no_lock (SQLHeavy.Query query) throws SQLHeavy.Error {
+      GLib.Object (query: query);
+      this.next_internal ();
+    }
+
     internal QueryResult.insert (SQLHeavy.Query query, out int64 insert_id) throws SQLHeavy.Error {
       GLib.Object (query: query);
 
@@ -155,8 +160,8 @@ namespace SQLHeavy {
 
       this.acquire_locks (queryable, db);
       try {
-        if ( this.next_internal () )
-          insert_id = db.last_insert_id;
+        this.next_internal ();
+        insert_id = db.last_insert_id;
       } catch ( SQLHeavy.Error e ) {
         this.release_locks (queryable, db);
         throw e;

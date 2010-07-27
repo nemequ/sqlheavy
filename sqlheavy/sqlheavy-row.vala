@@ -79,60 +79,60 @@ namespace SQLHeavy {
 
         var field = 0;
         var field_count = this.table.field_count;
-        var query = new GLib.StringBuilder ();
+        var sql = new GLib.StringBuilder ();
         var first_field = true;
 
         if ( this._id > 0 ) {
-          query.printf ("UPDATE `%s` SET ", this.table.name);
+          sql.printf ("UPDATE `%s` SET ", this.table.name);
 
           for ( field = 0 ; field < field_count ; field++ ) {
             if ( this.values[field] != null ) {
               if ( !first_field )
-                query.append (", ");
+                sql.append (", ");
               var field_name = this.table.field_name (field);
-              query.append (@"`$(field_name)` = :$(field_name)");
+              sql.append (@"`$(field_name)` = :$(field_name)");
               first_field = false;
             }
           }
-          query.append (" WHERE `ROWID` = :ROWID;");
+          sql.append (" WHERE `ROWID` = :ROWID;");
         } else {
-          query.printf ("INSERT INTO `%s` (", this.table.name);
+          sql.printf ("INSERT INTO `%s` (", this.table.name);
           var qvalues = new GLib.StringBuilder ();
 
           for ( field = 0 ; field < field_count ; field++ ) {
             if ( this.values[field] != null ) {
               if ( !first_field ) {
-                query.append (", ");
+                sql.append (", ");
                 qvalues.append (", ");
               }
 
               var field_name = this.table.field_name (field);
-              query.append (@"`$(field_name)`");
+              sql.append (@"`$(field_name)`");
               qvalues.append (@":$(field_name)");
             }
           }
 
-          query.append (") VALUES (");
-          query.append (qvalues.str);
-          query.append (");");
+          sql.append (") VALUES (");
+          sql.append (qvalues.str);
+          sql.append (");");
         }
 
-        var stmt = this.table.queryable.prepare (query.str);
+        var query = new SQLHeavy.Query (this.table.queryable, sql.str);
 
         for ( field = 0 ; field < field_count ; field++ ) {
           if ( this.values[field] != null ) {
             var field_name = this.table.field_name (field);
-            stmt.set (@":$(field_name)", this.values[field]);
+            query.set (@":$(field_name)", this.values[field]);
           }
         }
 
         if ( this._id > 0 ) {
-          stmt.set_int64 (":ROWID", this._id);
-          stmt.execute ();
+          query.set_int64 (":ROWID", this._id);
+          query.execute ();
         }
         else {
           var db = this.table.queryable.database;
-          this._id = stmt.execute_insert ();
+          this._id = query.execute_insert ();
           db.register_orm_row (this);
           this.update_cache ();
         }
@@ -191,9 +191,9 @@ namespace SQLHeavy {
      */
     public void delete () throws SQLHeavy.Error {
       if ( this._id > 0 ) {
-        var stmt = this.table.queryable.prepare (@"DELETE FROM `$(this.table.name)` WHERE `ROWID` = :id;");
-        stmt.set_int64 (":id", this._id);
-        stmt.execute ();
+        var query = this.table.queryable.prepare (@"DELETE FROM `$(this.table.name)` WHERE `ROWID` = :id;");
+        query.set_int64 (":id", this._id);
+        query.execute ();
       }
     }
 
@@ -211,9 +211,9 @@ namespace SQLHeavy {
       if ( this._id <= 0 )
         throw new SQLHeavy.Error.MISUSE ("Cannot read field `%s` from row not persisted to database.", field_name);
 
-      var stmt = this.table.queryable.prepare (@"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = :id;");
-      stmt.set_int64 (":id", this._id);
-      return stmt.fetch_result (0);
+      var query = new SQLHeavy.Query (this.table.queryable, @"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = :id;");
+      query.set_int64 (":id", this._id);
+      return query.execute ().fetch (0);
     }
 
     /**
@@ -252,10 +252,9 @@ namespace SQLHeavy {
             this.cache = new GLib.Value[fc];
         }
 
-        var stmt = this.table.queryable.prepare (@"SELECT * FROM `$(this.table.name)` WHERE `ROWID` = :id;");
-        stmt.set_int64 (":id", this._id);
-        stmt.step_internal ();
-        var res = stmt.fetch_row ();
+        var query = new SQLHeavy.Query (this.table.queryable, @"SELECT * FROM `$(this.table.name)` WHERE `ROWID` = :id;");
+        query.set_int64 (":id", this._id);
+        var res = new SQLHeavy.QueryResult.no_lock (query).fetch_row ();
 
         var fields_changed = new bool[fc];
         int f = 0;
