@@ -51,8 +51,7 @@ namespace SQLHeavy {
             (s != null) && (current_max > 0) ; ) {
         unowned char * os = (char *)s;
         {
-          SQLHeavy.Statement stmt = new SQLHeavy.Statement.full (this, (!) s, (int)current_max, out s);
-          stmt.execute ();
+          new SQLHeavy.Query.full (this, (!) s, (int) current_max, out s).execute ();
         }
 
         current_max -= (char *)s - os;

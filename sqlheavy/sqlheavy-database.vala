@@ -382,7 +382,7 @@ namespace SQLHeavy {
         return new SQLHeavy.Query (this, "PRAGMA %s;".printf (pragma)).execute ().fetch_string (0);
       }
       catch ( SQLHeavy.Error e ) {
-        GLib.critical ("Unable to retrieve pragma value: %s", e.message);
+        GLib.critical ("Unable to retrieve pragma value %s: %s", pragma, e.message);
         return null;
       }
     }

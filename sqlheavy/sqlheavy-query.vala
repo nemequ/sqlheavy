@@ -11,6 +11,11 @@ namespace SQLHeavy {
     public string sql { get; construct; }
 
     /**
+     * The maximum length of the SQL used to create this query
+     */
+    public int sql_len { private get; construct; default = -1; }
+
+    /**
      * The last error code
      */
     private int error_code = Sqlite.OK;
@@ -18,12 +23,7 @@ namespace SQLHeavy {
     /**
      * The SQLite statement associated with this query
      */
-    private unowned Sqlite.Statement? stmt = null;
-
-    /**
-     * The unused portion of the SQL used to create this query
-     */
-    private unowned string? sql_tail = null;
+    private Sqlite.Statement? stmt = null;
 
     /**
      * Return the SQLite statement associated with this query
@@ -434,7 +434,7 @@ namespace SQLHeavy {
     }
 
     construct {
-      this.error_code = sqlite3_prepare (queryable.database.get_sqlite_db (), this.sql, -1, out this.stmt, out this.sql_tail);
+      this.error_code = queryable.database.get_sqlite_db ().prepare_v2 (this.sql, this.sql_len, out this.stmt);
 
       if ( this.error_code == Sqlite.OK )
         this.sql = this.stmt.sql ();
@@ -447,8 +447,15 @@ namespace SQLHeavy {
      */
     public Query (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
       GLib.Object (queryable: queryable, sql: sql);
-      this.sql_tail = null;
       error_if_not_ok (this.error_code);
+    }
+
+    public Query.full (SQLHeavy.Queryable queryable, string sql, int sql_max_len = -1, out unowned string? tail = null) throws SQLHeavy.Error {
+      GLib.Object (queryable: queryable, sql: sql, sql_len: sql_max_len);
+      error_if_not_ok (this.error_code);
+
+      if ( &tail != null )
+        tail = (string) ((size_t) sql + this.sql.size ());
     }
   }
 }
