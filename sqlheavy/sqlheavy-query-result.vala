@@ -108,6 +108,38 @@ namespace SQLHeavy {
       return this.query.get_statement ().column_name (this.field_check_index (field));
     }
 
+    /**
+     * Name of the table that is the origin of a field
+     *
+     * @param field index of the field
+     * @return the table
+     * @see field_origin_table
+     */
+    public string field_origin_table_name (int field) throws SQLHeavy.Error {
+      return this.query.get_statement ().column_table_name (this.field_check_index (field));
+    }
+
+    /**
+     * Table that is the origin of a field
+     *
+     * @param field index of the field
+     * @return the table
+     * @see field_origin_table_name
+     */
+    public SQLHeavy.Table field_origin_table (int field) throws SQLHeavy.Error {
+      return new SQLHeavy.Table (this.query.queryable, this.field_origin_table_name (field));
+    }
+
+    /**
+     * Name of the column that is the origin of a field
+     *
+     * @param field index of the field
+     * @return the table name
+     */
+    public string field_origin_name (int field) throws SQLHeavy.Error {
+      return this.query.get_statement ().column_origin_name (this.field_check_index (field));
+    }
+
     private GLib.HashTable<string, int?>? _field_names = null;
 
     public int field_index (string field) throws SQLHeavy.Error {
@@ -134,8 +166,55 @@ namespace SQLHeavy {
       return sqlite_value_to_g_value (this.query.get_statement ().column_value (this.field_check_index (field)));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public string? fetch_string (int field = 0) throws SQLHeavy.Error {
+      return this.query.get_statement ().column_text (this.field_check_index (field));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int fetch_int (int field = 0) throws SQLHeavy.Error {
+      return this.query.get_statement ().column_int (this.field_check_index (field));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int64 fetch_int64 (int field = 0) throws SQLHeavy.Error {
+      return this.query.get_statement ().column_int64 (this.field_check_index (field));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public double fetch_double (int field = 0) throws SQLHeavy.Error {
+      return this.query.get_statement ().column_double (this.field_check_index (field));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public uint8[] fetch_blob (int field = 0) throws SQLHeavy.Error {
+      var res = new uint8[this.query.get_statement ().column_bytes(this.field_check_index (field))];
+      GLib.Memory.copy (res, this.query.get_statement ().column_blob (field), res.length);
+      return res;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public SQLHeavy.Row fetch_foreign_row (int field) throws SQLHeavy.Error {
-      GLib.assert_not_reached ();
+      var table = this.field_origin_table (field);
+      var foreign_key_idx = table.foreign_key_index (this.field_origin_name (field));
+      var foreign_table = table.foreign_key_table (foreign_key_idx);
+      var foreign_column = table.foreign_key_to (foreign_key_idx);
+
+      var q = new SQLHeavy.Query (this.query.queryable, @"SELECT `ROWID` FROM `$(foreign_table.name)` WHERE `$(foreign_column)` = :value;");
+      q.bind_int64 (1, this.fetch_int64 (field));
+      return new SQLHeavy.Row (foreign_table, q.execute ().fetch_int64 (0));
     }
 
     construct {
