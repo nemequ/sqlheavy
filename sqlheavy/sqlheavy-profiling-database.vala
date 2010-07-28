@@ -1,4 +1,19 @@
 namespace SQLHeavy {
+  /**
+   * Database used to hold profiling information.
+   *
+   * Note that this database will have {@link Database.synchronous}
+   * property set to OFF. This provides a drastic performance increase
+   * but means that sudden power loss could lead to a corrupt
+   * profiling database.
+   *
+   * This database will also have {@link Database.journal_mode} set to
+   * OFF. This will approximately halve the amount of time time spent
+   * inserting profiling data, but the database will likely become
+   * corrupt if the application crashes.
+   *
+   * @see Database.profiling_data
+   */
   public class ProfilingDatabase : SQLHeavy.VersionedDatabase {
     private SQLHeavy.Query query;
 
@@ -17,6 +32,9 @@ namespace SQLHeavy {
     }
 
     construct {
+      this.synchronous = SQLHeavy.SynchronousMode.OFF;
+      this.journal_mode = SQLHeavy.JournalMode.OFF;
+
       try {
         this.query = new SQLHeavy.Query (this, "INSERT INTO `queries` (`sql`, `clock`, `fullscan_step`, `sort`) VALUES (:sql, :clock, :fullscan_step, :sort);");
         this.query.auto_clear = true;
@@ -26,6 +44,9 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * Create a new ProfilingDatabase
+     */
     public ProfilingDatabase (string? filename = null) {
       var schema = GLib.Path.build_filename (SQLHeavy.Config.PATH_PACKAGE_DATA,
                                              SQLHeavy.Version.API,
