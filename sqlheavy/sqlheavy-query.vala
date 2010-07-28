@@ -366,7 +366,12 @@ namespace SQLHeavy {
       this.bind_blob (this.parameter_index (field), value);
     }
 
-    // public void clear ();
+    /**
+     * Clear the bindings
+     */
+    public void clear () {
+      this.stmt.clear_bindings ();
+    }
 
     /**
      * Print the result set to a file stream
