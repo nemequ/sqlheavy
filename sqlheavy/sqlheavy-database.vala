@@ -910,6 +910,27 @@ namespace SQLHeavy {
         this.db.update_hook (this.update_hook_cb);
         this.db.busy_timeout (int.MAX);
       }
+
+      { // Check environment variables for settings
+        string? env_var = null;
+
+        if ( !(this is SQLHeavy.ProfilingDatabase) &&
+             (env_var = GLib.Environment.get_variable ("SQLHEAVY_PROFILING_DATA")) != null ) {
+          try {
+            this.profiling_data = new SQLHeavy.ProfilingDatabase (env_var);
+          } catch ( SQLHeavy.Error e ) {
+            GLib.critical ("Unable to set profiling database to `%s': %s", env_var, e.message);
+          }
+        }
+
+        if ( (env_var = GLib.Environment.get_variable ("SQLHEAVY_JOURNAL_MODE")) != null ) {
+          this.journal_mode = SQLHeavy.JournalMode.from_string (env_var);
+        }
+
+        if ( (env_var = GLib.Environment.get_variable ("SQLHEAVY_SYNCHRONOUS_MODE")) != null ) {
+          this.synchronous = SQLHeavy.SynchronousMode.from_string (env_var);
+        }
+      }
     }
 
     /**
