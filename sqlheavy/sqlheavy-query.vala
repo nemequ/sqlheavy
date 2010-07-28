@@ -267,6 +267,72 @@ namespace SQLHeavy {
 
     // public void clear ();
 
+    /**
+     * Print the result set to a file stream
+     *
+     * @param fd the stream to print to
+     * @see get_table
+     * @see Queryable.print_table
+     */
+    public void print_table (GLib.FileStream? fd = null) throws SQLHeavy.Error {
+      var result = this.execute ();
+
+      var field_names = result.field_names ();
+      var field_lengths = new long[field_names.length];
+      var data = new GLib.GenericArray<GLib.GenericArray <string>> ();
+
+      if ( fd == null )
+        fd = GLib.stderr;
+      int field = 0;
+
+      for ( field = 0 ; field < field_lengths.length ; field++ )
+        field_lengths[field] = field_names[field].len ();
+
+      while ( !result.finished ) {
+        var row_data = new GLib.GenericArray<string> ();
+        data.add (row_data);
+
+        for ( field = 0 ; field < field_names.length ; field++ ) {
+          var cell = result.fetch_string (field);
+          var cell_l = cell.len ();
+          if ( field_lengths[field] < cell_l )
+            field_lengths[field] = cell_l;
+
+          row_data.add (cell);
+        }
+
+        result.next ();
+      }
+
+      GLib.StringBuilder sep = new GLib.StringBuilder ("+");
+      for ( field = 0 ; field < field_names.length ; field++ ) {
+        for ( var c = 0 ; c < field_lengths[field] + 2 ; c++ )
+          sep.append_c ('-');
+        sep.append_c ('+');
+      }
+      sep.append_c ('\n');
+
+      var field_fmt = new string[field_names.length];
+      fd.puts (sep.str);
+      fd.putc ('|');
+      for ( field = 0 ; field < field_names.length ; field++ ) {
+        field_fmt[field] = " %%%lds |".printf (field_lengths[field]);
+        fd.printf (field_fmt[field], field_names[field]);
+      }
+      fd.putc ('\n');
+      fd.puts (sep.str);
+
+      for ( var row_n = 0 ; row_n < data.length ; row_n++ ) {
+        var row_data = data[row_n];
+
+        fd.putc ('|');
+        for ( var col_n = 0 ; col_n < row_data.length ; col_n++ )
+          fd.printf (field_fmt[col_n], row_data[col_n]);
+        fd.putc ('\n');
+        fd.puts (sep.str);
+      }
+    }
+
     construct {
       this.error_code = sqlite3_prepare (queryable.database.get_sqlite_db (), this.sql, -1, out this.stmt, out this.sql_tail);
 

@@ -328,7 +328,7 @@ namespace SQLHeavy {
      * done so we can gather more information about the query than is
      * available from and SQLite profiling callback.
      *
-     * @see Statement.execution_time_elapsed
+     * @see Query.execution_time_elapsed
      * @see ProfilingDatabase
      */
     public bool enable_profiling {
@@ -379,9 +379,7 @@ namespace SQLHeavy {
      */
     private string? pragma_get_string (string pragma) {
       try {
-        var stmt = new SQLHeavy.Statement (this, "PRAGMA %s;".printf (pragma));
-        stmt.step ();
-        return stmt.fetch_string (0);
+        return new SQLHeavy.Query (this, "PRAGMA %s;".printf (pragma)).execute ().fetch_string (0);
       }
       catch ( SQLHeavy.Error e ) {
         GLib.critical ("Unable to retrieve pragma value: %s", e.message);
@@ -430,7 +428,7 @@ namespace SQLHeavy {
      */
     private void pragma_set_string (string pragma, string value) {
       try {
-        var stmt = new SQLHeavy.Statement (this, "PRAGMA %s = %s;".printf (pragma, value));
+        var stmt = new SQLHeavy.Query (this, "PRAGMA %s = %s;".printf (pragma, value));
         stmt.execute ();
       }
       catch ( SQLHeavy.Error e ) {
@@ -1053,11 +1051,13 @@ namespace SQLHeavy {
     public GLib.HashTable<string, SQLHeavy.Table> get_tables () throws SQLHeavy.Error {
       var ht = new GLib.HashTable<string, SQLHeavy.Table>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
 
-      var stmt = this.prepare ("SELECT `name` FROM `SQLITE_MASTER` WHERE `type` = 'table';");
-      while ( stmt.step () ) {
-        var table_name = stmt.fetch_string (0);
+      var result = this.prepare ("SELECT `name` FROM `SQLITE_MASTER` WHERE `type` = 'table';").execute ();
+      while ( !result.finished ) {
+        var table_name = result.fetch_string (0);
         if ( !table_name.has_prefix ("sqlite_") )
           ht.insert (table_name, new SQLHeavy.Table (this, table_name));
+
+        result.next ();
       }
 
       return ht;

@@ -69,8 +69,8 @@ namespace SQLHeavy {
      * @param sql An SQL query.
      * @return a new statement
      */
-    public virtual SQLHeavy.Statement prepare (string sql) throws SQLHeavy.Error {
-      return new SQLHeavy.Statement (this, sql);
+    public virtual SQLHeavy.Query prepare (string sql) throws SQLHeavy.Error {
+      return new SQLHeavy.Query (this, sql);
     }
 
     /**
@@ -86,17 +86,6 @@ namespace SQLHeavy {
       catch ( GLib.FileError e ) {
         throw new SQLHeavy.Error.IO ("Unable to open script: %s (%d).", e.message, e.code);
       }
-    }
-
-    /**
-     * Read the entire result set into an array
-     *
-     * @return a GValueArray of (boxed) GValueArrays representing rows and columns, respectively
-     * @see print_table
-     * @see Statement.get_table
-     */
-    public virtual GLib.ValueArray get_table (string sql) throws SQLHeavy.Error {
-      return this.prepare (sql).get_table ();
     }
 
     /**

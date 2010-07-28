@@ -131,7 +131,7 @@ namespace SQLHeavy {
     /**
      * {@inheritDoc}
      */
-    public SQLHeavy.Statement prepare (string sql) throws SQLHeavy.Error {
+    public SQLHeavy.Query prepare (string sql) throws SQLHeavy.Error {
       return this.database.prepare (sql);
     }
 

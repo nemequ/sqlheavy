@@ -492,7 +492,8 @@ namespace SQLHeavy {
       var foreign_key_idx = table.foreign_key_index (this.field_origin_name (field));
       var foreign_table = table.foreign_key_table (foreign_key_idx);
       var foreign_column = table.foreign_key_to (foreign_key_idx);
-      var stmt = this.queryable.prepare (@"SELECT `ROWID` FROM `$(foreign_table.name)` WHERE `$(foreign_column)` = :value;");
+
+      var stmt = new SQLHeavy.Statement (this.queryable, @"SELECT `ROWID` FROM `$(foreign_table.name)` WHERE `$(foreign_column)` = :value;");
       stmt.bind_int64 (1, this.fetch_int64 (field));
       return new SQLHeavy.Row (foreign_table, stmt.fetch_result_int64 ());
     }
