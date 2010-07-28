@@ -387,3 +387,13 @@ SELECT FOOBAR(1);
 }}}
 
 Which would return the string "Foobar".
+
+= Running SQLHeavy Applications =
+
+SQLHeavy uses several environment variables which allow certain settings' defaults to be overridden at run-time:
+
+  * SQLHEAVY_PROFILING_DATA. This is used to save profiling data to the specified filename.
+  * SQLHEAVY_SYNCHRONOUS_MODE. Sets the default value of Database.synchronous.
+  * SQLHEAVY_JOURNAL_MODE. Sets the default value of Database.joural_mode
+
+Other potentially useful variables may be added in the future.
