@@ -128,7 +128,16 @@ namespace SQLHeavy {
      * @return the result
      */
     public async SQLHeavy.QueryResult execute_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      GLib.assert_not_reached ();
+      if ( this.result != null )
+        throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
+
+      var res = new SQLHeavy.QueryResult.no_exec (this);
+      this.result = res;
+      res.weak_ref (query_result_destroyed_cb);
+
+      yield res.next_async (cancellable);
+
+      return res;
     }
 
     /**
@@ -158,7 +167,17 @@ namespace SQLHeavy {
      * @return the inserted row ID
      */
     public async int64 execute_insert_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      GLib.assert_not_reached ();
+      if ( this.result != null )
+        throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
+
+      var res = new SQLHeavy.QueryResult.no_exec (this);
+      this.result = res;
+      res.weak_ref (query_result_destroyed_cb);
+
+      int64 insert_id = 0;
+      yield res.next_internal_async (cancellable, 1, out insert_id);
+
+      return insert_id;
     }
 
     /**

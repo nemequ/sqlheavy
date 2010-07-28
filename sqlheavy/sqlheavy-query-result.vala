@@ -147,7 +147,90 @@ namespace SQLHeavy {
      * @see next
      */
     public async bool next_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      GLib.assert_not_reached ();
+      int64 insert_id = 0;
+      return yield this.next_internal_async (cancellable, 1, out insert_id);
+    }
+
+    /**
+     * Move to the next result in the result set asynchronously
+     *
+     * @param cancellable optional cancellable for aborting the operation
+     * @param steps number of steps to take through the result set, or 0 for unlimited
+     * @return true on success, false if the query is finished executing
+     * @see next
+     */
+    internal async bool next_internal_async (GLib.Cancellable? cancellable = null, int steps = 0, out int64 last_insert_id) throws SQLHeavy.Error {
+      bool executing = false;
+      GLib.StaticMutex executing_lock = GLib.StaticMutex ();
+      SQLHeavy.Queryable queryable = this.query.queryable;
+      SQLHeavy.Database database = queryable.database;
+      unowned GLib.Thread? thread = null;
+      SQLHeavy.Error? error = null;
+      int64 insert_id = 0;
+      ulong cancellable_sig = 0;
+      bool step_res = false;
+
+      if ( cancellable != null ) {
+        cancellable_sig = cancellable.cancelled.connect (() => {
+            executing_lock.lock ();
+            if ( executing ) {
+              database.interrupt ();
+            } else {
+              error = new SQLHeavy.Error.INTERRUPTED (sqlite_errstr (Sqlite.INTERRUPT));
+              next_internal_async.callback ();
+              if ( thread != null )
+                thread.exit (null);
+              this.release_locks (queryable, database);
+            }
+            executing_lock.unlock ();
+          });
+      }
+
+      try {
+        GLib.Thread.create (() => {
+            this.acquire_locks (queryable, database);
+
+            executing_lock.lock ();
+            executing = true;
+            executing_lock.unlock ();
+
+            try {
+              while ( steps != 0 ) {
+                if ( (cancellable != null && cancellable.is_cancelled ()) || !(step_res = this.next_internal ()) )
+                  break;
+
+                if ( steps > 0 )
+                  steps--;
+              }
+            }
+            catch ( SQLHeavy.Error e ) {
+              error = e;
+            }
+
+            insert_id = database.last_insert_id;
+
+            this.release_locks (queryable, database);
+
+            if ( cancellable_sig != 0 ) {
+              cancellable.disconnect (cancellable_sig);
+            }
+
+            next_internal_async.callback ();
+
+            return null;
+          }, false);
+      } catch ( GLib.ThreadError e ) {
+        throw new SQLHeavy.Error.THREAD ("Thread error: %s (%d)", e.message, e.code);
+      }
+
+      yield;
+
+      if ( error != null )
+        throw error;
+
+      last_insert_id = insert_id;
+
+      return step_res;
     }
 
     /**
@@ -173,7 +256,8 @@ namespace SQLHeavy {
      * @param cancellable optional cancellable for aborting the operation
      */
     public async void complete_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      GLib.assert_not_reached ();
+      int64 insert_id = 0;
+      yield this.next_internal_async (cancellable, 0, out insert_id);
     }
 
     /**
@@ -370,6 +454,15 @@ namespace SQLHeavy {
         throw e;
       }
       this.release_locks (queryable, db);
+    }
+
+    /**
+     * Create a new QueryResult but do not run it.
+     *
+     * @param query the relevant query
+     */
+    internal QueryResult.no_exec (SQLHeavy.Query query) throws SQLHeavy.Error {
+      GLib.Object (query: query);
     }
 
     /**
