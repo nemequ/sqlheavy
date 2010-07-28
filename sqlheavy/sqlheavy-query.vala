@@ -1,17 +1,40 @@
 namespace SQLHeavy {
   public class Query : GLib.Object {
-    // Core
+    /**
+     * The queryable asscociated with this query
+     */
     public SQLHeavy.Queryable queryable { get; construct; }
+
+    /**
+     * The SQL used to create this query 
+     */
     public string sql { get; construct; }
 
+    /**
+     * The last error code
+     */
     private int error_code = Sqlite.OK;
-    private unowned Sqlite.Statement? stmt = null;
-    private string? sql_tail = null;
 
+    /**
+     * The SQLite statement associated with this query
+     */
+    private unowned Sqlite.Statement? stmt = null;
+
+    /**
+     * The unused portion of the SQL used to create this query
+     */
+    private unowned string? sql_tail = null;
+
+    /**
+     * Return the SQLite statement associated with this query
+     */
     internal unowned Sqlite.Statement? get_statement () {
       return this.stmt;
     }
 
+    /**
+     * The currently active {@link QueryResult}, if any
+     */
     public weak SQLHeavy.QueryResult? result { get; private set; }
 
     /**
@@ -25,8 +48,12 @@ namespace SQLHeavy {
      */
     public int parameter_count { get; private set; default = 0; }
 
-    // // Fields
-
+    /**
+     * Check to make sure that specified parameter is valid
+     *
+     * @param parameter the parameter to check
+     * @return the parameter
+     */
     private int parameter_check_index (int parameter) throws SQLHeavy.Error {
       if (parameter < 0 || parameter > this.parameter_count)
         throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));
@@ -34,10 +61,22 @@ namespace SQLHeavy {
       return parameter;
     }
 
-    public string parameter_name (int parameter) throws SQLHeavy.Error {
+    /**
+     * Return the name of the specified parameter
+     *
+     * @param parameter the parameter to look up
+     * @return string representation of the parameter
+     */
+    public unowned string parameter_name (int parameter) throws SQLHeavy.Error {
       return this.stmt.bind_parameter_name (this.parameter_check_index (parameter));
     }
 
+    /**
+     * Return the numeric offset of the specified parameter
+     *
+     * @param paramter the parameter to look up
+     * @return offset of the parameter
+     */
     public int parameter_index (string parameter) throws SQLHeavy.Error {
       var idx = this.stmt.bind_parameter_index (parameter);
       if ( idx == 0 )
@@ -45,11 +84,11 @@ namespace SQLHeavy {
       return idx;
     }
 
-    // public string parameter_origin (int parameter);
-    // public SQLHeavy.Table parameter_origin_table (int parameter) throws SQLHeavy.Error;
-
-    // Execution
-
+    /**
+     * Callback to be invoked when the QueryResult is destroyed
+     *
+     * @param the {@link QueryResult}
+     */
     private void query_result_destroyed_cb (GLib.Object query_result) {
       GLib.assert (query_result == this.result);
 
@@ -66,6 +105,11 @@ namespace SQLHeavy {
       this.result = null;
     }
 
+    /**
+     * Execute the query
+     *
+     * @return the result
+     */
     public SQLHeavy.QueryResult execute () throws SQLHeavy.Error {
       if ( this.result != null )
         throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
@@ -77,8 +121,21 @@ namespace SQLHeavy {
       return res;
     }
 
-    // public async SQLHeavy.QueryResult execute_async () throws SQLHeavy.Error;
+    /**
+     * Execute the query asynchronously
+     *
+     * @param cancellable optional cancellable for aborting the operation
+     * @return the result
+     */
+    public async SQLHeavy.QueryResult execute_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
+      GLib.assert_not_reached ();
+    }
 
+    /**
+     * Execute the INSERT query
+     *
+     * @return the inserted row ID
+     */
     public int64 execute_insert () throws SQLHeavy.Error {
       if ( this.result != null )
         throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
@@ -94,10 +151,23 @@ namespace SQLHeavy {
       return insert_id;
     }
 
-    // public async int64 execute_insert () throws SQLHeavy.Error;
+    /**
+     * Execute the INSERT query asynchronously
+     *
+     * @param cancellable optional cancellable for aborting the operation
+     * @return the inserted row ID
+     */
+    public async int64 execute_insert_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
+      GLib.assert_not_reached ();
+    }
 
-    // // Bindings
-
+    /**
+     * Bind a value to the specified parameter index
+     *
+     * @param field name of the parameter
+     * @param value value to bind
+     * @see set
+     */
     public void bind (int parameter, GLib.Value? value) throws SQLHeavy.Error {
       this.parameter_check_index (parameter);
 
@@ -121,6 +191,13 @@ namespace SQLHeavy {
         throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
     }
 
+    /**
+     * Bind a value to the specified parameter
+     *
+     * @param name name of the parameter
+     * @param value value to bind
+     * @see bind
+     */
     public new void set (string name, GLib.Value? value) throws SQLHeavy.Error {
       this.bind (this.parameter_index (name), value);
     }
@@ -346,6 +423,9 @@ namespace SQLHeavy {
       this.parameter_count = this.stmt.bind_parameter_count ();
     }
 
+    /**
+     * Create a new Query
+     */
     public Query (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
       GLib.Object (queryable: queryable, sql: sql);
       this.sql_tail = null;
