@@ -14,10 +14,15 @@ namespace SQLHeavy {
 
     public weak SQLHeavy.QueryResult? result { get; private set; }
 
-    // // Settings
+    /**
+     * When set the bindings will automatically be cleared when the
+     * associated {@link QueryResult} is destroyed.
+     */
     public bool auto_clear { get; set; default = false; }
 
-    // // Statistics
+    /**
+     * The number of parameters in the query.
+     */
     public int parameter_count { get; private set; default = 0; }
 
     // // Fields
@@ -271,7 +276,6 @@ namespace SQLHeavy {
      * Print the result set to a file stream
      *
      * @param fd the stream to print to
-     * @see get_table
      * @see Queryable.print_table
      */
     public void print_table (GLib.FileStream? fd = null) throws SQLHeavy.Error {

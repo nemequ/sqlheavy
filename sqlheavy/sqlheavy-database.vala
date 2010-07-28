@@ -328,7 +328,7 @@ namespace SQLHeavy {
      * done so we can gather more information about the query than is
      * available from and SQLite profiling callback.
      *
-     * @see Query.execution_time_elapsed
+     * @see QueryResult.execution_time
      * @see ProfilingDatabase
      */
     public bool enable_profiling {

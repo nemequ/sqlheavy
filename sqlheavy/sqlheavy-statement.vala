@@ -656,7 +656,6 @@ namespace SQLHeavy {
      * @return a GValueArray of (boxed) GValueArrays representing rows and fields, respectively
      * @see get_row
      * @see print_table
-     * @see Queryable.get_table
      */
     public GLib.ValueArray get_table () throws SQLHeavy.Error {
       var data = new GLib.ValueArray (0);

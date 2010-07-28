@@ -1,31 +1,79 @@
 namespace SQLHeavy {
+  /**
+   * The result of executing a {@link Query}
+   */
   public class QueryResult : GLib.Object, SQLHeavy.Record, SQLHeavy.RecordSet {
+    /**
+     * The Query associated with this result.
+     */
     public SQLHeavy.Query query { get; construct; }
 
+    /**
+     * The last error code.
+     */
     private int error_code = Sqlite.OK;
 
+    /**
+     * Signal which is emitted each time a row is recieved.
+     */
     public signal void received_row ();
 
+    /**
+     * Number of times that SQLite has stepped forward in a table as
+     * part of a full table scan.
+     *
+     * See SQLite documentation at [[http://sqlite.org/c3ref/c_stmtstatus_fullscan_step.html]]
+     */
     public int full_scan_steps {
       get {
         return this.query.get_statement ().status (Sqlite.StatementStatus.FULLSCAN_STEP, 0);
       }
     }
 
+    /**
+     * The number of sort operations that have occurred.
+     *
+     * See SQLite documentation at [[http://sqlite.org/c3ref/c_stmtstatus_fullscan_step.html]]
+     */
     public int sort_operations {
       get {
         return this.query.get_statement ().status (Sqlite.StatementStatus.SORT, 0);
       }
     }
 
+    /**
+     * Timer used for profiling.
+     *
+     * @see execution_time
+     * @see ProfilingDatabase
+     */
     private GLib.Timer execution_timer;
 
+    /**
+     * A timer for determining how much time (wall-clock) has been
+     * spent executing the statement.
+     *
+     * This clock is started and stopped each time step () is called,
+     * and reset when reset () is called.
+     *
+     * @return seconds elapsed
+     * @see Database.enable_profiling
+     */
     public double execution_time {
       get {
         return this.execution_timer.elapsed ();
       }
     }
 
+    /**
+     * Move to the next row in the result set.
+     *
+     * This internal function is called by {@link next} (among
+     * others), and will not acquire any locks.
+     *
+     * @return true on success, false if the query is finished executing
+     * @see next
+     */
     internal bool next_internal () throws SQLHeavy.Error {
       unowned Sqlite.Statement stmt = this.query.get_statement ();
 
@@ -51,16 +99,35 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * Acquire locks
+     *
+     * @param queryable the relevant {@link Queryable}
+     * @param database the relevant {@link Database}
+     */
     private void acquire_locks (SQLHeavy.Queryable queryable, SQLHeavy.Database database) {
       queryable.@lock ();
       database.step_lock ();
     }
 
+    /**
+     * Release locks
+     *
+     * @param queryable the relevant {@link Queryable}
+     * @param database the relevant {@link Database}
+     */
     private void release_locks (SQLHeavy.Queryable queryable, SQLHeavy.Database database) {
       database.step_unlock ();
       queryable.unlock ();
     }
 
+    /**
+     * Move to the next row in the result set.
+     *
+     * @return true on success, false if the query is finished executing
+     * @see next_async
+     * @see complete
+     */
     public bool next () throws SQLHeavy.Error {
       unowned SQLHeavy.Queryable queryable = this.query.queryable;
       SQLHeavy.Database db = queryable.database;
@@ -72,8 +139,20 @@ namespace SQLHeavy {
       return res;
     }
 
-    // public async bool next_async () throws SQLHeavy.Error;
+    /**
+     * Move to the next result in the result set asynchronously
+     *
+     * @param cancellable optional cancellable for aborting the operation
+     * @return true on success, false if the query is finished executing
+     * @see next
+     */
+    public async bool next_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
+      GLib.assert_not_reached ();
+    }
 
+    /**
+     * Finish iterating through the result set.
+     */
     public void complete () throws SQLHeavy.Error {
       unowned SQLHeavy.Queryable queryable = this.query.queryable;
       SQLHeavy.Database db = queryable.database;
@@ -88,15 +167,33 @@ namespace SQLHeavy {
       queryable.unlock ();
     }
 
-    // public async void complete_async () throws SQLHeavy.Error;
+    /**
+     * Finish iterating through the result set asynchronously
+     *
+     * @param cancellable optional cancellable for aborting the operation
+     */
+    public async void complete_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
+      GLib.assert_not_reached ();
+    }
 
+    /**
+     * Whether the result set has been iterated through in its
+     * entirety
+     */
     public bool finished { get; private set; }
 
     private int _field_count;
+
+    /**
+     * {@inheritDoc}
+     */
     public int field_count {
       get { return this._field_count; }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     private int field_check_index (int field) throws SQLHeavy.Error {
       if (field < 0 || field > this.field_count)
         throw new SQLHeavy.Error.RANGE (sqlite_errstr (Sqlite.RANGE));
@@ -104,6 +201,9 @@ namespace SQLHeavy {
       return field;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public string field_name (int field) throws SQLHeavy.Error {
       return this.query.get_statement ().column_name (this.field_check_index (field));
     }
@@ -140,8 +240,14 @@ namespace SQLHeavy {
       return this.query.get_statement ().column_origin_name (this.field_check_index (field));
     }
 
+    /**
+     * Hash table of field names and their indices
+     */
     private GLib.HashTable<string, int?>? _field_names = null;
 
+    /**
+     * {@inheritDoc}
+     */
     public int field_index (string field) throws SQLHeavy.Error {
       if ( this._field_names == null ) {
         this._field_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
@@ -158,10 +264,16 @@ namespace SQLHeavy {
       return (!) field_number;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public GLib.Type field_type (int field) throws SQLHeavy.Error {
       return sqlite_type_to_g_type (this.query.get_statement ().column_type (this.field_check_index (field)));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public GLib.Value fetch (int field) throws SQLHeavy.Error {
       return sqlite_value_to_g_value (this.query.get_statement ().column_value (this.field_check_index (field)));
     }
@@ -226,11 +338,23 @@ namespace SQLHeavy {
       this._field_count = stmt.column_count ();
     }
 
+    /**
+     * Create a new QueryResult without acquiring locks
+     *
+     * @param query the relevant query
+     */
     internal QueryResult.no_lock (SQLHeavy.Query query) throws SQLHeavy.Error {
       GLib.Object (query: query);
       this.next_internal ();
     }
 
+    /**
+     * Create a new QueryResult and return the {@link Database.last_insert_id}
+     *
+     * @param query the relevant query
+     * @param inser_id location to put the ID of the inserted row
+     * @see Query.execute_insert
+     */
     internal QueryResult.insert (SQLHeavy.Query query, out int64 insert_id) throws SQLHeavy.Error {
       GLib.Object (query: query);
 
@@ -248,7 +372,12 @@ namespace SQLHeavy {
       this.release_locks (queryable, db);
     }
 
-    internal QueryResult (SQLHeavy.Query query) throws SQLHeavy.Error {
+    /**
+     * Create a new QueryResult
+     *
+     * @param query the relevant query
+     */
+    public QueryResult (SQLHeavy.Query query) throws SQLHeavy.Error {
       GLib.Object (query: query);
 
       this.next ();

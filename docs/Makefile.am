@@ -23,8 +23,11 @@ VALADOC_FLAGS = --force \
 		$(top_srcdir)/sqlheavy/sqlheavy-error.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-mutable-record.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-profiling-database.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-query.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-queryable.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-query-result.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-record.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-record-set.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-row.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-statement.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-table.vala \

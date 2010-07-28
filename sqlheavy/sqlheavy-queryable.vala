@@ -93,7 +93,6 @@ namespace SQLHeavy {
      *
      * @param sql the query
      * @param fd the stream to print to
-     * @see get_table
      * @see Queryable.print_table
      */
     public virtual void print_table (string sql, GLib.FileStream? fd = null) throws SQLHeavy.Error {
