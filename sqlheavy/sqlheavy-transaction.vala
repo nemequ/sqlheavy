@@ -50,7 +50,9 @@ namespace SQLHeavy {
     public signal void resolved (SQLHeavy.TransactionStatus status);
 
     /**
+     * Resolve the transaction
      *
+     * @param commit whether to commit the transaction or roll it back
      */
     private void resolve (bool commit) throws SQLHeavy.Error {
       if ( this.status != TransactionStatus.UNRESOLVED )
