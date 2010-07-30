@@ -1,4 +1,10 @@
 namespace SQLHeavy {
+  /**
+   * Covert an SQLite type (integer) to a GLib.Type.
+   *
+   * @param stype the SQLite type
+   * @return the GLib.Type
+   */
   internal GLib.Type sqlite_type_to_g_type (int stype) throws SQLHeavy.Error {
     switch ( stype ) {
       case Sqlite.INTEGER:
@@ -16,6 +22,9 @@ namespace SQLHeavy {
     }
   }
 
+  /**
+   * Test whether two GLib.Values are equal
+   */
   internal bool value_equal (GLib.Value a, GLib.Value b) {
     var gtype = a.type ();
     if ( !b.holds (gtype) )
@@ -34,28 +43,17 @@ namespace SQLHeavy {
     } else if ( gtype == typeof (void*) )
       return a.get_pointer () == b.get_pointer ();
     else {
-      GLib.critical ("sqlheavy_value_equal not implemented for %s type.", gtype.name ());
+      GLib.critical ("sql_heavy_value_equal not implemented for %s type.", gtype.name ());
       return false;
     }
   }
 
-  // internal GLib.Type sqlite_type_string_to_g_type (string stype) throws SQLHeavy.Error {
-  //   switch ( stype ) {
-  //     case "INTEGER":
-  //       return typeof (int64);
-  //     case "TEXT":
-  //       return typeof (string);
-  //     case "STRING":
-  //       return typeof (string);
-  //     case "FLOAT":
-  //       return typeof (double);
-  //     case "BLOB":
-  //       return typeof (GLib.ByteArray);
-  //     default:
-  //       throw new SQLHeavy.Error.DATA_TYPE ("Data type \"%s\" unsupported.", stype);
-  //   }
-  // }
-
+  /**
+   * Convert an SQLite value to a GLib.Value
+   *
+   * @param value the SQLite value
+   * @return the GLib.Value
+   */
   internal GLib.Value sqlite_value_to_g_value (Sqlite.Value value) {
     GLib.Type gtype;
     try {
@@ -86,6 +84,12 @@ namespace SQLHeavy {
     return gval;
   }
 
+  /**
+   * Convert an array of SQLite values to a GLib.ValueArray
+   *
+   * @param values the SQLite values
+   * @return the GLib.ValueArray
+   */
   internal GLib.ValueArray sqlite_value_array_to_g_value_array (Sqlite.Value[] values) {
     var va = new GLib.ValueArray (values.length);
     for ( int i = 0 ; i < values.length ; i++ )
