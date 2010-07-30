@@ -1,9 +1,54 @@
 namespace SQLHeavy {
+  /**
+   * Version information
+   */
   namespace Version {
+    /**
+     * Major version
+     */
     public const int MAJOR = @SQLHEAVY_MAJOR_VERSION@;
+    /**
+     * Minor version
+     */
     public const int MINOR = @SQLHEAVY_MINOR_VERSION@;
+    /**
+     * Micro version
+     */
     public const int MICRO = @SQLHEAVY_MICRO_VERSION@;
+    /**
+     * Version as a string
+     */
     public const string STRING = "@SQLHEAVY_VERSION@";
+    /**
+     * API version
+     */
     public const string API = "@SQLHEAVY_API_VERSION@";
+
+    /**
+     * Return an integer representation of the version currenly in
+     * use.
+     *
+     * This result is major * 1000000 + minor * 1000 + micro.
+     *
+     * @return the version number of the library
+     */
+    public int library () {
+      return (SQLHeavy.Version.MAJOR * 1000000) + (SQLHeavy.Version.MINOR * 1000) + SQLHeavy.Version.MICRO;
+    }
+
+    /**
+     * Return an integer representation of the SQLite version
+     * currently in use.
+     *
+     * This function is just an alias for
+     * Sqlite.libversion_number. The version is number is in the same
+     * format as the result of the {@link library} function.
+     *
+     * @return the version number of the SQLite library
+     * @see library
+     */
+    public int sqlite_library () {
+      return Sqlite.libversion_number ();
+    }
   }
 }
