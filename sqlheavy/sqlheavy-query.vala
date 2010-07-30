@@ -374,6 +374,30 @@ namespace SQLHeavy {
     }
 
     /**
+     * Retrieve the entire result set
+     *
+     * @return the result set
+     * @see print_table
+     */
+    public GLib.GenericArray<GLib.GenericArray<GLib.Value?>> get_table () throws SQLHeavy.Error {
+      var values = new GLib.GenericArray<GLib.GenericArray<GLib.Value?>> ();
+
+      for ( var results = this.execute () ; !results.finished ; results.next () ) {
+        var column_l = results.field_count;
+
+        var row = new GLib.GenericArray<GLib.Value?> ();
+        row.length = column_l;
+
+        for ( int c = 0 ; c < column_l ; c++ )
+          row[c] = result.fetch (c);
+
+        values.add (row);
+      }
+
+      return values;
+    }
+
+    /**
      * Print the result set to a file stream
      *
      * @param fd the stream to print to
