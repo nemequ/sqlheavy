@@ -17,6 +17,7 @@ VALADOC_FLAGS = --force \
 		--package-version @SQLHEAVY_VERSION@ \
 		$(top_srcdir)/sqlheavy/sqlheavy-backup.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-common-function.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-cursor.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-database.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-database-pool.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-enums.vala \
@@ -30,6 +31,7 @@ VALADOC_FLAGS = --force \
 		$(top_srcdir)/sqlheavy/sqlheavy-record-set.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-row.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-table.vala \
+		$(top_srcdir)/sqlheavy/sqlheavy-table-cursor.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-transaction.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-user-functions.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-value.vala \

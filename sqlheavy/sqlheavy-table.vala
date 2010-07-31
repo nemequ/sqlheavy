@@ -266,6 +266,13 @@ namespace SQLHeavy {
       this.queryable.execute (@"CREATE TEMPORARY TRIGGER IF NOT EXISTS `__SQLHeavy_$(this.name)_update_notifier` AFTER UPDATE ON `$(this.name)` FOR EACH ROW BEGIN SELECT __SQLHeavy_notify (1, '$(this.name)', `OLD`.`ROWID`); END;");
     }
 
+    /**
+     * Create a new cursor of this table
+     */
+    public SQLHeavy.TableCursor iterator () {
+      return new SQLHeavy.TableCursor (this);
+    }
+
     construct {
       this.queryable.database.register_orm_table (this);
     }

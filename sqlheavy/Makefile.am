@@ -9,6 +9,7 @@ lib_LTLIBRARIES = \
 libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-backup.vala \
 	sqlheavy-common-function.vala \
+	sqlheavy-cursor.vala \
 	sqlheavy-database.vala \
 	sqlheavy-database-pool.vala \
 	sqlheavy-enums.vala \
@@ -22,6 +23,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-record-set.vala \
 	sqlheavy-row.vala \
 	sqlheavy-table.vala \
+	sqlheavy-table-cursor.vala \
 	sqlheavy-transaction.vala \
 	sqlheavy-user-functions.vala \
 	sqlheavy-value.vala \

@@ -2,7 +2,7 @@ namespace SQLHeavy {
   /**
    * A group of {@link Record}s
    */
-  public interface RecordSet : SQLHeavy.Record {
+  public interface RecordSet {
     /**
      * Move to the next record in the set
      *

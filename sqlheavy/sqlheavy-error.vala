@@ -210,7 +210,7 @@ namespace SQLHeavy {
       case Sqlite.FORMAT:
         return "Auxiliary database format error";
       case Sqlite.RANGE:
-        return "2nd parameter to sqlite3_bind out of range";
+        return "Parameter out of range";
       case Sqlite.NOTADB:
         return "File opened that is not a database file";
       case Sqlite.ROW:

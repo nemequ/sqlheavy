@@ -378,4 +378,18 @@ namespace SQLHeavy {
      */
     ROLLED_BACK
   }
+
+  /**
+   * Sort Order
+   */
+  public enum SortOrder {
+    /**
+     * Ascending order
+     */
+    ASCENDING,
+    /**
+     * Descending order
+     */
+    DESCENDING
+  }
 }
