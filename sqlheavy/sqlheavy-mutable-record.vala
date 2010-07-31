@@ -1,4 +1,7 @@
 namespace SQLHeavy {
+  /**
+   * A record that can be altered or removed
+   */
   public interface MutableRecord : SQLHeavy.Record {
     /**
      * Put a value into a field of a record

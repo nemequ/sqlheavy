@@ -1,4 +1,7 @@
 namespace SQLHeavy {
+  /**
+   * A prepared statement
+   */
   public class Query : GLib.Object {
     /**
      * The queryable asscociated with this query
