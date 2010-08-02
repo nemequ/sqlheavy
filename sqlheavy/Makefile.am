@@ -34,7 +34,7 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
 if HAVE_INTROSPECTION
 GIR_VALAFLAGS = \
 	--gir SQLHeavy-@SQLHEAVY_API_VERSION@.gir \
-	--library sqlheavy-1.0 \
+	--library sqlheavy-@SQLHEAVY_API_VERSION@ \
 	$(NULL)
 else
 GIR_VALAFLAGS =
