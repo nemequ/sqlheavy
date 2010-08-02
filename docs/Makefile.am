@@ -75,6 +75,6 @@ install-data-hook: devhelp gtkdoc
 	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy/img devhelp/SQLHeavy/img/*
 	cp -R gtkdoc/html $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
 
-all: valadoc devhelp # gtkdoc
+all: valadoc devhelp gtkdoc
 
 endif
