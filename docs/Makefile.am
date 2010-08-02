@@ -67,13 +67,13 @@ clean-local:
 
 uninstall-hook:
 	rm -rf $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy
-#	rm -rf $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
+	rm -rf $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
 
-install-data-hook: devhelp # gtkdoc
+install-data-hook: devhelp gtkdoc
 	$(MKDIR_P) $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy/img
 	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy devhelp/SQLHeavy/*.*
 	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy/img devhelp/SQLHeavy/img/*
-#	cp -R gtkdoc/html $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
+	cp -R gtkdoc/html $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
 
 all: valadoc devhelp # gtkdoc
 
