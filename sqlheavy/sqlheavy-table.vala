@@ -15,11 +15,15 @@ namespace SQLHeavy {
 
     /**
      * A new row was inserted into the table
+     *
+     * @param row_id the ROWID of the row that was inserted
      */
     public signal void row_inserted (int64 row_id);
 
     /**
      * A row was deleted from the table
+     *
+     * @param row_id the ROWID of the row that was deleted
      */
     public signal void row_deleted (int64 row_id);
 

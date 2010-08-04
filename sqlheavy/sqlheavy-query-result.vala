@@ -436,7 +436,7 @@ namespace SQLHeavy {
      * Create a new QueryResult and return the {@link Database.last_insert_id}
      *
      * @param query the relevant query
-     * @param inser_id location to put the ID of the inserted row
+     * @param insert_id location to put the ID of the inserted row
      * @see Query.execute_insert
      */
     internal QueryResult.insert (SQLHeavy.Query query, out int64 insert_id) throws SQLHeavy.Error {
