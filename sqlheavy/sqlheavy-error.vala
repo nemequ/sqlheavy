@@ -30,8 +30,6 @@ namespace SQLHeavy {
       case Sqlite.FORMAT:     throw new Error.FORMAT       (msg);
       case Sqlite.RANGE:      throw new Error.RANGE        (msg);
       case Sqlite.NOTADB:     throw new Error.NOTADB       (msg);
-      case Sqlite.ROW:        throw new Error.ROW          (msg);
-      case Sqlite.DONE:       throw new Error.DONE         (msg);
       default:                throw new Error.UNKNOWN      (msg);
     }
   }
@@ -46,34 +44,138 @@ namespace SQLHeavy {
      * An unknown error occured
      */
     UNKNOWN,
+    /**
+     * SQL error or missing database
+     *
+     * This is most commonly the result of a bad SQL query.
+     */
     ERROR,
+    /**
+     * Internal logic error
+     */
     INTERNAL,
+    /**
+     * Permission denied
+     *
+     * The library attempted to perform an operation for which it did
+     * not have permission.
+     */
     ACCESS_DENIED,
+    /**
+     * Callback routine requested an abort
+     *
+     * The query was cancelled.
+     *
+     * @see Query.execute_async
+     */
     ABORTED,
+    /**
+     * The database is locked
+     *
+     * Another process or thread is currently accessing the database.
+     */
     BUSY,
+    /**
+     * A table in the database is locked
+     *
+     * Another process or thread is currently accessing a table in the
+     * database.
+     */
     LOCKED,
+    /**
+     * Unable to allocate memory
+     *
+     * A call to malloc failed.
+     */
     NO_MEMORY,
+    /**
+     * Attempt to write to a read-only database
+     *
+     * The library attempted to write to a database which was opened
+     * in read-only mode.
+     *
+     * @see FileMode
+     */
     READ_ONLY,
+    /**
+     * Operation interrupted
+     */
     INTERRUPTED,
+    /**
+     * An I/O error occurred
+     */
     IO,
+    /**
+     * The database disk image is malformed
+     *
+     * This is generally quite bad, but you may be able to recover by
+     * dumping the database and creating a new one.
+     */
     CORRUPT,
+    /**
+     * Not found
+     */
     NOT_FOUND,
+    /**
+     * Insertion failed because the database is full
+     */
     FULL,
+    /**
+     * Unable to open the database file
+     */
     CAN_NOT_OPEN,
+    /**
+     * Database lock protocol error
+     */
     PROTOCOL,
+    /**
+     * Database is empty
+     */
     EMPTY,
+    /**
+     * Database schema changed
+     *
+     * This generally happens when you have a prepared statement
+     * saved, execute a command which modifies the database schema,
+     * then try to use the old prepared statement.
+     */
     SCHEMA,
+    /**
+     * String or BLOB exceeds size limit
+     */
     TOO_BIG,
+    /**
+     * Abort due to constraint violation
+     */
     CONSTRAINT,
+    /**
+     * Data type mismatch
+     */
     MISMATCH,
+    /**
+     * Library used incorrectly
+     */
     MISUSE,
+    /**
+     * Uses OS features not supported on the host
+     */
     NOLFS,
+    /**
+     * Authorization denied
+     */
     AUTH,
+    /**
+     * Auxiliary database format error
+     */
     FORMAT,
+    /**
+     * Specified parameter does not exist
+     */
     RANGE,
+    /**
+     * Requested file is not a database
+     */
     NOTADB,
-    ROW,
-    DONE,
 
     /**
      * An unhandled data type was encountered.
@@ -152,10 +254,6 @@ namespace SQLHeavy {
       return Sqlite.RANGE;
     else if ( e is Error.NOTADB )
       return Sqlite.NOTADB;
-    else if ( e is Error.ROW )
-      return Sqlite.ROW;
-    else if ( e is Error.DONE )
-      return Sqlite.DONE;
     else
       return Sqlite.ERROR;
   }
@@ -180,7 +278,7 @@ namespace SQLHeavy {
       case Sqlite.NOMEM:
         return "A malloc failed";
       case Sqlite.READONLY:
-        return "Attempt to write a readonly database";
+        return "Attempt to write to a read-only database";
       case Sqlite.INTERRUPT:
         return "Operation interrupted";
       case Sqlite.IOERR:
