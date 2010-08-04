@@ -56,7 +56,7 @@ gtkdoc:
 	$(VALADOC) \
 		-X --ignore-headers -X $(top_srcdir)/sqlheavy/sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
 		-X --ignore-headers -X $(top_srcdir)/sqlheavy/config.h \
-		-X -l -X $(top_srcdir)/sqlheavy/.libs/libsqlheavy-@SQLHEAVY_API_VERSION@.so \
+		-X -l -X $(top_srcdir)/sqlheavy/.libs/libsqlheavy@SQLHEAVY_API_VERSION@.so \
 		-o gtkdoc \
 		--doclet gtkdoc \
 		$(VALADOC_FLAGS) \

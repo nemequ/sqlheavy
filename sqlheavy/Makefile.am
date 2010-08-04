@@ -3,10 +3,10 @@ NULL =
 CLEANFILES =
 
 lib_LTLIBRARIES = \
-	libsqlheavy-@SQLHEAVY_API_VERSION@.la \
+	libsqlheavy@SQLHEAVY_API_VERSION@.la \
 	$(NULL)
 
-libsqlheavy_@SQLHEAVY_API_VERSION@_la_SOURCES = \
+libsqlheavy@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-backup.vala \
 	sqlheavy-common-function.vala \
 	sqlheavy-cursor.vala \
@@ -40,7 +40,7 @@ else
 GIR_VALAFLAGS =
 endif
 
-libsqlheavy_@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
+libsqlheavy@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	$(GIR_VALAFLAGS) \
 	--target-glib $(GLIB_VERSION) \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
@@ -55,14 +55,14 @@ libsqlheavy_@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	--pkg sqlite3 \
 	$(NULL)
 
-libsqlheavy_@SQLHEAVY_API_VERSION@_la_CFLAGS = \
+libsqlheavy@SQLHEAVY_API_VERSION@_la_CFLAGS = \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(SQLITE3_CFLAGS) \
 	$(NULL)
 
-libsqlheavy_@SQLHEAVY_API_VERSION@_la_LDFLAGS = \
+libsqlheavy@SQLHEAVY_API_VERSION@_la_LDFLAGS = \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS) \
 	$(GMODULE_LIBS) \

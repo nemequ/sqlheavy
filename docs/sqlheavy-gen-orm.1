@@ -57,11 +57,11 @@ Properties are represented by key-value pairs. The following is a table of curre
 box, tab(:);
 c | c | c | c
 l | l | l | l.
-Name:Type:Usable for database/table/column:Purpose
+Name:Type:DB/TBL/COL:Purpose
 =
 name:string:Y/Y/Y:Rename the symbol
 type:string:N/N/Y:Set the Vala type of the column
-hidden:bool:Y/Y/Y:Do not create a binding for the symbol
+hidden:bool:Y/Y/Y:Do not create a binding
 .TE
 .SS Custom Vala
 In addition to providing one or more SQLite database as a basis for code generation, you can provide an existing *.vala file. Theoretically, this will allow you to place custom code in a separate file, so that you can use sqlheavy-gen-orm to update the generated code without losing whenever the database schema changes, and you will not lose any enhancements you made. The generated code will be merged into the custom vala file in order to generate the output.

@@ -1,7 +1,7 @@
 NULL = 
 
 LDADD = \
-	$(top_builddir)/sqlheavy/libsqlheavy-$(SQLHEAVY_API_VERSION).la \
+	$(top_builddir)/sqlheavy/libsqlheavy$(SQLHEAVY_API_VERSION).la \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS) \
 	$(GMODULE_LIBS) \
