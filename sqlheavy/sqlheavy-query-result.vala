@@ -80,7 +80,7 @@ namespace SQLHeavy {
       if ( this.finished )
         return false;
 
-      this.execution_timer.start ();
+      this.execution_timer.continue ();
       this.error_code = stmt.step ();
       this.execution_timer.stop ();
 
