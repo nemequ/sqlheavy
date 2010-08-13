@@ -16,7 +16,7 @@ namespace SQLHeavy {
      * @see field_index
      * @see field_names
      */
-    public abstract string field_name (int field) throws SQLHeavy.Error;
+    public abstract string field_name (int field = 0) throws SQLHeavy.Error;
 
     /**
      * Fetch the index for the specified field name
@@ -56,7 +56,7 @@ namespace SQLHeavy {
      * @param field the field index
      * @return the datatype of the field
      */
-    public abstract GLib.Type field_type (int field) throws SQLHeavy.Error;
+    public abstract GLib.Type field_type (int field = 0) throws SQLHeavy.Error;
 
     /**
      * Return a field from result.
@@ -66,7 +66,7 @@ namespace SQLHeavy {
      * @see get
      * @see fetch_row
      */
-    public abstract GLib.Value fetch (int field) throws SQLHeavy.Error;
+    public abstract GLib.Value fetch (int field = 0) throws SQLHeavy.Error;
 
     /**
      * Fetch a field from the result by name
@@ -86,7 +86,7 @@ namespace SQLHeavy {
      * @return the value of the field
      * @see get_foreign_row
      */
-    public abstract SQLHeavy.Row fetch_foreign_row (int field) throws SQLHeavy.Error;
+    public abstract SQLHeavy.Row fetch_foreign_row (int field = 0) throws SQLHeavy.Error;
 
     /**
      * Fetch a row in a foreign table
