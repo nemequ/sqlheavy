@@ -81,7 +81,7 @@ namespace SQLHeavy {
 
     ~ Transaction () {
       if ( this.status == TransactionStatus.UNRESOLVED )
-        GLib.warning ("Destroying an unresolved transaction.");
+        this.rollback ();
     }
 
     private SQLHeavy.Error? err = null;
