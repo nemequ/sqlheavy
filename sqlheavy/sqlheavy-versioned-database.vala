@@ -58,8 +58,8 @@ namespace SQLHeavy {
      * @param file The filename of the database
      * @param directory the directory where the schema can be found
      */
-    public VersionedDatabase (string file, string directory) throws SQLHeavy.Error {
-      Object (filename: file, schema: directory);
+    public VersionedDatabase (string? file, string directory) throws SQLHeavy.Error {
+      Object (filename: file ?? ":memory:", schema: directory);
     }
   }
 }
