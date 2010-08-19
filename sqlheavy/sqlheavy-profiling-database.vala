@@ -46,6 +46,8 @@ namespace SQLHeavy {
 
     /**
      * Create a new ProfilingDatabase
+     *
+     * @param filename the location of the database
      */
     public ProfilingDatabase (string? filename = null) {
       var schema = GLib.Path.build_filename (SQLHeavy.Config.PATH_PACKAGE_DATA,

@@ -116,6 +116,7 @@ namespace SQLHeavy {
       private unowned UserFuncData? user_func_data = null;
 
       private unowned GLib.HashTable<string, GLib.Value?>? _data = null;
+
       /**
        * Map of user data
        *
@@ -161,6 +162,8 @@ namespace SQLHeavy {
        * feature of SQLite, allowing user data to be shared accross an
        * entire aggregate operation.
        *
+       * @param key key of user data
+       * @param value value of user data
        * @see get_user_data
        */
       public void set_user_data (string key, GLib.Value value) {
@@ -170,6 +173,8 @@ namespace SQLHeavy {
       /**
        * Get user data
        *
+       * @param key key of user data
+       * @return value of user data
        * @see set_user_data
        */
       public unowned GLib.Value? get_user_data (string key) {

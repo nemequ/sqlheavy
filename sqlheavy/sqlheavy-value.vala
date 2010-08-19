@@ -104,6 +104,8 @@ namespace SQLHeavy {
    * This function should be used sparingly, as it is generally
    * preferable to use prepared statements.
    *
+   * @param str the string to escape
+   * @return the escaped string
    * @see Query.bind_string
    */
   public static string escape_string (string str) {

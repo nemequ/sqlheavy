@@ -45,7 +45,7 @@ namespace SQLHeavy {
     /**
      * The transaction has been resolved (committed or rolled back)
      *
-     * @param committed whether the transaction was committed or rolled back
+     * @param status whether the transaction was committed or rolled back
      */
     public signal void resolved (SQLHeavy.TransactionStatus status);
 

@@ -137,6 +137,8 @@ namespace SQLHeavy {
 
     /**
      * Create a new database pool.
+     *
+     * @param filename the location of the database
      */
     public DatabasePool (string filename) {
       Object (filename: filename);

@@ -110,6 +110,11 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * Create a new cursor for the table
+     *
+     * @param table the table to create the cursor for
+     */
     public TableCursor (SQLHeavy.Table table) {
       GLib.Object (table: table);
     }

@@ -11,6 +11,7 @@ namespace SQLHeavy {
     /**
      * Signal which is emitted when a query finished executing.
      *
+     * @param query the query which was executed
      * @see Database.sql_executed
      */
     public signal void query_executed (SQLHeavy.Query query);
@@ -42,6 +43,7 @@ namespace SQLHeavy {
      * Execute the supplied SQL, iterating through multiple statements if necessary.
      *
      * @param sql An SQL query.
+     * @param max_len the maximum length of the query, or -1 to use strlen (sql)
      */
     public virtual void execute (string sql, ssize_t max_len = -1) throws Error {
       unowned string? s = sql;

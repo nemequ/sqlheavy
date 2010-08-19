@@ -180,6 +180,12 @@ namespace SQLHeavy {
      */
     OFF;
 
+    /**
+     * Convert a string as returned by SQLite to a JournalMode
+     *
+     * @param journal_mode the string representation of the journal mode
+     * @return the JournalMode
+     */
     public static JournalMode from_string (string? journal_mode) {
       string mode = journal_mode.up ();
 
@@ -199,6 +205,12 @@ namespace SQLHeavy {
         return DELETE;
     }
 
+    /**
+     * Get the string representation of the journal mode as expected
+     * by SQLite
+     *
+     * @return string representatio of the journal mode
+     */
     public unowned string to_string () {
       switch ( this ) {
         case DELETE:
@@ -237,6 +249,12 @@ namespace SQLHeavy {
      */
     EXCLUSIVE;
 
+    /**
+     * Get a locking mode from its string representation
+     *
+     * @param locking_mode the string representation of the locking mode
+     * @return the locking mode
+     */
     public static LockingMode from_string (string? locking_mode) {
       var mode = locking_mode.up ();
 
@@ -248,6 +266,11 @@ namespace SQLHeavy {
         return NORMAL;
     }
 
+    /**
+     * Convert a locking mode to its string representation
+     *
+     * @return the string representation of the locking mode
+     */
     public unowned string to_string () {
       switch ( this ) {
         case NORMAL:
@@ -283,6 +306,12 @@ namespace SQLHeavy {
      */
     FULL;
 
+    /**
+     * Get a synchronous mode from its string representation
+     *
+     * @param synchronous_mode the string representation of the synchronous mode
+     * @return the synchronous mode
+     */
     public static SynchronousMode from_string (string? synchronous_mode) {
       var mode = synchronous_mode.up ();
 
@@ -296,6 +325,11 @@ namespace SQLHeavy {
         return FULL;
     }
 
+    /**
+     * Return a string representation of the synchronous mode
+     *
+     * @return the string representation of the synchronous mode
+     */
     public unowned string to_string () {
       switch ( this ) {
         case OFF:
@@ -332,6 +366,12 @@ namespace SQLHeavy {
      */
     MEMORY;
 
+    /**
+     * Get a temporary storage mode from its string representation
+     *
+     * @param temp_store_mode the string representation
+     * @return a temporary storage mode
+     */
     public static TempStoreMode from_string (string? temp_store_mode) {
       var mode = temp_store_mode.up ();
 
@@ -345,6 +385,11 @@ namespace SQLHeavy {
         return DEFAULT;
     }
 
+    /**
+     * Convert a temporary storage mode to its string representation
+     *
+     * @return the string representation of the temporary storage mode
+     */
     public unowned string to_string () {
       switch ( this ) {
         case DEFAULT:

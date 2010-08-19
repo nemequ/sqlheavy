@@ -32,6 +32,8 @@ namespace SQLHeavy {
     /**
      * Emitted when data is committed to the write-ahead log
      *
+     * @param db_name the name of the database the WAL was committed for
+     * @param pages the number of pages committed
      * @see journal_mode
      */
     public virtual signal void wal_committed (string db_name, int pages) {
@@ -232,6 +234,7 @@ namespace SQLHeavy {
      * for debugging, but {@link Queryable.query_executed} provides a
      * more powerful interface.
      *
+     * @param sql the SQL which was executed
      * @see Queryable.query_executed
      */
     public signal void sql_executed (string sql);
@@ -974,6 +977,7 @@ namespace SQLHeavy {
      *
      * See SQLite documentation at [[http://sqlite.org/wal.html#ckpt]]
      *
+     * @param database the name of the database to checkpoint
      * @see journal_mode
      */
     public void wal_checkpoint (string? database = null) throws SQLHeavy.Error {

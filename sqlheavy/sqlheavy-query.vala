@@ -186,7 +186,7 @@ namespace SQLHeavy {
     /**
      * Bind a value to the specified parameter index
      *
-     * @param field name of the parameter
+     * @param parameter name of the parameter
      * @param value value to bind
      * @see set
      */
@@ -476,12 +476,23 @@ namespace SQLHeavy {
 
     /**
      * Create a new Query
+     *
+     * @param queryable the queryable to create the query
+     * @param sql the SQL to use to create the query
      */
     public Query (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
       GLib.Object (queryable: queryable, sql: sql);
       error_if_not_ok (this.error_code);
     }
 
+    /**
+     * Create a new Query
+     *
+     * @param queryable the queryable to create the query
+     * @param sql the SQL to use to create the query
+     * @param sql_max_len the maximum length of the SQL
+     * @param tail unused portion of the SQL
+     */
     public Query.full (SQLHeavy.Queryable queryable, string sql, int sql_max_len = -1, out unowned string? tail = null) throws SQLHeavy.Error {
       GLib.Object (queryable: queryable, sql: sql, sql_len: sql_max_len);
       error_if_not_ok (this.error_code);

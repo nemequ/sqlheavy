@@ -66,6 +66,8 @@ namespace SQLHeavy {
 
     /**
      * The specified field changed in the database
+     *
+     * @param field the index of the field which was modified
      */
     public signal void field_changed (int field);
 

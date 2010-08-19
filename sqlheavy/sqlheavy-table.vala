@@ -166,7 +166,7 @@ namespace SQLHeavy {
     /**
      * Get the name of a field
      *
-     * @param index index of the field
+     * @param field index of the field
      * @return name of the field by index
      */
     public string field_name (int field) throws SQLHeavy.Error {
