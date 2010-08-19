@@ -13,7 +13,7 @@ bin_PROGRAMS = sqlheavy-gen-orm
 
 VALAFLAGS = \
 	--vapidir $(top_srcdir)/sqlheavy \
-	--pkg vala-1.0 \
+	--pkg $(VALA_PACKAGE) \
 	--pkg sqlheavy-@SQLHEAVY_API_VERSION@ \
 	$(NULL)
 
