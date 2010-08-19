@@ -77,7 +77,7 @@ namespace SQLHeavy {
     /**
      * Return the numeric offset of the specified parameter
      *
-     * @param paramter the parameter to look up
+     * @param parameter the parameter to look up
      * @return offset of the parameter
      */
     public int parameter_index (string parameter) throws SQLHeavy.Error {
