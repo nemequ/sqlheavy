@@ -20,16 +20,7 @@ namespace SQLHeavy {
       new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
 
     /**
-     * List of all SQLHeavy.Row objects, used for change notification
-     *
-     * @see orm_tables
-     */
-    private GLib.HashTable <string, GLib.Sequence<unowned SQLHeavy.Row>> orm_rows = null;
-
-    /**
      * List of all SQLHeavy.Table objects, used for change notification
-     *
-     * @see orm_rows
      */
     private GLib.HashTable <string, GLib.Sequence<unowned SQLHeavy.Table>> orm_tables = null;
 
@@ -60,26 +51,6 @@ namespace SQLHeavy {
     }
 
     /**
-     * Register a row for change notifications
-     *
-     * @param row the row to register
-     */
-    internal void register_orm_row (SQLHeavy.Row row) {
-      lock ( this.orm_rows ) {
-        if ( this.orm_rows == null )
-          this.orm_rows = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Row>>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, (GLib.DestroyNotify) g_sequence_free);
-
-        var rowstr = @"$(row.table.name).$(row.id)";
-        unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.orm_rows.lookup (rowstr);
-        if ( list == null ) {
-          this.orm_rows.insert (rowstr, new GLib.Sequence<unowned SQLHeavy.Row> (null));
-          list = this.orm_rows.lookup (rowstr);
-        }
-        list.insert_sorted (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; });
-      }
-    }
-
-    /**
      * Register a table for change notifications
      *
      * @param table the table to register
@@ -100,28 +71,9 @@ namespace SQLHeavy {
     }
 
     /**
-     * Unregister a row from change notifications
+     * Unregister a table from change notifications
      *
-     * @param row the row to unregister
-     */
-    internal void unregister_orm_row (SQLHeavy.Row row) {
-      var rowstr = @"$(row.table.name).$(row.id)";
-
-      lock ( this.orm_rows ) {
-        unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.orm_rows.lookup (rowstr);
-        if ( list != null ) {
-          var iter = list.search (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; }).prev ();
-          unowned SQLHeavy.Row r2 = iter.get ();
-          if ( (uint)row == (uint)r2 )
-            list.remove (iter);
-        }
-      }
-    }
-
-    /**
-     * Unregister a row from change notifications
-     *
-     * @param row the row to unregister
+     * @param table the table to unregister
      */
     internal void unregister_orm_table (SQLHeavy.Table table) {
       lock ( this.orm_tables ) {
@@ -141,45 +93,17 @@ namespace SQLHeavy {
      * See SQLite documentation at [[http://www.sqlite.org/c3ref/update_hook.html]]
      */
     private void update_hook_cb (Sqlite.Action action, string dbname, string table, int64 rowid) {
-      if ( action == Sqlite.Action.UPDATE ) {
-        lock ( this.orm_rows ) {
-          if ( this.orm_rows == null )
-            return;
-
-          unowned GLib.Sequence<unowned SQLHeavy.Row> l = this.orm_rows.lookup (@"$(table).$(rowid)");
-          if ( l != null ) {
-            for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
-              unowned SQLHeavy.Row r = iter.get ();
-              r.changed ();
-            }
-          }
-        }
-      } else if ( action == Sqlite.Action.INSERT ||
-                  action == Sqlite.Action.DELETE ) {
-        lock ( this.orm_tables ) {
-          if ( this.orm_tables == null )
-            return;
-
-          unowned GLib.Sequence<unowned SQLHeavy.Table> l = this.orm_tables.lookup (table);
-          if ( l != null ) {
-            for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
-              unowned SQLHeavy.Table t = iter.get ();
-              if ( action == Sqlite.Action.INSERT )
-                t.row_inserted (rowid);
-              else
-                t.row_deleted (rowid);
-            }
-          }
-        }
-
-        lock ( this.orm_rows ) {
-          if ( this.orm_rows != null ) {
-            unowned GLib.Sequence<unowned SQLHeavy.Row> l = this.orm_rows.lookup (@"$(table).$(rowid)");
-            if ( l != null ) {
-              for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
-                unowned SQLHeavy.Row r = iter.get ();
-                r.on_delete ();
-              }
+      lock ( this.orm_tables ) {
+        unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (table);
+        if ( list != null ) {
+          for ( var iter = list.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {
+            unowned SQLHeavy.Table tbl = iter.get ();
+            if ( action == Sqlite.Action.UPDATE ) {
+              tbl.row_modified (rowid);
+            } else if ( action == Sqlite.Action.INSERT ) {
+              tbl.row_inserted (rowid);
+            } else if ( action == Sqlite.Action.DELETE ) {
+              tbl.row_deleted (rowid);
             }
           }
         }
@@ -1065,6 +989,34 @@ namespace SQLHeavy {
     }
 
     /**
+     * Return a reference to the requested table
+     *
+     * @param table_name the name of the table to return a reference to
+     * @return a reference to the table
+     */
+    public SQLHeavy.Table get_table (string table) throws SQLHeavy.Error {
+      lock ( this.orm_tables ) {
+        if ( this.orm_tables == null )
+          this.orm_tables = new GLib.HashTable<string, GLib.Sequence<unowned SQLHeavy.Table>>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, (GLib.DestroyNotify) g_sequence_free);
+
+        unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (table);
+        if ( list == null ) {
+          this.orm_tables.insert (table, new GLib.Sequence<unowned SQLHeavy.Table> (null));
+          list = this.orm_tables.lookup (table);
+
+          SQLHeavy.Table res = new SQLHeavy.Table (this, table);
+          list.insert_sorted (res, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; });
+          return res;
+        } else {
+          for ( var iter = list.get_begin_iter () ; !iter.is_end () ; iter = iter.next () )
+            return iter.get ();
+        }
+      }
+
+      return new SQLHeavy.Table (this, table);
+    }
+
+    /**
      * List all tables in the database
      *
      * @return a hash table of tables, with the key being the table name
@@ -1076,7 +1028,7 @@ namespace SQLHeavy {
       while ( !result.finished ) {
         var table_name = result.fetch_string (0);
         if ( !table_name.has_prefix ("sqlite_") )
-          ht.insert (table_name, new SQLHeavy.Table (this, table_name));
+          ht.insert (table_name, this.get_table (table_name));
 
         result.next ();
       }

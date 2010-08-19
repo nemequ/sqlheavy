@@ -131,9 +131,8 @@ namespace SQLHeavy {
           query.execute ();
         }
         else {
-          var db = this.table.queryable.database;
           this._id = query.execute_insert ();
-          db.register_orm_row (this);
+          this.table.register_row (this);
           this.update_cache ();
         }
 
@@ -275,7 +274,7 @@ namespace SQLHeavy {
 
     construct {
       if ( this._id != 0 )
-        this.table.queryable.database.register_orm_row (this);
+        this.table.register_row (this);
 
       if ( this.enable_cache ) {
         try {
@@ -315,7 +314,7 @@ namespace SQLHeavy {
       if ( this.auto_save )
         this.save ();
 
-      this.table.queryable.database.unregister_orm_row (this);
+      this.table.unregister_row (this);
     }
   }
 }

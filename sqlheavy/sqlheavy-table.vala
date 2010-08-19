@@ -14,6 +14,12 @@ namespace SQLHeavy {
     public SQLHeavy.Queryable queryable { get; construct; }
 
     /**
+     * List of all SQLHeavy.Row objects for this table, used for
+     * change notification
+     */
+    private GLib.HashTable <int64?, GLib.Sequence<unowned SQLHeavy.Row>> child_rows = new GLib.HashTable<int64?, GLib.Sequence<unowned SQLHeavy.Row>>.full (GLib.int64_hash, GLib.int64_equal, GLib.g_free, (GLib.DestroyNotify) g_sequence_free);
+
+    /**
      * A new row was inserted into the table
      *
      * @param row_id the ROWID of the row that was inserted
@@ -26,6 +32,26 @@ namespace SQLHeavy {
      * @param row_id the ROWID of the row that was deleted
      */
     public signal void row_deleted (int64 row_id);
+
+    /**
+     * A row in the table was modified
+     *
+     * @param row_id the ROWID of the row that was updated
+     */
+    public virtual signal void row_modified (int64 row_id) {
+      this.row_modified_handler (row_id);
+    }
+
+    private void row_modified_handler (int64 row_id) {
+      lock ( this.child_rows ) {
+        unowned GLib.Sequence<unowned SQLHeavy.Row> l = this.child_rows.lookup (row_id);
+        if ( l == null )
+          return;
+
+        for ( var iter = l.get_begin_iter () ; !iter.is_end () ; iter = iter.next () )
+          iter.get ().changed ();
+      }
+    }
 
     private class FieldInfo : GLib.Object {
       public int index;
@@ -275,6 +301,29 @@ namespace SQLHeavy {
      */
     public SQLHeavy.TableCursor iterator () {
       return new SQLHeavy.TableCursor (this);
+    }
+
+    internal void register_row (SQLHeavy.Row row) {
+      lock ( this.child_rows ) {
+        unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.child_rows.lookup (row.id);
+        if ( list == null ) {
+          this.child_rows.insert (row.id, new GLib.Sequence<unowned SQLHeavy.Row> (null));
+          list = this.child_rows.lookup (row.id);
+        }
+        list.insert_sorted (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; });
+      }
+    }
+
+    internal void unregister_row (SQLHeavy.Row row) {
+      lock ( this.child_rows ) {
+        unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.child_rows.lookup (row.id);
+        if ( list != null ) {
+          var iter = list.search (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; }).prev ();
+          unowned SQLHeavy.Row r2 = iter.get ();
+          if ( (uint)row == (uint)r2 )
+            list.remove (iter);
+        }
+      }
     }
 
     construct {
