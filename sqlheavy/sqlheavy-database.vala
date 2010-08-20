@@ -995,7 +995,7 @@ namespace SQLHeavy {
     /**
      * Return a reference to the requested table
      *
-     * @param table_name the name of the table to return a reference to
+     * @param table the name of the table to return a reference to
      * @return a reference to the table
      */
     public SQLHeavy.Table get_table (string table) throws SQLHeavy.Error {
