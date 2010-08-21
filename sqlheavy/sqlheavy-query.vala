@@ -119,13 +119,43 @@ namespace SQLHeavy {
     }
 
     /**
+     * Bind a list of parameters
+     */
+    private void set_list (string? first_parameter, va_list args) {
+      unowned string? current_parameter = first_parameter;
+      while ( current_parameter != null ) {
+        GLib.Type current_parameter_type = args.arg ();
+        if ( current_parameter_type == typeof (string) )
+          this.set_string (current_parameter, args.arg ());
+        else if ( current_parameter_type == typeof (int) )
+          this.set_int (current_parameter, args.arg ());
+        else if ( current_parameter_type == typeof (int64) )
+          this.set_int64 (current_parameter, args.arg ());
+        else if ( current_parameter_type == typeof (double) )
+          this.set_double (current_parameter, args.arg ());
+        else
+          throw new SQLHeavy.Error.DATA_TYPE ("Data type `%s' unsupported.", current_parameter_type.name ());
+
+        current_parameter = args.arg ();
+      }
+    }
+
+    /**
      * Execute the query
      *
+     * This function accepts an arbitrary number of groups of
+     * arguments for binding values. The first argument in the group
+     * must be the name of the parameter to bind, the second a GType,
+     * and the third the value.
+     *
+     * @param first_parameter the name of the first parameter to bind, or null
      * @return the result
      */
-    public SQLHeavy.QueryResult execute () throws SQLHeavy.Error {
+    public SQLHeavy.QueryResult execute (string? first_parameter = null, ...) throws SQLHeavy.Error {
       if ( this.result != null )
         throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
+
+      this.set_list (first_parameter, va_list ());
 
       var res = new SQLHeavy.QueryResult (this);
       this.result = res;
