@@ -81,10 +81,20 @@ namespace SQLHeavy {
      * @return offset of the parameter
      */
     public int parameter_index (string parameter) throws SQLHeavy.Error {
-      var idx = this.stmt.bind_parameter_index (parameter);
-      if ( idx == 0 )
-        throw new SQLHeavy.Error.RANGE ("Could not find parameter '%s'.", parameter);
-      return idx;
+      int idx = 0;
+      var first_char = parameter[0];
+
+      if ( first_char == ':' || first_char == '@' ) {
+        if ( (idx = this.stmt.bind_parameter_index (parameter)) != 0 )
+          return idx;
+      } else {
+        if ( (idx = this.stmt.bind_parameter_index (":" + parameter)) != 0 )
+          return idx;
+        else if ( (idx = this.stmt.bind_parameter_index ("@" + parameter)) != 0 )
+          return idx;
+      }
+
+      throw new SQLHeavy.Error.RANGE ("Could not find parameter '%s'.", parameter);
     }
 
     /**
