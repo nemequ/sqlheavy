@@ -121,7 +121,7 @@ namespace SQLHeavy {
     /**
      * Bind a list of parameters
      */
-    private void set_list (string? first_parameter, va_list args) {
+    private void set_list (string? first_parameter, va_list args) throws SQLHeavy.Error {
       unowned string? current_parameter = first_parameter;
       while ( current_parameter != null ) {
         GLib.Type current_parameter_type = args.arg ();
