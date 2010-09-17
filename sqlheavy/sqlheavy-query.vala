@@ -458,7 +458,7 @@ namespace SQLHeavy {
       int field = 0;
 
       for ( field = 0 ; field < field_lengths.length ; field++ )
-        field_lengths[field] = field_names[field].len ();
+        field_lengths[field] = field_names[field].length;
 
       while ( !result.finished ) {
         var row_data = new GLib.GenericArray<string> ();
@@ -466,7 +466,7 @@ namespace SQLHeavy {
 
         for ( field = 0 ; field < field_names.length ; field++ ) {
           var cell = result.fetch_string (field);
-          var cell_l = cell.len ();
+          var cell_l = cell.length;
           if ( field_lengths[field] < cell_l )
             field_lengths[field] = cell_l;
 
@@ -538,7 +538,7 @@ namespace SQLHeavy {
       error_if_not_ok (this.error_code);
 
       if ( &tail != null )
-        tail = (string) ((size_t) sql + this.sql.size ());
+        tail = (string) ((size_t) sql + this.sql.length);
     }
   }
 }

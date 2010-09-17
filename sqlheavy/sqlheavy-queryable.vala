@@ -49,7 +49,7 @@ namespace SQLHeavy {
       unowned string? s = sql;
 
       // Could probably use a bit of work.
-      for ( size_t current_max = (max_len < 0) ? s.size () : max_len ;
+      for ( size_t current_max = (max_len < 0) ? s.length : max_len ;
             (s != null) && (current_max > 0) ; ) {
         unowned char * os = (char *)s;
         {
