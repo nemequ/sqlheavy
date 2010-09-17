@@ -1,8 +1,4 @@
 namespace SQLHeavy {
-  private int direct_compare (void * a, void * b) {
-    return (int) (a - b);
-  }
-
   /**
    * Automatically growing pool of {@link Database} objects
    *
@@ -72,7 +68,7 @@ namespace SQLHeavy {
       }
 
       lock ( this.active_pool ) {
-        this.active_pool.insert_sorted (db, direct_compare);
+        this.active_pool.insert_sorted (db, SQLHeavy.Database.direct_compare);
       }
 
       return db.begin_transaction ();

@@ -68,7 +68,7 @@ namespace SQLHeavy {
           this.orm_tables.insert (tblname, new GLib.Sequence<unowned SQLHeavy.Table> (null));
           list = this.orm_tables.lookup (tblname);
         }
-        list.insert_sorted (table, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; });
+        list.insert_sorted (table, SQLHeavy.Table.direct_compare);
       }
     }
 
@@ -81,7 +81,7 @@ namespace SQLHeavy {
       lock ( this.orm_tables ) {
         unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (table.name);
         if ( list != null ) {
-          var iter = list.search (table, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; }).prev ();
+          var iter = list.search (table, SQLHeavy.Table.direct_compare).prev ();
           unowned SQLHeavy.Table t2 = iter.get ();
           if ( (uint)table == (uint)t2 )
             list.remove (iter);
@@ -1009,7 +1009,7 @@ namespace SQLHeavy {
           list = this.orm_tables.lookup (table);
 
           SQLHeavy.Table res = new SQLHeavy.Table (this, table);
-          list.insert_sorted (res, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; });
+          list.insert_sorted (res, SQLHeavy.Table.direct_compare);
           return res;
         } else {
           for ( var iter = list.get_begin_iter () ; !iter.is_end () ; iter = iter.next () )
@@ -1038,6 +1038,44 @@ namespace SQLHeavy {
       }
 
       return ht;
+    }
+
+    /**
+     * Compare two databases
+     *
+     * @param a the first database
+     * @param b the second database
+     * @return less than, equal to, or greater than 0 depending on a's relationship to b
+     */
+    public static int compare (SQLHeavy.Database? a, SQLHeavy.Database? b) {
+      int r = 0;
+
+      // Pointer comparison
+      if ( a == b )
+        return 0;
+      if ( a == null )
+        return -1;
+      if ( b == null )
+        return 1;
+
+      if ( (r = GLib.strcmp (a.filename, b.filename)) != 0 )
+        return r;
+
+      if ( (r = a.mode - b.mode) != 0 )
+        return r;
+
+      return direct_compare (a, b);
+    }
+
+    /**
+     * Compare database pointers directly
+     *
+     * @param a the first database
+     * @param b the second database
+     * @return less than, equal to, or greater than 0 depending on a's relationship to b
+     */
+    internal static int direct_compare (SQLHeavy.Database? a, SQLHeavy.Database? b) {
+      return (int) ((ulong) a - (ulong) b);
     }
 
     /**

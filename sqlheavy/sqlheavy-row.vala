@@ -274,6 +274,44 @@ namespace SQLHeavy {
       }
     }
 
+    /**
+     * Compare two rows
+     *
+     * @param a the first row
+     * @param b the second row
+     * @return less than, equal to, or greater than 0 depending on a's relationship to b
+     */
+    public static int compare (SQLHeavy.Row? a, SQLHeavy.Row? b) {
+      int r = 0;
+
+      // Pointer comparison
+      if ( a == b )
+        return 0;
+      if ( a == null )
+        return -1;
+      if ( b == null )
+        return 1;
+
+      if ( (r = SQLHeavy.Table.compare (a.table, b.table)) != 0 )
+        return r;
+
+      if ( (r = (int) (a.id - b.id).clamp (int.MIN, int.MAX)) != 0 )
+        return r;
+
+      return direct_compare (a, b);
+    }
+
+    /**
+     * Compare row pointers directly
+     *
+     * @param a the first row
+     * @param b the second row
+     * @return less than, equal to, or greater than 0 depending on a's relationship to b
+     */
+    internal static int direct_compare (SQLHeavy.Row? a, SQLHeavy.Row? b) {
+      return (int) ((ulong) a - (ulong) b);
+    }
+
     construct {
       if ( this._id != 0 )
         this.table.register_row (this);

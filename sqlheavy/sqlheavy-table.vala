@@ -310,7 +310,7 @@ namespace SQLHeavy {
           this.child_rows.insert (row.id, new GLib.Sequence<unowned SQLHeavy.Row> (null));
           list = this.child_rows.lookup (row.id);
         }
-        list.insert_sorted (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; });
+        list.insert_sorted (row, SQLHeavy.Row.compare);
       }
     }
 
@@ -318,12 +318,47 @@ namespace SQLHeavy {
       lock ( this.child_rows ) {
         unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.child_rows.lookup (row.id);
         if ( list != null ) {
-          var iter = list.search (row, (a, b) => { return a < b ? -1 : (a > b) ? 1 : 0; }).prev ();
+          var iter = list.search (row, SQLHeavy.Row.direct_compare).prev ();
           unowned SQLHeavy.Row r2 = iter.get ();
           if ( (uint)row == (uint)r2 )
             list.remove (iter);
         }
       }
+    }
+
+    /**
+     * Compare two tables
+     *
+     * @param a the first table
+     * @param b the second table
+     * @return less than, equal to, or greater than 0 depending on a's relationship to b
+     */
+    public static int compare (SQLHeavy.Table? a, SQLHeavy.Table? b) {
+      int r = 0;
+
+      // Pointer comparison
+      if ( a == b )
+        return 0;
+      if ( a == null )
+        return -1;
+      if ( b == null )
+        return 1;
+
+      if ( (r = SQLHeavy.Database.compare (a.queryable.database, b.queryable.database)) != 0 )
+        return r;
+
+      return direct_compare (a, b);
+    }
+
+    /**
+     * Compare table pointers directly
+     *
+     * @param a the first table
+     * @param b the second table
+     * @return less than, equal to, or greater than 0 depending on a's relationship to b
+     */
+    internal static int direct_compare (SQLHeavy.Table? a, SQLHeavy.Table? b) {
+      return (int) ((ulong) a - (ulong) b);
     }
 
     construct {
