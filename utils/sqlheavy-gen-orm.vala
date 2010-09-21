@@ -69,7 +69,7 @@ namespace SQLHeavy {
 
       int sym_t = 3;
       bool tb = true, sb = true, tf = true;
-      GLib.StringBuilder name = new GLib.StringBuilder.sized (symbol.size () * 2);
+      GLib.StringBuilder name = new GLib.StringBuilder.sized (symbol.length * 2);
       for ( sym = symbol ; ; sym = sym.offset (1) ) {
         var c = sym.get_char_validated ();
         if ( c <= 0 )
@@ -397,7 +397,7 @@ namespace SQLHeavy {
       var analyzer = new Vala.SemanticAnalyzer ();
       analyzer.analyze (context);
 
-      var code_writer = new Vala.CodeWriter (true);
+      var code_writer = new Vala.CodeWriter ();
       code_writer.write_file (this.context, output_location ?? "/dev/stdout");
     }
 
@@ -410,7 +410,7 @@ namespace SQLHeavy {
         throw new GeneratorError.CONFIGURATION (@"Could not find package '$(pkg)'");
 
       this.context.add_package (pkg);
-      this.context.add_source_file (new Vala.SourceFile (this.context, package_path, true));
+      this.context.add_source_file (new Vala.SourceFile (this.context, SourceFileType.NONE, package_path));
 
       var deps_filename = GLib.Path.build_filename (GLib.Path.get_dirname (package_path), "%s.deps".printf (pkg));
       if ( GLib.FileUtils.test (deps_filename, GLib.FileTest.EXISTS) ) {
@@ -515,7 +515,7 @@ namespace SQLHeavy {
       foreach ( unowned string source in sources ) {
         if ( source.has_suffix (".vala") ) {
           if ( GLib.FileUtils.test (source, GLib.FileTest.EXISTS) )
-            this.context.add_source_file (new Vala.SourceFile (this.context, source));
+            this.context.add_source_file (new Vala.SourceFile (this.context, SourceFileType.NONE, source));
           else
             throw new GeneratorError.CONFIGURATION (@"Source file '$(source)' does not exist.");
         } else {
