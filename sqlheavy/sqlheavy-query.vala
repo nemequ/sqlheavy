@@ -155,7 +155,8 @@ namespace SQLHeavy {
       if ( this.result != null )
         throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
 
-      this.set_list (first_parameter, va_list ());
+      var args = va_list ();
+      this.set_list (first_parameter, args);
 
       var res = new SQLHeavy.QueryResult (this);
       this.result = res;
