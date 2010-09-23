@@ -111,4 +111,298 @@ namespace SQLHeavy {
   public static string escape_string (string str) {
     return str.replace ("'", "''");
   }
+
+  /**
+   * A copy-on-write array of GValues
+   */
+  public class ValueArray : GLib.Object {
+    /**
+     * The source array, or null if none
+     */
+    public ValueArray? source {
+      get {
+        return this._source;
+      }
+
+      construct set {
+        if ( value != null ) {
+          var len = value.length;
+          GLib.return_if_fail (len > 0);
+
+          this._source = value;
+          this.to_source_map = new int[len];
+          for ( int i = 0 ; i < len ; i++ )
+            this.to_source_map[i] = i;
+
+          value.position_changed["before"].connect (this.on_parent_position_changed);
+          value.value_changed["before"].connect (this.on_parent_value_changed);
+        }
+      }
+    }
+    private ValueArray? _source = null;
+
+    /**
+     * How the values are mapped to the source array, or null if there
+     * is no source array
+     */
+    private int[]? to_source_map = null;
+
+    /**
+     * Actual array containing the GValues
+     */
+    private GLib.Value?[]? values = null;
+
+    /**
+     * The length of the array
+     */
+    public int length {
+      get {
+        if ( this.values != null )
+          return this.values.length;
+        else if ( this.source != null )
+          return this.source.length;
+        else
+          return 0;
+      }
+    }
+
+    /**
+     * The position of one of the elements in the array changed
+     */
+    [Signal (detailed = true)]
+    public signal void position_changed (int old_index, int new_index);
+
+    /**
+     * The value of one of the elements in the array changed
+     */
+    [Signal (detailed = true)]
+    public signal void value_changed (int index);
+
+    /**
+     * Retrieve a value
+     *
+     * @param index the index of the value to retrieve
+     * @return the value
+     */
+    public new unowned GLib.Value? get (int index) {
+      GLib.return_val_if_fail (index < this.length, null);
+
+      if ( this.values != null && ((this.to_source_map == null) || (this.to_source_map[index] == -1)) )
+        return this.values[index];
+      else if ( this._source != null && this.to_source_map[index] != -1 )
+        return this._source[this.to_source_map[index]];
+      else
+        return null;
+    }
+
+    /**
+     * Set a value
+     *
+     * This function will replace the value at the specified index if
+     * it exists. If the array is not long enough to accomodate a
+     * value at the specified index it is expanded.
+     *
+     * @param index the index to write to
+     * @param value the value to write
+     */
+    public new void set (int index, GLib.Value? value) {
+      var len = this.length;
+
+      if ( index >= len ) {
+        var i = int.max (index, len - 1);
+        this.insert_padding (index, int.max (1, index - i));
+      } else if ( this.values == null ) {
+        this.set_values_length (len);
+      }
+
+      this.value_changed["before"] (index);
+      this.values[index] = value;
+      if ( this.to_source_map != null )
+        this.to_source_map[index] = -1;
+      this.value_changed (index);
+    }
+
+    /**
+     * Insert a value into the array
+     *
+     * Rather than replacing the value at the specified index, this
+     * function will move all subsequent data in order to make room
+     * for the new value.
+     *
+     * @param index the index to write to
+     * @param value the value to write
+     */
+    public void insert (int index, GLib.Value? value) {
+      this.insert_padding (index, 1);
+      this.set (index, value);
+    }
+
+    /**
+     * Append a value
+     *
+     * @param value the value to write
+     */
+    public void append (GLib.Value? value) {
+      var len = this.length;
+      this.insert_padding (len, 1);
+      this.set (len, value);
+    }
+
+    /**
+     * Prepend a value
+     *
+     * Note that prepend is much slower than append, since all other
+     * values in the array must be moved.
+     *
+     * @param value the value to write
+     */
+    public void prepend (GLib.Value? value) {
+      this.insert_padding (0, 1);
+      this.set (0, value);
+    }
+
+    /**
+     * Remove a value
+     *
+     * All values after the removed value will be moved one slot in
+     * order to fill in the gap.
+     *
+     * @param index the index of the value to remove
+     */
+    public void remove (int index) {
+      this.insert_padding (index, -1);
+    }
+
+    /**
+     * Set the length of the {@link values} array
+     */
+    private void set_values_length (int length) {
+      if ( this.values != null ) {
+        if ( this.values.length != length )
+          this.values.resize (length);
+      } else {
+        // Requires patch in bgo#571486
+        this.values = new (GLib.Value?)[length];
+      }
+
+      if ( this.to_source_map != null )
+        this.to_source_map.resize (length);
+    }
+
+    /**
+     * Handle an item in the {@link source} array moving
+     *
+     * This is currently not implemented.
+     */
+    private void on_parent_position_changed (ValueArray src, int old_index, int new_index) {
+      // TODO
+    }
+
+    /**
+     * Handle data in the {@link source} array being changed
+     */
+    private void on_parent_value_changed (ValueArray src, int index) {
+      this.set (index, src[index]);
+    }
+
+    /**
+     * Insert or remove padding from the array
+     *
+     * If members is positive, padding will be added. If elements is
+     * negative, elements/padding will be removed.
+     *
+     * @param index to add/remove from
+     * @param members number of members to add/remove
+     */
+    public void insert_padding (int index, int members) {
+      if ( members == 0 )
+        return;
+
+      int old_length = this.length;
+      int new_length = old_length + members;
+
+      if ( members > 0 ) { // Inserting
+        for ( int i = int.min (old_length, index + members) ; i >= index ; i-- )
+          this.position_changed["before"] (i, i + members);
+
+        if ( this.values != null ) {
+          this.set_values_length (new_length);
+
+          if ( index < old_length ) { // Into the middle
+            GLib.Memory.move ((void*) (((ulong) this.values) + ((index + members) * sizeof (GLib.Value?))),
+                              (void*) (((ulong) this.values) + (index * sizeof (GLib.Value?))),
+                              members * sizeof (GLib.Value?));
+            GLib.Memory.set ((void*) (((ulong) this.values) + (index * sizeof (GLib.Value?))), 0, members * sizeof (GLib.Value?));
+            if ( this.to_source_map != null )
+              GLib.Memory.move ((void*) (((ulong) this.to_source_map) + ((index + members) * sizeof (int))),
+                                (void*) (((ulong) this.to_source_map) + (index * sizeof (int))),
+                                members * sizeof (int));
+          }
+        } else {
+          this.set_values_length (new_length);
+        }
+
+        for ( int i = int.min (old_length, index + members) ; i >= index ; i-- )
+          this.position_changed (i, i + members);
+      } else { // Removing
+        for ( int i = index ; i < (index - members) ; i++ ) {
+          this.position_changed["before"] (i, -1);
+          this[i] = null;
+        }
+
+        for ( int i = (index - members) ; i < old_length ; i++ )
+          this.position_changed["before"] (i, i + members);
+
+        if ( (index - members) < old_length ) { // From the middle
+          GLib.Memory.move ((void*) (((ulong) this.values) + (index * sizeof (GLib.Value?))),
+                            (void*) (((ulong) this.values) + ((index - members) * sizeof (GLib.Value?))),
+                            ((old_length - index) + members) * sizeof (GLib.Value?));
+          GLib.Memory.set ((void*) (((ulong) this.values) + ((old_length + members) * sizeof (GLib.Value?))),
+                           0, (-members) * sizeof (GLib.Value?));
+
+          if ( this.to_source_map != null ) {
+            GLib.Memory.move ((void*) (((ulong) this.to_source_map) + (index * sizeof (int))),
+                              (void*) (((ulong) this.to_source_map) + ((index - members) * sizeof (int))),
+                              ((old_length - index) + members) * sizeof (int));
+            GLib.Memory.set ((void*) (((ulong) this.to_source_map) + ((old_length + members) * sizeof (int))),
+                             0, (-members) * sizeof (int));
+          }
+        }
+
+        this.set_values_length (new_length);
+
+        for ( int i = index ; i < (index - members) ; i++ )
+          this.position_changed (i, -1);
+        for ( int i = (index - members) ; i < old_length ; i++ )
+          this.position_changed (i, i + members);
+      }
+    }
+
+    /**
+     * Create a copy of the array
+     *
+     * No data will be copied unless the {@link source} array is
+     * altered.
+     *
+     * @return a new array
+     */
+    public ValueArray copy () {
+      return new ValueArray.with_source (this);
+    }
+
+    /**
+     * Create a new array with the specified number of elements
+     * pre-allocated
+     */
+    public ValueArray (int length = 0) {
+      GLib.Object ();
+
+      if ( length > 0 )
+        this.insert_padding (0, length);
+    }
+
+    private ValueArray.with_source (ValueArray source) {
+      GLib.Object (source: source);
+    }
+  }
 }
