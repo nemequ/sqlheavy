@@ -45,6 +45,7 @@ libsqlheavy@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	--target-glib $(GLIB_VERSION) \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	-H SQLHeavy.h \
+	--use-header \
 	--internal-header sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
 	--vapidir $(top_srcdir)/sqlheavy \
 	--pkg config \
