@@ -21,7 +21,7 @@ private static int main (string[] args) {
 
     GLib.stdout.puts ("Testing compression...\n");
     var data = (uint8[]) test_string.to_utf8 ();
-    GLib.stdout.printf ("Original size: %d bytes\n", (int) test_string.size ());
+    GLib.stdout.printf ("Original size: %d bytes\n", (int) test_string.length);
     query = db.prepare ("SELECT COMPRESS(:data);");
     query.set_blob (":data", data);
     var compressed = query.execute ().fetch_blob (0);
