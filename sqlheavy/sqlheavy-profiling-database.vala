@@ -15,7 +15,7 @@ namespace SQLHeavy {
    * @see Database.profiling_data
    */
   public class ProfilingDatabase : SQLHeavy.VersionedDatabase {
-    private SQLHeavy.Query query;
+    private SQLHeavy.Query? query;
 
     internal void insert (SQLHeavy.QueryResult query_result) {
       lock ( this.query ) {

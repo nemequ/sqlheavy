@@ -113,6 +113,22 @@ namespace SQLHeavy {
   }
 
   /**
+   * Check to see whether the specified GType is handled by SQLHeavy
+   *
+   * @param gtype the type to check
+   * @return whether or not the type is handled by SQLHeavy
+   */
+  internal bool check_type (GLib.Type gtype) {
+    return ( (gtype == typeof (int)) ||
+             (gtype == typeof (string)) ||
+             (gtype == typeof (int64)) ||
+             (gtype == typeof (float)) ||
+             (gtype == typeof (double)) ||
+             (gtype == typeof (void*)) ||
+             (gtype == typeof (GLib.ByteArray)) );
+  }
+
+  /**
    * A copy-on-write array of GValues
    */
   public class ValueArray : GLib.Object {
@@ -196,16 +212,11 @@ namespace SQLHeavy {
     }
 
     /**
-     * Set a value
+     * Prepare to set a value
      *
-     * This function will replace the value at the specified index if
-     * it exists. If the array is not long enough to accomodate a
-     * value at the specified index it is expanded.
-     *
-     * @param index the index to write to
-     * @param value the value to write
+     * @param index the index of the value to prepare
      */
-    public new void set (int index, GLib.Value? value) {
+    private void prepare_set (int index) {
       var len = this.length;
 
       if ( index >= len ) {
@@ -216,10 +227,102 @@ namespace SQLHeavy {
       }
 
       this.value_changed["before"] (index);
-      this.values[index] = value;
+    }
+
+    /**
+     * Finish setting a value
+     *
+     * @param index the index of the value to finish setting
+     */
+    private void finish_set (int index) {
       if ( this.to_source_map != null )
         this.to_source_map[index] = -1;
+
       this.value_changed (index);
+    }
+
+    /**
+     * Set a value
+     *
+     * This function will replace the value at the specified index if
+     * it exists. If the array is not long enough to accomodate a
+     * value at the specified index it is expanded.
+     *
+     * @param index the index to write to
+     * @param value the value to write
+     */
+    public new void set (int index, GLib.Value? value) {
+      this.prepare_set (index);
+      this.values[index] = value;
+      this.finish_set (index);
+    }
+
+    /**
+     * Set a string value
+     *
+     * @param index the index to write to
+     * @param value the value to write
+     */
+    public void set_string (int index, string value) {
+      this.prepare_set (index);
+      this.values[index] = value;
+      this.finish_set (index);
+    }
+
+    /**
+     * Set a int value
+     *
+     * @param index the index to write to
+     * @param value the value to write
+     */
+    public void set_int (int index, int value) {
+      this.prepare_set (index);
+      this.values[index] = value;
+      this.finish_set (index);
+    }
+
+    /**
+     * Set a 64-bit integer value
+     *
+     * @param index the index to write to
+     * @param value the value to write
+     */
+    public void set_int64 (int index, int64 value) {
+      this.prepare_set (index);
+      this.values[index] = value;
+      this.finish_set (index);
+    }
+
+    /**
+     * Set a double value
+     *
+     * @param index the index to write to
+     * @param value the value to write
+     */
+    public void set_double (int index, double value) {
+      this.prepare_set (index);
+      this.values[index] = value;
+      this.finish_set (index);
+    }
+
+    /**
+     * Set a binary data value
+     *
+     * @param index the index to write to
+     * @param value the value to write
+     */
+    public void set_byte_array (int index, GLib.ByteArray value) {
+      this.prepare_set (index);
+      this.values[index] = value;
+      this.finish_set (index);
+    }
+
+    public void set_null (int index) {
+      this.prepare_set (index);
+      var v = GLib.Value (typeof (void*));
+      v.set_pointer (null);
+      this.values[index] = v;
+      this.finish_set (index);
     }
 
     /**
@@ -376,6 +479,19 @@ namespace SQLHeavy {
         for ( int i = (index - members) ; i < old_length ; i++ )
           this.position_changed (i, i + members);
       }
+    }
+
+    /**
+     * Clear all values from the array
+     */
+    public void clear () {
+      if ( this.values != null )
+        for ( int i = 0 ; i < this.values.length ; i++ )
+          this.values[i] = null;
+
+      if ( this.to_source_map != null )
+        for ( int i = 0 ; i < this.to_source_map.length ; i++ )
+          this.to_source_map[i] = -1;
     }
 
     /**

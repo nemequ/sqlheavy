@@ -9,6 +9,21 @@ namespace SQLHeavy {
     public SQLHeavy.Query query { get; construct; }
 
     /**
+     * The bindings for this query result
+     */
+    public SQLHeavy.ValueArray bindings { get; construct; }
+
+    /**
+     * The SQLite statement associated with this result
+     */
+    private unowned Sqlite.Statement stmt;
+
+    /**
+     * Whether the statement is owned by this result
+     */
+    private bool stmt_is_owned;
+
+    /**
      * The last error code.
      */
     private int error_code = Sqlite.OK;
@@ -26,7 +41,7 @@ namespace SQLHeavy {
      */
     public int full_scan_steps {
       get {
-        return this.query.get_statement ().status (Sqlite.StatementStatus.FULLSCAN_STEP, 0);
+        return this.stmt.status (Sqlite.StatementStatus.FULLSCAN_STEP, 0);
       }
     }
 
@@ -37,7 +52,7 @@ namespace SQLHeavy {
      */
     public int sort_operations {
       get {
-        return this.query.get_statement ().status (Sqlite.StatementStatus.SORT, 0);
+        return this.stmt.status (Sqlite.StatementStatus.SORT, 0);
       }
     }
 
@@ -75,7 +90,7 @@ namespace SQLHeavy {
      * @see next
      */
     internal bool next_internal () throws SQLHeavy.Error {
-      unowned Sqlite.Statement stmt = this.query.get_statement ();
+      unowned Sqlite.Statement stmt = this.stmt;
 
       if ( this.finished )
         return false;
@@ -289,7 +304,7 @@ namespace SQLHeavy {
      * {@inheritDoc}
      */
     public string field_name (int field) throws SQLHeavy.Error {
-      return this.query.get_statement ().column_name (this.field_check_index (field));
+      return this.stmt.column_name (this.field_check_index (field));
     }
 
     /**
@@ -300,7 +315,7 @@ namespace SQLHeavy {
      * @see field_origin_table
      */
     public string field_origin_table_name (int field) throws SQLHeavy.Error {
-      return this.query.get_statement ().column_table_name (this.field_check_index (field));
+      return this.stmt.column_table_name (this.field_check_index (field));
     }
 
     /**
@@ -321,7 +336,7 @@ namespace SQLHeavy {
      * @return the table name
      */
     public string field_origin_name (int field) throws SQLHeavy.Error {
-      return this.query.get_statement ().column_origin_name (this.field_check_index (field));
+      return this.stmt.column_origin_name (this.field_check_index (field));
     }
 
     /**
@@ -352,50 +367,50 @@ namespace SQLHeavy {
      * {@inheritDoc}
      */
     public GLib.Type field_type (int field) throws SQLHeavy.Error {
-      return sqlite_type_to_g_type (this.query.get_statement ().column_type (this.field_check_index (field)));
+      return sqlite_type_to_g_type (this.stmt.column_type (this.field_check_index (field)));
     }
 
     /**
      * {@inheritDoc}
      */
     public GLib.Value fetch (int field) throws SQLHeavy.Error {
-      return sqlite_value_to_g_value (this.query.get_statement ().column_value (this.field_check_index (field)));
+      return sqlite_value_to_g_value (this.stmt.column_value (this.field_check_index (field)));
     }
 
     /**
      * {@inheritDoc}
      */
     public string? fetch_string (int field = 0) throws SQLHeavy.Error {
-      return this.query.get_statement ().column_text (this.field_check_index (field));
+      return this.stmt.column_text (this.field_check_index (field));
     }
 
     /**
      * {@inheritDoc}
      */
     public int fetch_int (int field = 0) throws SQLHeavy.Error {
-      return this.query.get_statement ().column_int (this.field_check_index (field));
+      return this.stmt.column_int (this.field_check_index (field));
     }
 
     /**
      * {@inheritDoc}
      */
     public int64 fetch_int64 (int field = 0) throws SQLHeavy.Error {
-      return this.query.get_statement ().column_int64 (this.field_check_index (field));
+      return this.stmt.column_int64 (this.field_check_index (field));
     }
 
     /**
      * {@inheritDoc}
      */
     public double fetch_double (int field = 0) throws SQLHeavy.Error {
-      return this.query.get_statement ().column_double (this.field_check_index (field));
+      return this.stmt.column_double (this.field_check_index (field));
     }
 
     /**
      * {@inheritDoc}
      */
     public uint8[] fetch_blob (int field = 0) throws SQLHeavy.Error {
-      var res = new uint8[this.query.get_statement ().column_bytes(this.field_check_index (field))];
-      GLib.Memory.copy (res, this.query.get_statement ().column_blob (field), res.length);
+      var res = new uint8[this.stmt.column_bytes(this.field_check_index (field))];
+      GLib.Memory.copy (res, this.stmt.column_blob (field), res.length);
       return res;
     }
 
@@ -418,8 +433,69 @@ namespace SQLHeavy {
       this.execution_timer.stop ();
       this.execution_timer.reset ();
 
-      unowned Sqlite.Statement stmt = this.query.get_statement ();
-      this._field_count = stmt.column_count ();
+      if ( (this.stmt = this.query.try_to_steal_stmt ()) == null ) {
+        this.stmt_is_owned = true;
+        unowned Sqlite.Database db = this.query.queryable.database.get_sqlite_db ();
+        GLib.assert (sqlite3_prepare_v2 (db, this.query.sql, -1, out this.stmt) == Sqlite.OK);
+      } else {
+        this.stmt_is_owned = false;
+      }
+
+      this._field_count = this.stmt.column_count ();
+
+      if ( this.bindings == null ) {
+        this.bindings = this.query.get_bindings ();
+      }
+
+      var bindings_length = this.bindings.length;
+      for ( int i = 0 ; i < bindings_length ; i++ ) {
+        unowned GLib.Value? val = this.bindings[i];
+        if ( val == null ) {
+          GLib.critical ("Incomplete bindings");
+        } else {
+          GLib.Type val_t = val.type ();
+          var index = i + 1;
+
+          if ( val_t == typeof (string) ) {
+            this.stmt._bind_text (index, val.get_string (), -1, null);
+          } else if ( val_t == typeof (int) ) {
+            this.stmt.bind_int (index, val.get_int ());
+          } else if ( val_t == typeof (int64) ) {
+            this.stmt.bind_int64 (index, val.get_int64 ());
+          } else if ( val_t == typeof (float) ) {
+            this.stmt.bind_double (index, val.get_float ());
+          } else if ( val_t == typeof (double) ) {
+            this.stmt.bind_double (index, val.get_double ());
+          } else if ( val_t == typeof (void*) ) {
+            this.stmt.bind_null (index);
+          } else if ( val_t == typeof (GLib.ByteArray) ) {
+            GLib.ByteArray ba = (GLib.ByteArray) val;
+            this.stmt.bind_blob (index, ba.data, (int) ba.len, null);
+          }
+        }
+      }
+    }
+
+    ~ QueryResult () {
+      unowned SQLHeavy.Query query = this.query;
+      unowned SQLHeavy.Queryable queryable = query.queryable;
+      unowned SQLHeavy.ProfilingDatabase? prof_db = queryable.database.profiling_data;
+
+      queryable.query_executed (query);
+
+      if ( prof_db != null )
+        prof_db.insert (this);
+
+      this.stmt.reset ();
+
+      if ( query.auto_clear )
+        query.clear ();
+
+      if ( this.stmt_is_owned ) {
+        sqlite3_finalize (this.stmt);
+      } else {
+        query.return_stmt ();
+      }
     }
 
     /**

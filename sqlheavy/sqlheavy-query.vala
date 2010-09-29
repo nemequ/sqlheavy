@@ -1,4 +1,9 @@
 namespace SQLHeavy {
+  [CCode (cname = "sqlite3_prepare_v2")]
+  internal extern int sqlite3_prepare_v2 (Sqlite.Database db, string sql, int n_bytes, out unowned Sqlite.Statement stmt, out unowned string tail = null);
+  [CCode (cname = "sqlite3_finalize")]
+  internal extern int sqlite3_finalize (Sqlite.Statement stmt);
+
   /**
    * A prepared statement
    */
@@ -16,7 +21,7 @@ namespace SQLHeavy {
     /**
      * The maximum length of the SQL used to create this query
      */
-    public int sql_len { private get; construct; default = -1; }
+    public int sql_length { private get; construct; default = -1; }
 
     /**
      * The last error code
@@ -26,22 +31,62 @@ namespace SQLHeavy {
     /**
      * The SQLite statement associated with this query
      */
-    private Sqlite.Statement? stmt = null;
+    private unowned Sqlite.Statement? stmt = null;
 
     /**
-     * Return the SQLite statement associated with this query
+     * Whether {@link stmt} is currently in use by a query result
      */
-    internal unowned Sqlite.Statement? get_statement () {
-      return this.stmt;
+    private bool stmt_in_use = false;
+
+    /**
+     * Bindings
+     */
+    private SQLHeavy.ValueArray? bindings = null;
+
+    /**
+     * Retrive the bindings for the query
+     */
+    internal SQLHeavy.ValueArray? get_bindings () {
+      return this.bindings;
     }
 
     /**
-     * The currently active {@link QueryResult}, if any
+     * Attempt to steal the {@link stmt}
+     *
+     * We want to be able to create multiple {@link QueryResult}
+     * instances from a single {@link Query}, but compiling a
+     * statement is not cheap, so we want to be able to reuse the
+     * statement we created for the query.
+     *
+     * This function will try to steal the statement, but if it is
+     * already in use by another {@link QueryResult} it will return
+     * null and let the {@link QueryResult} compile a new statement.
+     *
+     * @return the statement or null
      */
-    public weak SQLHeavy.QueryResult? result { get; private set; }
+    internal unowned Sqlite.Statement? try_to_steal_stmt () {
+      if ( !this.stmt_in_use ) {
+        lock ( this.stmt ) {
+          if ( !this.stmt_in_use ) {
+            this.stmt_in_use = true;
+            return this.stmt;
+          }
+        }
+      }
+
+      return null;
+    }
 
     /**
-     * When set the bindings will automatically be cleared when the
+     * Return ownership of a statement which was acquired from the
+     * {@link try_to_steal_stmt} method
+     */
+    internal void return_stmt () {
+      this.stmt_in_use = false;
+    }
+
+    /**
+     * When set the bindings will automatically be cleared when an
      * associated {@link QueryResult} is destroyed.
      */
     public bool auto_clear { get; set; default = false; }
@@ -86,36 +131,15 @@ namespace SQLHeavy {
 
       if ( first_char == ':' || first_char == '@' ) {
         if ( (idx = this.stmt.bind_parameter_index (parameter)) != 0 )
-          return idx;
+          return idx - 1;
       } else {
         if ( (idx = this.stmt.bind_parameter_index (":" + parameter)) != 0 )
-          return idx;
+          return idx - 1;
         else if ( (idx = this.stmt.bind_parameter_index ("@" + parameter)) != 0 )
-          return idx;
+          return idx - 1;
       }
 
       throw new SQLHeavy.Error.RANGE ("Could not find parameter '%s'.", parameter);
-    }
-
-    /**
-     * Callback to be invoked when the QueryResult is destroyed
-     *
-     * @param the {@link QueryResult}
-     */
-    private void query_result_destroyed_cb (GLib.Object query_result) {
-      GLib.assert (query_result == this.result);
-
-      this.queryable.query_executed (this);
-
-      var prof_db = this.queryable.database.profiling_data;
-      if ( prof_db != null )
-        prof_db.insert ((SQLHeavy.QueryResult) query_result);
-
-      if ( this.auto_clear )
-        this.stmt.clear_bindings ();
-
-      this.stmt.reset ();
-      this.result = null;
     }
 
     /**
@@ -131,8 +155,13 @@ namespace SQLHeavy {
           this.set_int (current_parameter, args.arg ());
         else if ( current_parameter_type == typeof (int64) )
           this.set_int64 (current_parameter, args.arg ());
-        else if ( current_parameter_type == typeof (double) )
+        else if ( (current_parameter_type == typeof (double)) ||
+                  (current_parameter_type == typeof (float)) )
           this.set_double (current_parameter, args.arg ());
+        else if ( current_parameter_type == typeof (void*) )
+          this.set_null (current_parameter);
+        else if ( current_parameter_type == typeof (GLib.ByteArray) )
+          this.set_byte_array (current_parameter, args.arg ());
         else
           throw new SQLHeavy.Error.DATA_TYPE ("Data type `%s' unsupported.", current_parameter_type.name ());
 
@@ -152,17 +181,10 @@ namespace SQLHeavy {
      * @return the result
      */
     public SQLHeavy.QueryResult execute (string? first_parameter = null, ...) throws SQLHeavy.Error {
-      if ( this.result != null )
-        throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
-
       var args = va_list ();
       this.set_list (first_parameter, args);
 
-      var res = new SQLHeavy.QueryResult (this);
-      this.result = res;
-      res.weak_ref (query_result_destroyed_cb);
-
-      return res;
+      return new SQLHeavy.QueryResult (this);
     }
 
     /**
@@ -172,13 +194,7 @@ namespace SQLHeavy {
      * @return the result
      */
     public async SQLHeavy.QueryResult execute_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      if ( this.result != null )
-        throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
-
       var res = new SQLHeavy.QueryResult.no_exec (this);
-      this.result = res;
-      res.weak_ref (query_result_destroyed_cb);
-
       yield res.next_async (cancellable);
 
       return res;
@@ -190,16 +206,9 @@ namespace SQLHeavy {
      * @return the inserted row ID
      */
     public int64 execute_insert () throws SQLHeavy.Error {
-      if ( this.result != null )
-        throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
-
       int64 insert_id = 0;
 
-      {
-        var res = new SQLHeavy.QueryResult.insert (this, out insert_id);
-        this.result = res;
-        res.weak_ref (query_result_destroyed_cb);
-      }
+      new SQLHeavy.QueryResult.insert (this, out insert_id);
 
       return insert_id;
     }
@@ -211,12 +220,7 @@ namespace SQLHeavy {
      * @return the inserted row ID
      */
     public async int64 execute_insert_async (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
-      if ( this.result != null )
-        throw new SQLHeavy.Error.MISUSE ("Cannot execute query again until existing SQLHeavyQueryResult is destroyed.");
-
       var res = new SQLHeavy.QueryResult.no_exec (this);
-      this.result = res;
-      res.weak_ref (query_result_destroyed_cb);
 
       int64 insert_id = 0;
       yield res.next_internal_async (cancellable, 1, out insert_id);
@@ -234,24 +238,10 @@ namespace SQLHeavy {
     public void bind (int parameter, GLib.Value? value) throws SQLHeavy.Error {
       this.parameter_check_index (parameter);
 
-      if ( value == null )
-        this.stmt.bind_null (parameter);
-      else if ( value.holds (typeof (int)) )
-        this.stmt.bind_int (parameter, value.get_int ());
-      else if ( value.holds (typeof (int64)) )
-        this.stmt.bind_int64 (parameter, value.get_int64 ());
-      else if ( value.holds (typeof (string)) )
-        this.stmt.bind_text (parameter, value.get_string ());
-      else if ( value.holds (typeof (double)) )
-        this.stmt.bind_double (parameter, value.get_double ());
-      else if ( value.holds (typeof (float)) )
-        this.stmt.bind_double (parameter, value.get_float ());
-      else if ( value.holds (typeof (GLib.ByteArray)) ) {
-        unowned GLib.ByteArray ba = (GLib.ByteArray) value;
-        this.stmt.bind_blob (parameter, GLib.Memory.dup (ba.data, ba.len), (int) ba.len, GLib.g_free);
-      }
-      else
+      if ( !SQLHeavy.check_type (value.type ()) )
         throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
+
+      this.bindings[parameter] = value;
     }
 
     /**
@@ -274,7 +264,7 @@ namespace SQLHeavy {
      * @see set
      */
     public void bind_int (int field, int value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_int (this.parameter_check_index (field), value), this.queryable);
+      this.bindings.set_int (this.parameter_check_index (field), value);
     }
 
     /**
@@ -298,7 +288,7 @@ namespace SQLHeavy {
      * @see bind
      */
     public void bind_int64 (int field, int64 value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_int64 (this.parameter_check_index (field), value), this.queryable);
+      this.bindings.set_int64 (this.parameter_check_index (field), value);
     }
 
     /**
@@ -325,7 +315,7 @@ namespace SQLHeavy {
       if ( value == null )
         this.bind_null (field);
       else
-        error_if_not_ok (this.stmt.bind_text (this.parameter_check_index (field), (!) value), this.queryable);
+        this.bindings.set_string (this.parameter_check_index (field), value);
     }
 
     /**
@@ -348,7 +338,7 @@ namespace SQLHeavy {
      * @see bind
      */
     public void bind_null (int field) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_null (this.parameter_check_index (field)), this.queryable);
+      this.bindings.set_null (this.parameter_check_index (field));
     }
 
     /**
@@ -371,7 +361,7 @@ namespace SQLHeavy {
      * @see bind
      */
     public void bind_double (int field, double value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_double (this.parameter_check_index (field), value), this.queryable);
+      this.bindings.set_double (this.parameter_check_index (field), value);
     }
 
     /**
@@ -395,7 +385,9 @@ namespace SQLHeavy {
      * @see bind
      */
     public void bind_blob (int field, uint8[] value) throws SQLHeavy.Error {
-      error_if_not_ok (this.stmt.bind_blob (field, GLib.Memory.dup (value, value.length), value.length, GLib.g_free), this.queryable);
+      var ba = new GLib.ByteArray.sized (value.length);
+      ba.append (value);
+      this.bind_byte_array (this.parameter_check_index (field), ba);
     }
 
     /**
@@ -411,10 +403,34 @@ namespace SQLHeavy {
     }
 
     /**
+     * Bind a byte array value to the specified parameter index
+     *
+     * @param field index of the parameter
+     * @param value value to bind
+     * @see set_blob
+     * @see bind
+     */
+    public void bind_byte_array (int field, GLib.ByteArray value) throws SQLHeavy.Error {
+      this.bindings.set_byte_array (this.parameter_check_index (field), value);
+    }
+
+    /**
+     * Bind a byte array value to the specified parameter
+     *
+     * @param field name of the parameter
+     * @param value value to bind
+     * @see bind_blob
+     * @see set
+     */
+    public void set_byte_array (string field, GLib.ByteArray value) throws SQLHeavy.Error {
+      this.bind_byte_array (this.parameter_index (field), value);
+    }
+
+    /**
      * Clear the bindings
      */
     public void clear () {
-      this.stmt.clear_bindings ();
+      this.bindings.clear ();
     }
 
     /**
@@ -433,7 +449,7 @@ namespace SQLHeavy {
         row.length = column_l;
 
         for ( int c = 0 ; c < column_l ; c++ )
-          row[c] = result.fetch (c);
+          row[c] = results.fetch (c);
 
         values.add (row);
       }
@@ -507,12 +523,14 @@ namespace SQLHeavy {
     }
 
     construct {
-      this.error_code = queryable.database.get_sqlite_db ().prepare_v2 (this.sql, this.sql_len, out this.stmt);
+      unowned Sqlite.Database db = this.queryable.database.get_sqlite_db ();
+      this.error_code = sqlite3_prepare_v2 (db, this.sql, this.sql_length, out this.stmt);
 
       if ( this.error_code == Sqlite.OK )
         this.sql = this.stmt.sql ();
 
       this.parameter_count = this.stmt.bind_parameter_count ();
+      this.bindings = new SQLHeavy.ValueArray (this.parameter_count);
     }
 
     /**
@@ -535,7 +553,7 @@ namespace SQLHeavy {
      * @param tail unused portion of the SQL
      */
     public Query.full (SQLHeavy.Queryable queryable, string sql, int sql_max_len = -1, out unowned string? tail = null) throws SQLHeavy.Error {
-      GLib.Object (queryable: queryable, sql: sql, sql_len: sql_max_len);
+      GLib.Object (queryable: queryable, sql: sql, sql_length: sql_max_len);
       error_if_not_ok (this.error_code);
 
       if ( &tail != null )
