@@ -95,7 +95,7 @@ namespace SQLHeavy {
      * See SQLite documentation at [[http://www.sqlite.org/c3ref/update_hook.html]]
      */
     private void update_hook_cb (Sqlite.Action action, string dbname, string table, int64 rowid) {
-      lock ( this.orm_tables ) {
+      if ( this.orm_tables != null ) {
         unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (table);
         if ( list != null ) {
           for ( var iter = list.get_begin_iter () ; !iter.is_end () ; iter = iter.next () ) {

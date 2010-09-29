@@ -410,7 +410,7 @@ namespace SQLHeavy {
         throw new GeneratorError.CONFIGURATION (@"Could not find package '$(pkg)'");
 
       this.context.add_package (pkg);
-      this.context.add_source_file (new Vala.SourceFile (this.context, SourceFileType.NONE, package_path));
+      this.context.add_source_file (new Vala.SourceFile (this.context, Vala.SourceFileType.NONE, package_path));
 
       var deps_filename = GLib.Path.build_filename (GLib.Path.get_dirname (package_path), "%s.deps".printf (pkg));
       if ( GLib.FileUtils.test (deps_filename, GLib.FileTest.EXISTS) ) {
@@ -515,7 +515,7 @@ namespace SQLHeavy {
       foreach ( unowned string source in sources ) {
         if ( source.has_suffix (".vala") ) {
           if ( GLib.FileUtils.test (source, GLib.FileTest.EXISTS) )
-            this.context.add_source_file (new Vala.SourceFile (this.context, SourceFileType.NONE, source));
+            this.context.add_source_file (new Vala.SourceFile (this.context, Vala.SourceFileType.NONE, source));
           else
             throw new GeneratorError.CONFIGURATION (@"Source file '$(source)' does not exist.");
         } else {

@@ -384,8 +384,9 @@ namespace SQLHeavy {
         if ( this.values.length != length )
           this.values.resize (length);
       } else {
-        // Requires patch in bgo#571486
-        this.values = new (GLib.Value?)[length];
+        void* m = GLib.malloc0 (sizeof (GLib.Value?) * (length + 1));
+        GLib.Memory.copy (&this.values, &m, sizeof (GLib.Value?[]));
+        this.values.length = length;
       }
 
       if ( this.to_source_map != null )
