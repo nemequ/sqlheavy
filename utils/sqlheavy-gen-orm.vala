@@ -401,32 +401,6 @@ namespace SQLHeavy {
       code_writer.write_file (this.context, output_location ?? "/dev/stdout");
     }
 
-    private void add_package (string pkg) throws GeneratorError {
-      if ( this.context.has_package (pkg) )
-        return;
-
-      var package_path = this.context.get_package_path (pkg, vapi_directories);
-      if ( package_path == null )
-        throw new GeneratorError.CONFIGURATION (@"Could not find package '$(pkg)'");
-
-      this.context.add_package (pkg);
-      this.context.add_source_file (new Vala.SourceFile (this.context, Vala.SourceFileType.NONE, package_path));
-
-      var deps_filename = GLib.Path.build_filename (GLib.Path.get_dirname (package_path), "%s.deps".printf (pkg));
-      if ( GLib.FileUtils.test (deps_filename, GLib.FileTest.EXISTS) ) {
-        try {
-          string deps_content;
-          size_t deps_len;
-          GLib.FileUtils.get_contents (deps_filename, out deps_content, out deps_len);
-          foreach ( string dep in deps_content.split ("\n") )
-            if ( dep.strip () != "" )
-              this.add_package (dep);
-        } catch ( GLib.FileError e ) {
-          throw new GeneratorError.CONFIGURATION (@"Unable to read dependency file: $(e.message)");
-        }
-      }
-    }
-
     private static string parse_selector (string selector, out bool wildcard) throws GeneratorError {
       wildcard = false;
       string?[] real_selector = new string[3];
@@ -504,12 +478,12 @@ namespace SQLHeavy {
       Vala.CodeContext.push (this.context);
 
       // Default packages
-      this.add_package ("glib-2.0");
-      this.add_package ("gobject-2.0");
-      this.add_package ("sqlheavy-1.0");
+      this.context.add_external_package ("glib-2.0");
+      this.context.add_external_package ("gobject-2.0");
+      this.context.add_external_package ("sqlheavy-1.0");
 
       foreach ( unowned string pkg in packages ) {
-        this.add_package (pkg);
+        this.context.add_external_package (pkg);
       }
 
       foreach ( unowned string source in sources ) {
