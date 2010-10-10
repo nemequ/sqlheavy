@@ -83,7 +83,7 @@ namespace SQLHeavy {
         if ( list != null ) {
           var iter = list.search (table, SQLHeavy.Table.direct_compare).prev ();
           unowned SQLHeavy.Table t2 = iter.get ();
-          if ( (uint)table == (uint)t2 )
+          if ( (ulong)table == (ulong)t2 )
             list.remove (iter);
         }
       }
