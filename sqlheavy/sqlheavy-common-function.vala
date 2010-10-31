@@ -106,25 +106,23 @@ namespace SQLHeavy {
         throw new SQLHeavy.Error.MISMATCH (sqlite_errstr (Sqlite.MISMATCH));
 
       var res = new GLib.ByteArray ();
-      size_t bytes_read, bytes_written, outbuf_l = 4096;
+      size_t bytes_read, bytes_written;
+      var outbuf = new uint8[4096];
       int in_offset = 0;
-      void * outbuf = GLib.malloc (outbuf_l);
 
       while ( true ) {
         try {
           var end = int.min (in_offset + 256, in_data.length);
 
           var cr = converter.convert (in_data[in_offset:end],
-                                      end - in_offset,
                                       outbuf,
-                                      outbuf_l,
                                       end >= in_data.length ? GLib.ConverterFlags.INPUT_AT_END : GLib.ConverterFlags.NO_FLAGS,
                                       out bytes_read,
                                       out bytes_written);
 
           if ( cr == GLib.ConverterResult.CONVERTED ||
                cr == GLib.ConverterResult.FINISHED ) {
-            unowned uint8[] data = (uint8[]) outbuf;
+            unowned uint8[] data = outbuf;
             data.length = (int) bytes_written;
             res.append (data);
 
@@ -135,9 +133,7 @@ namespace SQLHeavy {
           }
         } catch ( GLib.Error e ) {
           if ( e is GLib.IOError.PARTIAL_INPUT ) {
-            GLib.free (outbuf);
-            outbuf_l += 4096;
-            outbuf = GLib.malloc (outbuf_l);
+            outbuf.resize (outbuf.length + 4096);
           }
           GLib.error (e.message);
         }
