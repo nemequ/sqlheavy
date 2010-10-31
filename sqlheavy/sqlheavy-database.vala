@@ -12,7 +12,7 @@ namespace SQLHeavy {
   /**
    * A database.
    */
-  public class Database : GLib.Object, Queryable {
+  public class Database : GLib.Object, Queryable, GLib.Initable {
     /**
      * List of registered user functions and their respective user data
      */
@@ -815,51 +815,6 @@ namespace SQLHeavy {
       set { this.pragma_set_bool ("vdbe_listing", value); }
     }
 
-    construct {
-      if ( this.filename != ":memory:" ) {
-        string dirname = GLib.Path.get_dirname (filename);
-        if ( !GLib.FileUtils.test (dirname, GLib.FileTest.EXISTS) )
-          GLib.DirUtils.create_with_parents (dirname, 0700);
-      }
-
-      int flags = 0;
-      if ( (this.mode & SQLHeavy.FileMode.READ) == SQLHeavy.FileMode.READ )
-        flags = Sqlite.OPEN_READONLY;
-      if ( (this.mode & SQLHeavy.FileMode.WRITE) == SQLHeavy.FileMode.WRITE )
-        flags = Sqlite.OPEN_READWRITE;
-      if ( (this.mode & SQLHeavy.FileMode.CREATE) == SQLHeavy.FileMode.CREATE )
-        flags |= Sqlite.OPEN_CREATE;
-
-      if ( Sqlite.Database.open_v2 ((!) filename, out this.db, flags, null) != Sqlite.OK )
-        this.db = null;
-      else {
-        this.db.trace ((sql) => { this.sql_executed (sql); });
-        this.db.update_hook (this.update_hook_cb);
-        this.db.busy_timeout (int.MAX);
-      }
-
-      { // Check environment variables for settings
-        string? env_var = null;
-
-        if ( !(this is SQLHeavy.ProfilingDatabase) &&
-             (env_var = GLib.Environment.get_variable ("SQLHEAVY_PROFILING_DATA")) != null ) {
-          try {
-            this.profiling_data = new SQLHeavy.ProfilingDatabase (env_var);
-          } catch ( SQLHeavy.Error e ) {
-            GLib.critical ("Unable to set profiling database to `%s': %s", env_var, e.message);
-          }
-        }
-
-        if ( (env_var = GLib.Environment.get_variable ("SQLHEAVY_JOURNAL_MODE")) != null ) {
-          this.journal_mode = SQLHeavy.JournalMode.from_string (env_var);
-        }
-
-        if ( (env_var = GLib.Environment.get_variable ("SQLHEAVY_SYNCHRONOUS_MODE")) != null ) {
-          this.synchronous = SQLHeavy.SynchronousMode.from_string (env_var);
-        }
-      }
-    }
-
     /**
      * Register aggregate function for use within SQLite
      *
@@ -1079,6 +1034,62 @@ namespace SQLHeavy {
     }
 
     /**
+     * Initialize the database
+     *
+     * @param cancellable optional GCancellable object
+     * @return true on success, false on failure
+     */
+    public virtual bool init (GLib.Cancellable? cancellable = null) throws GLib.Error {
+      if ( this.filename != ":memory:" ) {
+        var file = GLib.File.new_for_path (filename);
+        try {
+          file.get_parent ().make_directory_with_parents (cancellable);
+        } catch ( GLib.Error e ) {
+          if ( !(e is GLib.IOError.EXISTS) )
+            throw e;
+        }
+      }
+
+      int flags = 0;
+      if ( (this.mode & SQLHeavy.FileMode.READ) == SQLHeavy.FileMode.READ )
+        flags = Sqlite.OPEN_READONLY;
+      if ( (this.mode & SQLHeavy.FileMode.WRITE) == SQLHeavy.FileMode.WRITE )
+        flags = Sqlite.OPEN_READWRITE;
+      if ( (this.mode & SQLHeavy.FileMode.CREATE) == SQLHeavy.FileMode.CREATE )
+        flags |= Sqlite.OPEN_CREATE;
+
+      if ( Sqlite.Database.open_v2 ((!) filename, out this.db, flags, null) != Sqlite.OK )
+        throw new SQLHeavy.Error.CAN_NOT_OPEN (sqlite_errstr (Sqlite.CANTOPEN));
+
+      this.db.trace ((sql) => { this.sql_executed (sql); });
+      this.db.update_hook (this.update_hook_cb);
+      this.db.busy_timeout (int.MAX);
+
+      { // Check environment variables for settings
+        string? env_var = null;
+
+        if ( !(this is SQLHeavy.ProfilingDatabase) &&
+             (env_var = GLib.Environment.get_variable ("SQLHEAVY_PROFILING_DATA")) != null ) {
+          try {
+            this.profiling_data = new SQLHeavy.ProfilingDatabase (env_var);
+          } catch ( SQLHeavy.Error e ) {
+            GLib.critical ("Unable to set profiling database to `%s': %s", env_var, e.message);
+          }
+        }
+
+        if ( (env_var = GLib.Environment.get_variable ("SQLHEAVY_JOURNAL_MODE")) != null ) {
+          this.journal_mode = SQLHeavy.JournalMode.from_string (env_var);
+        }
+
+        if ( (env_var = GLib.Environment.get_variable ("SQLHEAVY_SYNCHRONOUS_MODE")) != null ) {
+          this.synchronous = SQLHeavy.SynchronousMode.from_string (env_var);
+        }
+      }
+
+      return true;
+    }
+
+    /**
      * Open a database.
      *
      * @param filename Where to store the database, or null for memory only.
@@ -1088,12 +1099,11 @@ namespace SQLHeavy {
                      SQLHeavy.FileMode mode =
                        SQLHeavy.FileMode.READ |
                        SQLHeavy.FileMode.WRITE |
-                       SQLHeavy.FileMode.CREATE) throws SQLHeavy.Error {
+                       SQLHeavy.FileMode.CREATE) throws SQLHeavy.Error, GLib.Error {
       if ( filename == null ) filename = ":memory:";
       Object (filename: (!) filename, mode: mode);
 
-      if ( this.db == null )
-        throw new SQLHeavy.Error.CAN_NOT_OPEN (sqlite_errstr (Sqlite.CANTOPEN));
+      this.init ();
     }
 
     /**
