@@ -7,7 +7,7 @@ namespace SQLHeavy {
   /**
    * A prepared statement
    */
-  public class Query : GLib.Object {
+  public class Query : GLib.Object, GLib.Initable {
     /**
      * The queryable asscociated with this query
      */
@@ -16,17 +16,16 @@ namespace SQLHeavy {
     /**
      * The SQL used to create this query 
      */
-    public string sql { get; construct; }
+    public string sql {
+      get { return this._sql; }
+      construct { this._sql = value; }
+    }
+    private string _sql;
 
     /**
      * The maximum length of the SQL used to create this query
      */
     public int sql_length { private get; construct; default = -1; }
-
-    /**
-     * The last error code
-     */
-    private int error_code = Sqlite.OK;
 
     /**
      * The SQLite statement associated with this query
@@ -522,13 +521,11 @@ namespace SQLHeavy {
       }
     }
 
-    construct {
+    public virtual bool init (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
       unowned Sqlite.Database db = this.queryable.database.get_sqlite_db ();
-      this.error_code = sqlite3_prepare_v2 (db, this.sql, this.sql_length, out this.stmt);
+      error_if_not_ok (sqlite3_prepare_v2 (db, this.sql, this.sql_length, out this.stmt));
 
-      if ( this.error_code == Sqlite.OK )
-        this.sql = this.stmt.sql ();
-
+      this._sql = this.stmt.sql ();
       this.parameter_count = this.stmt.bind_parameter_count ();
       this.bindings = new SQLHeavy.ValueArray (this.parameter_count);
     }
@@ -541,7 +538,7 @@ namespace SQLHeavy {
      */
     public Query (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
       GLib.Object (queryable: queryable, sql: sql);
-      error_if_not_ok (this.error_code);
+      this.init ();
     }
 
     /**
@@ -554,10 +551,10 @@ namespace SQLHeavy {
      */
     public Query.full (SQLHeavy.Queryable queryable, string sql, int sql_max_len = -1, out unowned string? tail = null) throws SQLHeavy.Error {
       GLib.Object (queryable: queryable, sql: sql, sql_length: sql_max_len);
-      error_if_not_ok (this.error_code);
+      this.init ();
 
       if ( &tail != null )
-        tail = (string) ((size_t) sql + this.sql.length);
+        tail = (string) ((size_t) sql + this._sql.length);
     }
   }
 }

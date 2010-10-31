@@ -1039,14 +1039,14 @@ namespace SQLHeavy {
      * @param cancellable optional GCancellable object
      * @return true on success, false on failure
      */
-    public virtual bool init (GLib.Cancellable? cancellable = null) throws GLib.Error {
+    public virtual bool init (GLib.Cancellable? cancellable = null) throws SQLHeavy.Error {
       if ( this.filename != ":memory:" ) {
         var file = GLib.File.new_for_path (filename);
         try {
           file.get_parent ().make_directory_with_parents (cancellable);
         } catch ( GLib.Error e ) {
           if ( !(e is GLib.IOError.EXISTS) )
-            throw e;
+            throw new SQLHeavy.Error.CAN_NOT_OPEN ("Unable to create parent directory: %s (%d)", e.message, e.code);
         }
       }
 
@@ -1099,7 +1099,7 @@ namespace SQLHeavy {
                      SQLHeavy.FileMode mode =
                        SQLHeavy.FileMode.READ |
                        SQLHeavy.FileMode.WRITE |
-                       SQLHeavy.FileMode.CREATE) throws SQLHeavy.Error, GLib.Error {
+                       SQLHeavy.FileMode.CREATE) throws SQLHeavy.Error {
       if ( filename == null ) filename = ":memory:";
       Object (filename: (!) filename, mode: mode);
 
