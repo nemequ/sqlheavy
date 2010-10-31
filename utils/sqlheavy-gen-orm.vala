@@ -214,7 +214,7 @@ namespace SQLHeavy {
 
         {
           var set_method = new Vala.Method (@"set_$(name)", new Vala.VoidType ());
-          set_method.add_parameter (new Vala.FormalParameter ("value", data_type));
+          set_method.add_parameter (new Vala.Parameter ("value", data_type));
           cl.add_method (set_method);
           set_method.access = Vala.SymbolAccessibility.PUBLIC;
           set_method.add_error_type (type_from_string ("SQLHeavy.Error"));
@@ -308,7 +308,7 @@ namespace SQLHeavy {
       {
         var register_notify = new Vala.Method ("emit_change_notification", new Vala.VoidType ());
         register_notify.access = Vala.SymbolAccessibility.PRIVATE;
-        register_notify.add_parameter (new Vala.FormalParameter ("field", type_from_string ("int")));
+        register_notify.add_parameter (new Vala.Parameter ("field", type_from_string ("int")));
 
         var block = new Vala.Block (null);
         var try_block = new Vala.Block (null);
