@@ -179,7 +179,7 @@ namespace SQLHeavy {
       GLib.StaticMutex executing_lock = GLib.StaticMutex ();
       SQLHeavy.Queryable queryable = this.query.queryable;
       SQLHeavy.Database database = queryable.database;
-      unowned GLib.Thread? thread = null;
+      unowned GLib.Thread<void*>? thread = null;
       SQLHeavy.Error? error = null;
       int64 insert_id = 0;
       ulong cancellable_sig = 0;
@@ -202,7 +202,7 @@ namespace SQLHeavy {
       }
 
       try {
-        GLib.Thread.create (() => {
+        GLib.Thread.create<void*> (() => {
             this.acquire_locks (queryable, database);
 
             executing_lock.lock ();

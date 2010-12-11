@@ -528,6 +528,8 @@ namespace SQLHeavy {
       this._sql = this.stmt.sql ();
       this.parameter_count = this.stmt.bind_parameter_count ();
       this.bindings = new SQLHeavy.ValueArray (this.parameter_count);
+
+      return true;
     }
 
     /**
