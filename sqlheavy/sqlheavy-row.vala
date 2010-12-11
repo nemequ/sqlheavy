@@ -111,6 +111,7 @@ namespace SQLHeavy {
               var field_name = this.table.field_name (field);
               sql.append (@"`$(field_name)`");
               qvalues.append (@":$(field_name)");
+              first_field = false;
             }
           }
 
