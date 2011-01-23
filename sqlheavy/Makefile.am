@@ -112,7 +112,7 @@ typelibs_DATA = $(gir_DATA:.gir=.typelib)
 # included.
 
 %.typelib: %.gir $(INTROSPECTION_COMPILER)
-	LD_LIBRARY_PATH=.libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} \
+	$(AM_V_GEN) LD_LIBRARY_PATH=.libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} \
 	$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=. \
