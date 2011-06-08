@@ -21,6 +21,12 @@ namespace SQLHeavy {
     public string schema { get; construct; }
 
     construct {
+      try {
+        init();
+      } catch (Error err) {
+        GLib.critical("Unable to initialize versioned database: %s", err.message);
+      }
+
       var version = this.user_version;
       string script_name;
 
