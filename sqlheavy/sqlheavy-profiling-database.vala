@@ -49,13 +49,14 @@ namespace SQLHeavy {
      *
      * @param filename the location of the database
      */
-    public ProfilingDatabase (string? filename = null) {
+    public ProfilingDatabase (string? filename = null) throws SQLHeavy.Error {
       var schema = GLib.Path.build_filename (SQLHeavy.Config.PATH_PACKAGE_DATA,
                                              SQLHeavy.Version.API,
                                              "schemas",
                                              "profiling");
 
       GLib.Object (filename: filename, schema: schema);
+      this.init ();
     }
   }
 }

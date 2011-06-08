@@ -334,7 +334,7 @@ namespace SQLHeavy {
      * @return the value of the pragma, or null
      */
     private int pragma_get_int (string pragma) {
-      return this.pragma_get_string (pragma).to_int ();
+      return int.parse (this.pragma_get_string (pragma));
     }
 
     /**

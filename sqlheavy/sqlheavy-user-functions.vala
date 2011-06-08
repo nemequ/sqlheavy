@@ -5,6 +5,7 @@ namespace SQLHeavy {
    *
    * See SQLite documentation at [[http://www.sqlite.org/c3ref/create_function.html]]
    */
+  [CCode (gir_namespace = "SQLHeavy", gir_version = "0.1")]
   namespace UserFunction {
     /**
      * This function is called as SQLite is stepping through the
