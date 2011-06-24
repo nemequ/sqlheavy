@@ -185,6 +185,11 @@ namespace SQLHeavy {
       ulong cancellable_sig = 0;
       bool step_res = false;
 
+      // prepare the async callback for the thread's default event dispatcher
+      unowned GLib.MainContext? thread_context = MainContext.get_thread_default ();
+      GLib.IdleSource idle_source = new GLib.IdleSource ();
+      idle_source.set_callback (next_internal_async.callback);
+
       if ( cancellable != null ) {
         cancellable_sig = cancellable.cancelled.connect (() => {
             executing_lock.lock ();
@@ -192,7 +197,7 @@ namespace SQLHeavy {
               database.interrupt ();
             } else {
               error = new SQLHeavy.Error.INTERRUPTED (sqlite_errstr (Sqlite.INTERRUPT));
-              next_internal_async.callback ();
+              idle_source.attach (thread_context);
               if ( thread != null )
                 thread.exit (null);
               this.release_locks (queryable, database);
@@ -230,7 +235,7 @@ namespace SQLHeavy {
               cancellable.disconnect (cancellable_sig);
             }
 
-            next_internal_async.callback ();
+            idle_source.attach (thread_context);
 
             return null;
           }, false);
