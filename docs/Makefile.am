@@ -19,7 +19,6 @@ VALADOC_FLAGS = --force \
 		$(top_srcdir)/sqlheavy/sqlheavy-common-function.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-cursor.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-database.vala \
-		$(top_srcdir)/sqlheavy/sqlheavy-database-pool.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-enums.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-error.vala \
 		$(top_srcdir)/sqlheavy/sqlheavy-mutable-record.vala \

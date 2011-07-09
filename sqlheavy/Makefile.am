@@ -11,7 +11,6 @@ libsqlheavy@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-common-function.vala \
 	sqlheavy-cursor.vala \
 	sqlheavy-database.vala \
-	sqlheavy-database-pool.vala \
 	sqlheavy-enums.vala \
 	sqlheavy-error.vala \
 	sqlheavy-mutable-record.vala \
