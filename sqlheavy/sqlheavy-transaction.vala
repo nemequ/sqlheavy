@@ -58,7 +58,7 @@ namespace SQLHeavy {
       if ( this.status != TransactionStatus.UNRESOLVED )
         throw new SQLHeavy.Error.TRANSACTION ("Refusing to resolve an already resolved transaction.");
 
-      this.execute ("%s SAVEPOINT 'SQLHeavy-0x%x';".printf (commit ? "RELEASE" : "ROLLBACK TRANSACTION TO", (uint)this));
+      this.run ("%s SAVEPOINT 'SQLHeavy-0x%x';".printf (commit ? "RELEASE" : "ROLLBACK TRANSACTION TO", (uint)this));
 
       this.status = commit ? TransactionStatus.COMMITTED : TransactionStatus.ROLLED_BACK;
       this.parent.@unlock ();
@@ -90,7 +90,7 @@ namespace SQLHeavy {
       this.parent.@lock ();
 
       try {
-        this.execute ("SAVEPOINT 'SQLHeavy-0x%x';".printf ((uint)this));
+        this.run ("SAVEPOINT 'SQLHeavy-0x%x';".printf ((uint)this));
       }
       catch ( SQLHeavy.Error e ) {
         this.err = e;

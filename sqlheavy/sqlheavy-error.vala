@@ -196,7 +196,15 @@ namespace SQLHeavy {
      * present in a later version of SQLite than is currently in
      * use. For example, WAL in SQLite < 3.7.0.
      */
-    FEATURE_NOT_SUPPORTED
+    FEATURE_NOT_SUPPORTED,
+    /**
+     * No SQL was provided
+     */
+    NO_SQL,
+    /**
+     * A parameter in the query was left unbound
+     */
+    MISSING_PARAMETER
   }
 
   /**

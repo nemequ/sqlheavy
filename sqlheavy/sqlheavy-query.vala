@@ -555,8 +555,14 @@ namespace SQLHeavy {
       GLib.Object (queryable: queryable, sql: sql, sql_length: sql_max_len);
       this.init ();
 
-      if ( &tail != null )
-        tail = (string) ((size_t) sql + this._sql.length);
+      if ( &tail != null ) {
+        if ( this._sql != null )
+          tail = (string) ((size_t) sql + this._sql.length);
+        else {
+          tail = (string) ((size_t) sql + sql.length);
+          throw new SQLHeavy.Error.NO_SQL ("No SQL was provided");
+        }
+      }
     }
   }
 }
