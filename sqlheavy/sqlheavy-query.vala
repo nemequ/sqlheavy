@@ -11,7 +11,7 @@ namespace SQLHeavy {
     /**
      * The queryable asscociated with this query
      */
-    public SQLHeavy.Queryable queryable { get; construct; }
+    public unowned SQLHeavy.Queryable queryable { get; private set; }
 
     /**
      * The SQL used to create this query 
@@ -539,7 +539,8 @@ namespace SQLHeavy {
      * @param sql the SQL to use to create the query
      */
     public Query (SQLHeavy.Queryable queryable, string sql) throws SQLHeavy.Error {
-      GLib.Object (queryable: queryable, sql: sql);
+      GLib.Object (sql: sql);
+      this.queryable = queryable;
       this.init ();
     }
 
@@ -552,7 +553,8 @@ namespace SQLHeavy {
      * @param tail unused portion of the SQL
      */
     public Query.full (SQLHeavy.Queryable queryable, string sql, int sql_max_len = -1, out unowned string? tail = null) throws SQLHeavy.Error {
-      GLib.Object (queryable: queryable, sql: sql, sql_length: sql_max_len);
+      GLib.Object (sql: sql, sql_length: sql_max_len);
+      this.queryable = queryable;
       this.init ();
 
       if ( &tail != null ) {
