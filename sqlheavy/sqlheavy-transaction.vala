@@ -65,6 +65,24 @@ namespace SQLHeavy {
       this.resolved (this.status);
     }
 
+
+    /**
+     * Resolve the transaction asychronously
+     *
+     * @param commit whether to commit the transaction or roll it back
+     */
+    private async void resolve_async (bool commit) throws SQLHeavy.Error {
+      if ( this.status != TransactionStatus.UNRESOLVED )
+        throw new SQLHeavy.Error.TRANSACTION ("Refusing to resolve an already resolved transaction.");
+
+      SQLHeavy.Query query = this.prepare ("%s SAVEPOINT 'SQLHeavy-0x%x';".printf (commit ? "RELEASE" : "ROLLBACK TRANSACTION TO", (uint)this));
+      yield query.execute_async ();
+
+      this.status = commit ? TransactionStatus.COMMITTED : TransactionStatus.ROLLED_BACK;
+      this.parent.@unlock ();
+      this.resolved (this.status);
+    }
+
     /**
      * Commit the transaction to the database
      */
@@ -73,10 +91,24 @@ namespace SQLHeavy {
     }
 
     /**
+     * Commit the transaction to the database asynchronously
+     */
+    public async void commit_async () throws SQLHeavy.Error {
+      yield this.resolve_async (true);
+    }
+
+    /**
      * Rollback the transaction
      */
     public void rollback () throws SQLHeavy.Error {
       this.resolve (false);
+    }
+
+    /**
+     * Rollback the transaction asynchronously
+     */
+    public async void rollback_async () throws SQLHeavy.Error {
+      yield this.resolve_async (false);
     }
 
     ~ Transaction () {
