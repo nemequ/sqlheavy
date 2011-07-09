@@ -83,12 +83,13 @@ namespace SQLHeavy {
       /* Hold off on populating this for better ABI compat with run
        * (which used to be execute) */
       GLib.HashTable<string,GLib.Value?>? parameters = null;
+      SQLHeavy.Transaction trans = this.begin_transaction ();
 
       for ( unowned char * sp = (char *)s ; *sp != '\0' ; sp++, s = (string)sp ) {
         if ( !(*sp).isspace () ) {
           SQLHeavy.Query? query = null;
           try {
-            query = new SQLHeavy.Query.full (this, (!) s, -1, out s);
+            query = new SQLHeavy.Query.full (trans, (!) s, -1, out s);
             sp = (char*) s;
           } catch ( SQLHeavy.Error e ) {
             if ( e is SQLHeavy.Error.NO_SQL ) {
@@ -113,6 +114,8 @@ namespace SQLHeavy {
           query.execute ();
         }
       }
+
+      trans.commit ();
     }
 
     /**
