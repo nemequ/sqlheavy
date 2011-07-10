@@ -1,11 +1,12 @@
 #summary High-level overview of how to use the SQLHeavy library.
 
+<wiki:toc />
+
 = Introduction =
 
 SQLHeavy provides developers with easy to use yet powerful tools for interfacing with SQLite databases. This document is intended to give an overview of how to use these interfaces without delving into too much detail (that is what the ReferenceManuals are for).
 
 This document is written with Vala in mind, but it should still be helpful for those wishing to develop in another language, such as C, `JavaScript`, or Python.
-
 
 = Asynchronous Variants =
 
@@ -141,7 +142,21 @@ query.set_int64 (":bar", 1729);
 query.execute ();
 }}}
 
-==== Execution Convenience Methods ====
+=== Retrieving Results ===
+
+After calling the `Query.step` method, you will probably want to actually read some fields from the result set. This can be accomplished using the `Record` interface (implemented by the `QueryResults` object. Specifically, `Record.fetch*` and `Record.get*` methods, which are analagous to SQLite's `sqlite3_column_*` methods.
+
+{{{
+for ( int record = 1 ; !results.finished ; record++, results.next () ) {
+  for ( int field = 1 ; field < results.field_count ; field++ ) {
+    GLib.debug ("Record %d, Field %d: %s", record, field, results.fetch_string (field));
+  }
+}
+}}}
+
+The `Record.fetch*` methods take an integer offset, while the `Record.get*` take a string name, much like `Query.bind*` and `Query.set*`. Also like `Query.bind` and `Query.set`, the `Record.fetch` and `Record.get` methods work with `GLib.Value`s, which makes them very convenient to work with using Vala's automatic conversion feature.
+
+== Execution Convenience Methods ==
 
 Sometimes you just want to run a query and forget about it. You're not worried about the results, and you want to bother with working with a prepared statement. Like SQLite, SQLHeavy provides alternatives that will simply run the query (or queries) in a supplied string... the `Queryable.execute` and `Queryable.execute_insert` methods:
 
@@ -168,20 +183,6 @@ There is also a method,  `Queryable.run_script` which makes it easy to run SQL d
 {{{
 db.run_script ("script.sql");
 }}}
-
-=== Retrieving Results ===
-
-After calling the `Query.step` method, you will probably want to actually read some fields from the result set. This can be accomplished using the `Record` interface (implemented by the `QueryResults` object. Specifically, `Record.fetch*` and `Record.get*` methods, which are analagous to SQLite's `sqlite3_column_*` methods.
-
-{{{
-for ( int record = 1 ; !results.finished ; record++, results.next () ) {
-  for ( int field = 1 ; field < results.field_count ; field++ ) {
-    GLib.debug ("Record %d, Field %d: %s", record, field, results.fetch_string (field));
-  }
-}
-}}}
-
-The `Record.fetch*` methods take an integer offset, while the `Record.get*` take a string name, much like `Query.bind*` and `Query.set*`. Also like `Query.bind` and `Query.set`, the `Record.fetch` and `Record.get` methods work with `GLib.Value`s, which makes them very convenient to work with using Vala's automatic conversion feature.
 
 == Transactions ==
 
