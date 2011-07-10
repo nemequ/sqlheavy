@@ -126,6 +126,49 @@ while ( !results.finished ) {
 }
 }}}
 
+You can also bind parameters at the same time as you execute by passing them in groups of three arguments; the first argument is the parameter name, the second the GLib.Type, and the third is the value. For example:
+
+{{{
+query.execute (":foo", typeof (string), "foo",
+               ":bar", typeof (int64), 1729);
+}}}
+
+is equivalent to writing:
+
+{{{
+query.set_string (":foo", "foo");
+query.set_int64 (":bar", 1729);
+query.execute ();
+}}}
+
+==== Execution Convenience Methods ====
+
+Sometimes you just want to run a query and forget about it. You're not worried about the results, and you want to bother with working with a prepared statement. Like SQLite, SQLHeavy provides alternatives that will simply run the query (or queries) in a supplied string... the `Queryable.execute` and `Queryable.execute_insert` methods:
+
+{{{
+db.execute ("DELETE FROM `bar`;");
+}}}
+
+`Queryable.execute` will even wrap your statements in a transaction, only committing once all statements have succeeeded, so it is safe to use it for multiple statements. And you can use named parameters (helpful for avoiding SQL injection vulnerabilities):
+
+{{{
+db.execute ("DELETE FROM `foo` WHERE `bar` = :bar;",
+            ":bar", typeof (int64), 42);
+}}}
+
+Or, if you need to get the row id from an insert (single statement only):
+
+{{{
+int64 id = db.execute_insert ("INSERT INTO `foo` (`bar`) VALUES (:bar);",
+                              ":bar", typeof (int64), 42);
+}}}
+
+There is also a method,  `Queryable.run_script` which makes it easy to run SQL directly from a file on disk. The file is memory mapped so it is a good way to run large scripts:
+
+{{{
+db.run_script ("script.sql");
+}}}
+
 === Retrieving Results ===
 
 After calling the `Query.step` method, you will probably want to actually read some fields from the result set. This can be accomplished using the `Record` interface (implemented by the `QueryResults` object. Specifically, `Record.fetch*` and `Record.get*` methods, which are analagous to SQLite's `sqlite3_column_*` methods.
@@ -139,20 +182,6 @@ for ( int record = 1 ; !results.finished ; record++, results.next () ) {
 }}}
 
 The `Record.fetch*` methods take an integer offset, while the `Record.get*` take a string name, much like `Query.bind*` and `Query.set*`. Also like `Query.bind` and `Query.set`, the `Record.fetch` and `Record.get` methods work with `GLib.Value`s, which makes them very convenient to work with using Vala's automatic conversion feature.
-
-== Execution Convenience Methods ==
-
-Sometimes you just want to run a query and forget about it. You're not worried about the results, and you want to bother with working with a prepared statement. Like SQLite, SQLHeavy provides an alternative that will simply run the query (or queries) in a supplied string... the `Queryable.execute` method:
-
-{{{
-db.execute ("DELETE FROM `bar`;");
-}}}
-
-There is also a method,  `Queryable.run_script` which makes it easy to run SQL directly from a file on disk. The file is memory mapped so it is a good way to run large scripts:
-
-{{{
-db.run_script ("script.sql");
-}}}
 
 == Transactions ==
 
