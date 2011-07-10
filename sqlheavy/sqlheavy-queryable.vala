@@ -81,6 +81,7 @@ namespace SQLHeavy {
      * and the third the value.
      *
      * @param sql An SQL query.
+     * @see Query.execute
      */
     public void execute (string sql, ...) throws SQLHeavy.Error {
       unowned string? s = sql;
@@ -120,6 +121,28 @@ namespace SQLHeavy {
       }
 
       trans.commit ();
+    }
+
+    /**
+     * Execute the supplied insert statement
+     *
+     * This function accepts an arbitrary number of groups of
+     * arguments for binding values. The first argument in the group
+     * must be the name of the parameter to bind, the second a GType,
+     * and the third the value.
+     *
+     * @param sql an INSERT query
+     * @return the inserted row ID
+     * @see execute
+     * @see Query.execute_insert
+     */
+    public int64 execute_insert (string sql, ...) throws SQLHeavy.Error {
+      SQLHeavy.Query query = this.prepare (sql);
+
+      var args = va_list ();
+      query.set_list (false, null, args);
+
+      return query.execute_insert ();
     }
 
     /**

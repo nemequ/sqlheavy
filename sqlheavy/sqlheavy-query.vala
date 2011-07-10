@@ -143,9 +143,20 @@ namespace SQLHeavy {
 
     /**
      * Bind a list of parameters
+     *
+     * These are in groups of three, with the first argument being the
+     * named parameter, the second being the type (GType), and the
+     * third being the value.
+     *
+     * @param has_first_parameter whether the first_parameter argument should be used
+     * @param first_parameter the name of the first parameter
+     * @param args the remaining parameters
      */
-    private void set_list (string? first_parameter, va_list args) throws SQLHeavy.Error {
+    internal void set_list (bool has_first_parameter, string? first_parameter, va_list args) throws SQLHeavy.Error {
       unowned string? current_parameter = first_parameter;
+      if ( !has_first_parameter )
+        current_parameter = args.arg ();
+
       while ( current_parameter != null ) {
         GLib.Type current_parameter_type = args.arg ();
         if ( current_parameter_type == typeof (string) )
@@ -181,7 +192,7 @@ namespace SQLHeavy {
      */
     public SQLHeavy.QueryResult execute (string? first_parameter = null, ...) throws SQLHeavy.Error {
       var args = va_list ();
-      this.set_list (first_parameter, args);
+      this.set_list (true, first_parameter, args);
 
       return new SQLHeavy.QueryResult (this);
     }
