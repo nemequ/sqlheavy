@@ -95,11 +95,10 @@ namespace SQLHeavy {
           SQLHeavy.Query? query = null;
           try {
             query = new SQLHeavy.Query.full (trans, (!) s, -1, out s);
-            sp = (char*) s;
+            sp = ((char*) s) - 1;
           } catch ( SQLHeavy.Error e ) {
-            if ( e is SQLHeavy.Error.NO_SQL ) {
+            if ( e is SQLHeavy.Error.NO_SQL )
               break;
-            }
             else
               throw e;
           }
