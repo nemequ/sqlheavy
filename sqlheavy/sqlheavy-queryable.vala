@@ -72,10 +72,15 @@ namespace SQLHeavy {
     }
 
     /**
-     * Execute the supplied SQL, iterating through multiple statements if necessary.
+     * Execute the supplied SQL, iterating through multiple statements
+     * if necessary.
+     *
+     * This function accepts an arbitrary number of groups of
+     * arguments for binding values. The first argument in the group
+     * must be the name of the parameter to bind, the second a GType,
+     * and the third the value.
      *
      * @param sql An SQL query.
-     * @param max_len the maximum length of the query, or -1 to use strlen (sql)
      */
     public void execute (string sql, ...) throws SQLHeavy.Error {
       unowned string? s = sql;
