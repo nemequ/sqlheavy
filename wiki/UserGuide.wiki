@@ -185,6 +185,26 @@ db.execute ("DELETE FROM `bar`;");
 
 Obviously, this is useful mainly for applications which are multi-threaded or use the asynchronous APIs.
 
+If you unref a transaction that has not been committed it will automatically be rolled back. For instance:
+
+{{{
+try {
+  SQLHeavy.Transaction trans = db.begin_transaction ();
+  trans.execute ("CREATE TABLE `numbers` (`id` INTEGER PRIMARY KEY, `name` TEXT);");
+  trans.execute ("CREATE TABLE `values` (`number` REFERENCES `numbers`(`id`), `value` DOUBLE);");
+  int64 id = trans.execute_insert ("INSERT INTO `numbers` (`name`) VALUES (:pi);",
+                                   ":pi", typeof (string), "pi");
+  trans.execute ("XINSERT INTO `values` (`number`, `value`) VALUES (:id, 3.141592654);",
+                 ":id", typeof (int64), id);
+
+  trans.commit ();
+} catch ( SQLHeavy.Error e ) {
+  GLib.error ("Failed: %s", e.message);
+}
+}}}
+
+Would result in the entire transaction being rolled back (notice the error in the fourth SQL query, which says "XINSERT" instead of "INSERT"), with no changes to the database.
+
 = Object Relational Mapping =
 
 SQLHeavy includes interfaces for ORM which use the [http://en.wikipedia.org/wiki/Active_record_pattern Active record pattern], and a code generator ([ORMGenerator sqlheavy-gen-orm]) which is capable of creating classes specialized to a particular database at compile time.
