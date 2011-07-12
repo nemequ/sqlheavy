@@ -39,7 +39,37 @@ namespace SQLHeavy {
      * {@inheritDoc}
      */
     public void @unlock () {
+      lock ( this._queue ) {
+        if ( this._queue != null && (this._queue.get_length () > 0) ) {
+          try {
+            for ( GLib.SequenceIter<SQLHeavy.Query> iter = this._queue.get_begin_iter () ;
+                  !iter.is_end () ;
+                  iter = iter.next () ) {
+              SQLHeavy.QueryResult result = new SQLHeavy.QueryResult.no_exec (iter.get ());
+              result.next_internal ();
+              this._queue.remove (iter);
+            }
+          } catch ( SQLHeavy.Error e ) {
+            GLib.critical ("Unable to execute queued query: %s", e.message);
+          }
+        }
+      }
+
       this._transaction_lock.leave ();
+    }
+
+    private GLib.Sequence<SQLHeavy.Query>? _queue = null;
+
+    /**
+     * {@inheritDoc}
+     */
+    public void queue (SQLHeavy.Query query) throws SQLHeavy.Error {
+      lock ( this._queue ) {
+        if ( this._queue == null )
+          this._queue = new GLib.Sequence<SQLHeavy.Query> (GLib.g_object_unref);
+
+        this._queue.append (query);
+      }
     }
 
     /**
@@ -58,7 +88,8 @@ namespace SQLHeavy {
       if ( this.status != TransactionStatus.UNRESOLVED )
         throw new SQLHeavy.Error.TRANSACTION ("Refusing to resolve an already resolved transaction.");
 
-      this.prepare ("%s SAVEPOINT 'SQLHeavy-0x%x';".printf (commit ? "RELEASE" : "ROLLBACK TRANSACTION TO", (uint)this)).execute ();
+      SQLHeavy.Query query = this.parent.prepare ("%s SAVEPOINT 'SQLHeavy-0x%x';".printf (commit ? "RELEASE" : "ROLLBACK TRANSACTION TO", (uint)this));
+      this.parent.queue (query);
 
       this.status = commit ? TransactionStatus.COMMITTED : TransactionStatus.ROLLED_BACK;
       this.parent.@unlock ();

@@ -11,7 +11,7 @@ namespace SQLHeavy {
     /**
      * The queryable asscociated with this query
      */
-    public unowned SQLHeavy.Queryable queryable { get; private set; }
+    public SQLHeavy.Queryable queryable { get; private set; }
 
     /**
      * The SQL used to create this query 

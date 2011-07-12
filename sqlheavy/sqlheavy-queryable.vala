@@ -31,6 +31,13 @@ namespace SQLHeavy {
     public abstract void @unlock ();
 
     /**
+     * Queue a query to be executed when the queryable is unlocked
+     *
+     * @param query the query to queue
+     */
+    public abstract void queue (SQLHeavy.Query query) throws SQLHeavy.Error;
+
+    /**
      * Begin a transaction. Will lock the queryable until the transaction is resolved.
      *
      * @return a new transaction

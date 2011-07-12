@@ -153,7 +153,37 @@ namespace SQLHeavy {
      * {@inheritDoc}
      */
     public void @unlock () {
+      lock ( this._queue ) {
+        if ( this._queue != null && (this._queue.get_length () > 0) ) {
+          try {
+            for ( GLib.SequenceIter<SQLHeavy.Query> iter = this._queue.get_begin_iter () ;
+                  !iter.is_end () ;
+                  iter = iter.next () ) {
+              SQLHeavy.QueryResult result = new SQLHeavy.QueryResult.no_exec (iter.get ());
+              result.next_internal ();
+              this._queue.remove (iter);
+            }
+          } catch ( SQLHeavy.Error e ) {
+            GLib.critical ("Unable to execute queued query: %s", e.message);
+          }
+        }
+      }
+
       this._transaction_lock.leave ();
+    }
+
+    private GLib.Sequence<SQLHeavy.Query>? _queue = null;
+
+    /**
+     * {@inheritDoc}
+     */
+    public void queue (SQLHeavy.Query query) throws SQLHeavy.Error {
+      lock ( this._queue ) {
+        if ( this._queue == null )
+          this._queue = new GLib.Sequence<SQLHeavy.Query> (GLib.g_object_unref);
+
+        this._queue.append (query);
+      }
     }
 
     /**
