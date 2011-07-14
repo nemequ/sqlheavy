@@ -155,27 +155,36 @@ The `Record.fetch*` methods take an integer offset, while the `Record.get*` take
 
 == Execution Convenience Methods ==
 
-Sometimes you just want to run a query quickly and not worry about the details. You're not worried about the results, and you want to bother with working with a prepared statement. Like SQLite, SQLHeavy provides alternatives that will simply run the query (or queries) in a supplied string... the `Queryable.execute` and `Queryable.execute_insert` methods:
+Often you just want to run a query quickly. The <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.execute.html Query.execute]</tt> method allows you to execute a single statement easily, and will return a `QueryResult`:
 
 {{{
 db.execute ("DELETE FROM `bar`;");
 }}}
 
-`Queryable.execute` will even wrap your statements in a transaction, only committing once all statements have succeeeded, so it is safe to use it for multiple statements. And you can use named parameters (helpful for avoiding SQL injection vulnerabilities):
+You can even use named parameters (helpful for avoiding SQL injection vulnerabilities):
 
 {{{
 db.execute ("DELETE FROM `foo` WHERE `bar` = :bar;",
             ":bar", typeof (int64), 42);
 }}}
 
-Or, if you need to get the row id from an insert (single statement only):
+If you need to get the row ID from an insert query, you can use the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.execute_insert.html Query.execute_insert]</tt> method:
 
 {{{
 int64 id = db.execute_insert ("INSERT INTO `foo` (`bar`) VALUES (:bar);",
                               ":bar", typeof (int64), 42);
 }}}
 
-There is also a method,  `Queryable.run_script` which makes it easy to run SQL directly from a file on disk. The file is memory mapped so it is a good way to run large scripts:
+If you want to execute multiple queries at once, you can use the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.run.html Query.run]</tt> method. You can still use named parameters, and it will even wrap your statements in a transaction, only committing once all statements have succeeded:
+
+{{{
+db.run ("""DELETE FROM `foo` WHERE `bar` = :bar;
+           DELETE FROM `bar` WHERE `foo` = :foo;""",
+        ":bar", typeof (int64), 42,
+        ":foo", typeof (int64), 1729);
+}}}
+
+There is also a <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Queryable.run_script.html Queryable.run_script]</tt> method which makes it easy to run SQL directly from a file on disk. The file is memory mapped so it is a good way to run large scripts:
 
 {{{
 db.run_script ("script.sql");
