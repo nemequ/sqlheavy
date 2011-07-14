@@ -153,7 +153,7 @@ namespace SQLHeavy {
       this.parent.@lock ();
 
       try {
-        this.run ("SAVEPOINT 'SQLHeavy-0x%x';".printf ((uint)this));
+        this.prepare ("SAVEPOINT 'SQLHeavy-0x%x';".printf ((uint)this)).execute ();
       }
       catch ( SQLHeavy.Error e ) {
         this.err = e;

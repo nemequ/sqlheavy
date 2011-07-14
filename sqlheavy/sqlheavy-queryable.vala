@@ -79,6 +79,60 @@ namespace SQLHeavy {
     }
 
     /**
+     * Execute the supplied SQL
+     *
+     * This function accepts an arbitrary number of groups of
+     * arguments for binding values. The first argument in the group
+     * must be the name of the parameter to bind, the second a GType,
+     * and the third the value.
+     *
+     * @param sql the SQL to execute
+     * @return the result
+     * @see Query.execute
+     */
+    public SQLHeavy.QueryResult execute (string sql, ...) throws SQLHeavy.Error {
+      unowned string? s = sql;
+      var args = va_list ();
+      SQLHeavy.QueryResult? result = null;
+      GLib.HashTable<string,GLib.Value?>? parameters = null;
+
+      for ( unowned char * sp = (char *)s ; *sp != '\0' ; sp++, s = (string)sp ) {
+        if ( !(*sp).isspace () ) {
+          SQLHeavy.Query? query = null;
+          try {
+            if ( result != null ) {
+              GLib.critical ("Executing multiple statements from Queryable.execute is deprecated. Use Queryable.run.");
+            }
+            query = new SQLHeavy.Query.full (this, (!) s, -1, out s);
+            sp = ((char*) s) - 1;
+          } catch ( SQLHeavy.Error e ) {
+            if ( e is SQLHeavy.Error.NO_SQL )
+              break;
+            else
+              throw e;
+          }
+
+          int param_count = query.parameter_count;
+          for ( int p = 0 ; p < param_count ; p++ ) {
+            if ( parameters == null )
+              parameters = va_list_to_hash_table (args);
+
+            unowned string name = query.parameter_name (p + 1);
+            unowned GLib.Value? value = parameters.lookup (name);
+            if ( value == null )
+              throw new SQLHeavy.Error.MISSING_PARAMETER ("Parameter `%s' left unbound", name);
+
+            query.set (name, value);
+          }
+
+          result = query.execute ();
+        }
+      }
+
+      return result;
+    }
+
+    /**
      * Execute the supplied SQL, iterating through multiple statements
      * if necessary.
      *
@@ -87,14 +141,12 @@ namespace SQLHeavy {
      * must be the name of the parameter to bind, the second a GType,
      * and the third the value.
      *
-     * @param sql An SQL query.
+     * @param sql the SQL query to run
      * @see Query.execute
      */
-    public void execute (string sql, ...) throws SQLHeavy.Error {
+    public void run (string sql, ...) throws SQLHeavy.Error {
       unowned string? s = sql;
       var args = va_list ();
-      /* Hold off on populating this for better ABI compat with run
-       * (which used to be execute) */
       GLib.HashTable<string,GLib.Value?>? parameters = null;
       SQLHeavy.Transaction trans = this.begin_transaction ();
 
@@ -158,7 +210,7 @@ namespace SQLHeavy {
      * @param sql An SQL query.
      * @param max_len the maximum length of the query, or -1 to use strlen (sql)
      */
-    public virtual void run (string sql, ssize_t max_len = -1) throws SQLHeavy.Error {
+    private void run_internal (string sql, ssize_t max_len = -1) throws SQLHeavy.Error {
       unowned string? s = sql;
 
       // Could probably use a bit of work.
@@ -195,7 +247,7 @@ namespace SQLHeavy {
     public virtual void run_script (string filename) throws Error {
       try {
         var file = new GLib.MappedFile (filename, false);
-        this.run ((string) file.get_contents(), (ssize_t) file.get_length());
+        this.run_internal ((string) file.get_contents(), (ssize_t) file.get_length());
       }
       catch ( GLib.FileError e ) {
         throw new SQLHeavy.Error.IO ("Unable to open script: %s (%d).", e.message, e.code);
