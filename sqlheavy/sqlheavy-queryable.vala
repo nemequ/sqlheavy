@@ -246,8 +246,11 @@ namespace SQLHeavy {
      */
     public virtual void run_script (string filename) throws Error {
       try {
-        var file = new GLib.MappedFile (filename, false);
-        this.run_internal ((string) file.get_contents(), (ssize_t) file.get_length());
+        GLib.MappedFile file = new GLib.MappedFile (filename, false);
+
+        SQLHeavy.Transaction trans = this.begin_transaction ();
+        trans.run_internal ((string) file.get_contents(), (ssize_t) file.get_length());
+        trans.commit ();
       }
       catch ( GLib.FileError e ) {
         throw new SQLHeavy.Error.IO ("Unable to open script: %s (%d).", e.message, e.code);
