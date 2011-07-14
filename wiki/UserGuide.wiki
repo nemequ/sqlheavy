@@ -14,18 +14,18 @@ Several methods which are likely to be fairly long running include asynchronous 
 
 = Handling Errors =
 
-The vast majority of methods exposed by SQLHeavy throw an `SQLHeavy.Error`. For information on properly handling errors in Vala, see the [http://live.gnome.org/Vala/Tutorial#Error_Handling Error Handling section in the Vala Tutorial]
+The vast majority of methods exposed by SQLHeavy throw an <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Error.html SQLHeavy.Error]</tt>. For information on properly handling errors in Vala, see the [http://live.gnome.org/Vala/Tutorial#Error_Handling Error Handling section in the Vala Tutorial]
 
 = Opening a Database =
 
-Opening a database is as simple as instantiating a class:
+Opening a database is as simple as instantiating the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Database.html Database]</tt> class:
 
 {{{
 var db = new SQLHeavy.Database ("foobar.db",
                                  SQLHeavy.FileMode.READ | SQLHeavy.FileMode.WRITE | SQLHeavy.FileMode.CREATE);
 }}}
 
-The first argument is the location of the database file to open, the second is a bitmask representing the mode to open it with. By passing null for the first argument, the database will be opened in memory instead of on disk. Both arguments have default values (null, READ | WRITE | CREATE), meaning that you can specify zero, one, or two of the arguments.
+The first argument is the location of the database file to open, the second is a bitmask, using the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.FileMode.html SQLHeavy.FileMode]</tt> enum, representing the mode to open it with. By passing null for the first argument, the database will be opened in memory instead of on disk. Both arguments have default values (null, READ | WRITE | CREATE), meaning that you can specify zero, one, or two of the arguments.
 
 == Versioned Databases ==
 
@@ -33,7 +33,7 @@ A versioned database can be a very useful tool for real world usage. The basic i
 
 The schema directory should contain a Create.sql script which will be run when the database is created in order to create the structure, and a series of scripts named "Update-to-%d.sql", where "%d" is a version number, which will be run in order to update the schema to the relevant version ("%d").
 
-For a simple example of the implementation of a simple `VersionedDatabase`, see the [http://gitorious.org/sqlheavy/sqlheavy/blobs/master/sqlheavy/sqlheavy-versioned-database.vala ProfilingDatabase] class and the [http://gitorious.org/sqlheavy/sqlheavy/trees/master/data/schemas/profiling data/schemas/profiling] directory.
+For a simple example of the implementation of a simple <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.VersionedDatabase.html VersionedDatabase]</tt>, see the [http://gitorious.org/sqlheavy/sqlheavy/blobs/master/sqlheavy/sqlheavy-versioned-database.vala ProfilingDatabase] class and the [http://gitorious.org/sqlheavy/sqlheavy/trees/master/data/schemas/profiling data/schemas/profiling] directory.
 
 Opening a versioned database is straightforward:
 
@@ -45,18 +45,16 @@ From that point you can simply use the returned `VersionedDatabase` just like a 
 
 `VersionedDatabase`s are implemented using SQLite's [http://www.sqlite.org/pragma.html#pragma_schema_version PRAGMA user_version].
 
-== Database Pools ==
-
 = Running Queries =
 
 Like SQLite, SQLHeavy uses prepared statements to run all queries and provides an API for automatically preparing and executing them from within a single function call if the user so chooses. In fact, you may recognize some of the interfaces if you've used SQLite before. SQLHeavy does provide some distinctive features, however, such as asynchronous queries and an interface for automatically handling transactions, both of which will be explained later in this section.
 
 == Prepared Statements ==
 
-Prepared statements form the basis of most of SQLHeavy, and the interface is fairly similar to that available from SQLite. To create a prepared statement, simply invoke the prepare method on any object implementing the `Queryable` interface (`Database`, `DatabasePool`, `ProfilingDatabase`, `Transaction`, `TransactionStack`, `VersionedDatabase`):
+Prepared statements, which are represented by the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.html Query]</tt> class, form the basis of much of SQLHeavy, and the interface is fairly similar to that available from SQLite. To create a prepared statement, simply invoke the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Queryable.prepare.html prepare]</tt> method on any object implementing the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Queryable.html Queryable]</tt> interface (`Database`, `ProfilingDatabase`, `Transaction`, `VersionedDatabase`):
 
 {{{
-var query = queryable.prepare ("SELECT `foo` FROM `bar` WHERE `baz` = :value;");
+SQLHeavy.Query query = queryable.prepare ("SELECT `foo` FROM `bar` WHERE `baz` = :value;");
 }}}
 
 For information on the format that goes inside of the argument passed to the prepare method, see [http://sqlite.org/c3ref/bind_blob.html SQLite's documentation on Binding Values to Prepared Statements].
@@ -65,7 +63,7 @@ Once you have a prepared statement, there are a large number of methods to help 
 
 === Binding By Name ===
 
-Binding values by name is accomplished through the `Query.set*` methods:
+Binding values by name is accomplished through the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.set.html Query].set*</tt> methods:
 
 {{{
 // Bind an int
@@ -76,7 +74,7 @@ query.set_string (":value", "foobar");
 query.set_double (":value", 3.141592654);
 }}}
 
-Other data types, such as int64, blob, and null, are also available--see the ReferenceManuals. Additionally, the `Query.set` has the following signature:
+Other data types, such as int64, blob, and null, are also available--see the ReferenceManuals. Additionally, the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.set.html Query.set]</tt> has the following signature:
 
 {{{
 public new void set (string name, GLib.Value? value) throws SQLHeavy.Error;
@@ -92,7 +90,7 @@ query[":value"] = 3.141592654;
 
 === Binding By Index ===
 
-Binding values by name is accomplished through the `Query.bind*` methods:
+Binding values by name is accomplished through the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.html Query]bind*</tt> methods:
 
 {{{
 query.bind_int64 (1, 1729);
@@ -100,7 +98,7 @@ query.bind_string (1, "foobar");
 query.bind_double (1, 3.141592654);
 }}}
 
-The `Query.bind` method, which is analagous to `Query.set`, accepts a GLib.Value, allowing you to do things like:
+The <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.bind.html Query.bind]</tt> method, which is analagous to <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.set.html Query.set]</tt>, accepts a GLib.Value, allowing you to do things like:
 
 {{{
 query.bind (1, 1729);
@@ -110,20 +108,19 @@ query.bind (1, 3.141592654);
 
 === Executing ===
 
-Once you have bound all the relevant parameters, you can execute a `Query` by calling `Query.execute`.
+Once you have bound all the relevant parameters, you can execute a <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.html Query]</tt> by calling <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.execute.html Query.execute]</tt>.
 
 {{{
 query.execute ();
 }}}
 
-If your `Query` is a SELECT query, you want to iterate through the results. `Query.execute` returns a `QueryResults` class for this purpose. To iterate through each row of the result set, you could do something like this:
+If your `Query` is a SELECT query, you want to iterate through the results. `Query.execute` returns a <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.QueryResult.html QueryResult]</tt> class for this purpose. To iterate through each row of the result set, you could do something like this:
 
 {{{
-var results = query.execute ();
-while ( !results.finished ) {
+for ( QueryResult results = query.execute ;
+      !results.finished ;
+      results.next () ) {
   GLib.debug ("Received a row.");
-
-  results.next ();
 }
 }}}
 
@@ -144,7 +141,7 @@ query.execute ();
 
 === Retrieving Results ===
 
-After calling the `Query.step` method, you will probably want to actually read some fields from the result set. This can be accomplished using the `Record` interface (implemented by the `QueryResults` object. Specifically, `Record.fetch*` and `Record.get*` methods, which are analagous to SQLite's `sqlite3_column_*` methods.
+After calling the `Query.execute` method, you will probably want to actually read some fields from the result set. This can be accomplished using the <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Record.html Record]</tt> interface (implemented by the `QueryResult` object. Specifically, `Record.fetch*` and `Record.get*` methods, which are analagous to SQLite's `sqlite3_column_*` methods, and similar to the `SQLHeavy.set*` and `SQLHeavy.bind*` methods.
 
 {{{
 for ( int record = 1 ; !results.finished ; record++, results.next () ) {
@@ -158,7 +155,7 @@ The `Record.fetch*` methods take an integer offset, while the `Record.get*` take
 
 == Execution Convenience Methods ==
 
-Sometimes you just want to run a query and forget about it. You're not worried about the results, and you want to bother with working with a prepared statement. Like SQLite, SQLHeavy provides alternatives that will simply run the query (or queries) in a supplied string... the `Queryable.execute` and `Queryable.execute_insert` methods:
+Sometimes you just want to run a query quickly and not worry about the details. You're not worried about the results, and you want to bother with working with a prepared statement. Like SQLite, SQLHeavy provides alternatives that will simply run the query (or queries) in a supplied string... the `Queryable.execute` and `Queryable.execute_insert` methods:
 
 {{{
 db.execute ("DELETE FROM `bar`;");
