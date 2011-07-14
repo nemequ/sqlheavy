@@ -42,19 +42,27 @@ namespace SQLHeavy {
           this.user_version = version = 1;
       }
 
-      while ( true ) {
-        script_name = GLib.Path.build_filename(this.schema, "Update-to-%d.sql".printf (version + 1));
-        if ( !GLib.FileUtils.test (script_name, GLib.FileTest.EXISTS) )
-          break;
+      try {
+        SQLHeavy.Transaction? trans = null;
 
-        try {
-          this.run_script (script_name);
+        while ( true ) {
+          script_name = GLib.Path.build_filename(this.schema, "Update-to-%d.sql".printf (version + 1));
+          if ( !GLib.FileUtils.test (script_name, GLib.FileTest.EXISTS) )
+            break;
+
+          if ( trans == null )
+            trans = this.begin_transaction ();
+
+          trans.run_script (script_name);
+
+          this.user_version = ++version;
         }
-        catch ( SQLHeavy.Error e ) {
-          GLib.critical ("Unable to run update script `%s' (%s: %d).", script_name, e.message, e.code);
-          break;
-        }
-        this.user_version = ++version;
+
+        if ( trans != null )
+          trans.commit ();
+      }
+      catch ( SQLHeavy.Error e ) {
+        GLib.critical ("Unable to run update script `%s' (%s: %d).", script_name, e.message, e.code);
       }
     }
 
