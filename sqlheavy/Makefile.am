@@ -34,11 +34,11 @@ libsqlheavy@SQLHEAVY_API_VERSION@_la_SOURCES = \
 # for us.
 
 if HAVE_INTROSPECTION
-GIR_VALAFLAGS = \
+GIR_SQLHEAVY_VALAFLAGS = \
 	--gir SQLHeavy-@SQLHEAVY_API_VERSION@.gir \
 	$(NULL)
 else
-GIR_VALAFLAGS =
+GIR_SQLHEAVY_VALAFLAGS =
 endif
 
 # For the most part this is pretty straightforward. If you don't
@@ -46,7 +46,7 @@ endif
 # page.
 
 libsqlheavy@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
-	$(GIR_VALAFLAGS) \
+	$(GIR_SQLHEAVY_VALAFLAGS) \
 	--library sqlheavy-@SQLHEAVY_API_VERSION@ \
 	--target-glib 2.24 \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \

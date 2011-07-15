@@ -184,6 +184,16 @@ namespace SQLHeavy {
     }
 
     /**
+     * The field affinity as a GType
+     *
+     * @param field the field index
+     * @return the GType of the field affinity
+     */
+    public GLib.Type field_affinity_type (int field) throws SQLHeavy.Error {
+      return sqlite_type_string_to_g_type (this.field_info (field).affinity);
+    }
+
+    /**
      * Get the index of a field by name
      *
      * @param name name of the field

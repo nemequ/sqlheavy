@@ -38,6 +38,7 @@ GLIB_REQUIRED=2.22.0
 SQLITE3_REQUIRED=3.6.20
 VALADOC_REQUIRED=0.2
 VALA_REQUIRED=0.12.0
+GTK_REQUIRED=2.24
 
 # Checks for programs.
 AC_PROG_CC
@@ -67,6 +68,11 @@ VALA_PACKAGE=libvala-0.12
 AC_SUBST(VALA_PACKAGE)
 AC_SUBST(VALA_CFLAGS)
 AC_SUBST(VALA_LIBS)
+PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_REQUIRED)
+GTK_PACKAGE=gtk+-2.0
+AC_SUBST(GTK_PACKAGE)
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
 
 AC_ARG_ENABLE(valadoc,
   AS_HELP_STRING([--enable-valadoc[=@<:@no/auto/yes@:>@]], [Enable valadoc support]),,
@@ -98,8 +104,11 @@ AC_CONFIG_FILES([Makefile
                  data/schemas/profiling/Makefile
                  docs/Makefile
                  examples/Makefile
+                 gtk/Makefile
+                 gtk/sqlheavygtk-$SQLHEAVY_API_VERSION.deps
                  sqlheavy/Makefile
                  sqlheavy/sqlheavy-version.vala
                  sqlheavy-$SQLHEAVY_API_VERSION.pc
+                 sqlheavygtk-$SQLHEAVY_API_VERSION.pc
                  utils/Makefile])
 AC_OUTPUT

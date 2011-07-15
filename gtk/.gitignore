@@ -1,0 +1,13 @@
+/.deps
+/.libs
+/SQLHeavyGTK.h
+/sqlheavygtk-0.1.deps
+/sqlheavygtk-0.1.vapi
+/*-internal.*
+/*.c
+/*.gir
+/*.la
+/*.lo
+/*.o
+/*.stamp
+/*.typelib

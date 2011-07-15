@@ -4,6 +4,7 @@ namespace SQLHeavy {
    *
    * @param stype the SQLite type
    * @return the GLib.Type
+   * @see sqlite_type_string_to_g_type
    */
   internal GLib.Type sqlite_type_to_g_type (int stype) throws SQLHeavy.Error {
     switch ( stype ) {
@@ -19,6 +20,30 @@ namespace SQLHeavy {
         return typeof (GLib.ByteArray);
       default:
         throw new SQLHeavy.Error.DATA_TYPE ("Data type unsupported.");
+    }
+  }
+
+  /**
+   * Covert an SQLite type (string) to a GLib.Type.
+   *
+   * @param stype the SQLite type
+   * @return the GLib.Type
+   * @see sqlite_type_to_g_type
+   */
+  internal GLib.Type sqlite_type_string_to_g_type (string stype) throws SQLHeavy.Error {
+    switch ( stype ) {
+      case "INTEGER":
+        return typeof (int64);
+      case "TEXT":
+        return typeof (string);
+      case "FLOAT":
+        return typeof (double);
+      case "NULL":
+        return typeof (void*);
+      case "BLOB":
+        return typeof (GLib.ByteArray);
+      default:
+        throw new SQLHeavy.Error.DATA_TYPE ("Unknown datatype (\"%s\")", stype);
     }
   }
 

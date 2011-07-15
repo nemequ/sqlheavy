@@ -6,6 +6,7 @@
 *~
 async
 backup
+browser
 common-functions
 dbpool
 orm
