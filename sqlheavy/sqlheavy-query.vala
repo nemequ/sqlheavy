@@ -213,10 +213,17 @@ namespace SQLHeavy {
     /**
      * Execute the INSERT query
      *
+     * This function accepts an arbitrary number of groups of
+     * arguments for binding values. The first argument in the group
+     * must be the name of the parameter to bind, the second a GType,
+     * and the third the value.
+     *
      * @return the inserted row ID
      */
-    public int64 execute_insert () throws SQLHeavy.Error {
+    public int64 execute_insert (string? first_parameter = null, ...) throws SQLHeavy.Error {
       int64 insert_id = 0;
+      var args = va_list ();
+      this.set_list (true, first_parameter, args);
 
       new SQLHeavy.QueryResult.insert (this, out insert_id);
 
