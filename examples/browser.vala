@@ -14,7 +14,7 @@ private static int main (string[] args) {
     window.destroy.connect (Gtk.main_quit);
 
     SQLHeavy.Table table = db.get_table (args[2]);
-    SQLHeavy.GtkModel model = new SQLHeavy.GtkModel (table);
+    SQLHeavyGtk.Model model = new SQLHeavyGtk.Model (table);
 
     Gtk.ScrolledWindow scroll = new Gtk.ScrolledWindow (null, null);
     window.add (scroll);

@@ -1,8 +1,8 @@
-namespace SQLHeavy {
+namespace SQLHeavyGtk {
   /**
    * Gtk.TreeModel implementation
    */
-  public class GtkModel : GLib.Object, Gtk.TreeModel {
+  public class Model : GLib.Object, Gtk.TreeModel {
     private SQLHeavy.Table _table;
     /**
      * The table that this model is based on
@@ -68,7 +68,7 @@ namespace SQLHeavy {
         return false;
 
       try {
-        var res = this.queryable.prepare (@"SELECT `ROWID` FROM `$(escape_string (this.table.name))` ORDER BY `ROWID` ASC LIMIT $(indices[0]),1;").execute ();
+        var res = this.queryable.prepare (@"SELECT `ROWID` FROM `$(SQLHeavy.escape_string (this.table.name))` ORDER BY `ROWID` ASC LIMIT $(indices[0]),1;").execute ();
         if ( res.finished )
           return false;
         iter.stamp = res.fetch_int ();
@@ -85,7 +85,7 @@ namespace SQLHeavy {
 
     public Gtk.TreePath get_path (Gtk.TreeIter iter) {
       try {
-        SQLHeavy.QueryResult res = this.queryable.prepare (@"SELECT COUNT(*) FROM `$(escape_string (this.table.name))` WHERE `ROWID` < :rid ORDER BY `ROWID` ASC LIMIT 1").execute (":rid", typeof (int), iter.stamp);
+        SQLHeavy.QueryResult res = this.queryable.prepare (@"SELECT COUNT(*) FROM `$(SQLHeavy.escape_string (this.table.name))` WHERE `ROWID` < :rid ORDER BY `ROWID` ASC LIMIT 1").execute (":rid", typeof (int), iter.stamp);
         return new Gtk.TreePath.from_indices (res.fetch_int ());
       } catch ( SQLHeavy.Error e ) {
         GLib.critical ("Unable to get path from iterator: %s", e.message);
@@ -120,7 +120,7 @@ namespace SQLHeavy {
     private int next_calls = 0;
     public bool iter_next (ref Gtk.TreeIter iter) {
       try {
-        SQLHeavy.QueryResult res = this.queryable.prepare (@"SELECT `ROWID` FROM `$(escape_string (this.table.name))` WHERE `ROWID` > $(iter.stamp) ORDER BY `ROWID` ASC LIMIT 1").execute ();
+        SQLHeavy.QueryResult res = this.queryable.prepare (@"SELECT `ROWID` FROM `$(SQLHeavy.escape_string (this.table.name))` WHERE `ROWID` > $(iter.stamp) ORDER BY `ROWID` ASC LIMIT 1").execute ();
         if ( res.finished ) {
           return false;
         }
@@ -161,7 +161,7 @@ namespace SQLHeavy {
      * @param table the table this model is based on
      * @see table
      */
-    public GtkModel (SQLHeavy.Table table) {
+    public Model (SQLHeavy.Table table) {
       GLib.Object (table: table);
     }
   }
