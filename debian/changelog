@@ -1,5 +1,5 @@
-sqlheavy (0.0.1-1) unstable; urgency=low
+sqlheavy (0.1.0-1) unstable; urgency=low
 
   * Initial release
 
- -- Evan Nemerson <evan@coeus-group.com>  Wed, 21 Apr 2010 17:29:18 -0700
+ -- Evan Nemerson <evan@coeus-group.com>  Sun, 17 Jul 2011 20:30:29 -0700

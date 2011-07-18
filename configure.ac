@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 m4_define([sqlheavy_major], [0])
-m4_define([sqlheavy_minor], [0])
-m4_define([sqlheavy_micro], [1])
+m4_define([sqlheavy_minor], [1])
+m4_define([sqlheavy_micro], [0])
 
 m4_define([sqlheavy_version], [sqlheavy_major.sqlheavy_minor.sqlheavy_micro])
 m4_define([sqlheavy_api_version], [0.1])
