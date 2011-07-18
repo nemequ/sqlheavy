@@ -1,6 +1,4 @@
-usr/include/*
-usr/lib/lib*.a
-usr/lib/lib*.so
-usr/lib/pkgconfig/*
-usr/lib/*.la
-usr/share/vala/vapi/*
+usr/include/sqlheavy/sqlheavy-0.1/SQLHeavy.h
+usr/lib/libsqlheavy0.1*.a
+usr/lib/pkgconfig/sqlheavy-0.1.pc
+usr/share/vala/vapi/sqlheavy-0.1.*

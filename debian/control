@@ -3,8 +3,8 @@ Priority: extra
 Maintainer: Evan Nemerson <evan@coeus-group.com>
 Build-Depends: debhelper (>= 7.0.50),
                autotools-dev,
-               valac (>= 0.11.0),
-               valadoc (>= 0.2),
+               valac-0.12,
+               valadoc,
                libglib2.0-dev (>= 2.22.0),
                libsqlite3-dev (>= 3.6.23.1)
 Standards-Version: 3.8.4
@@ -61,3 +61,30 @@ Description: GObject wrapper for SQLite (documentation)
  easier to use from other languages than the standard SQLite interface
  .
  This package contains the documentation.
+
+Package: libsqlheavygtk0.1-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         libsqlheavygtk0.1-0 (= ${binary:Version}),
+         libsqlheavy0.1-0 (= ${binary:Version})
+Description: SQLHeavy GTK+ integration library (development files)
+ SQLHeavy is a convenience wrapper on top of SQLite. Though its primary
+ purpose is to provide an easy to use Vala interface, it also provides
+ a very nice C interface and GObject Introspection support, and may be
+ easier to use from other languages than the standard SQLite interface
+ .
+ This package contains the development files for a library to help
+ integrate SQLHeavy into GTK+ applications.
+
+Package: libsqlheavygtk0.1-0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: SQLHeavy GTK+ integration library (library)
+ SQLHeavy is a convenience wrapper on top of SQLite. Though its primary
+ purpose is to provide an easy to use Vala interface, it also provides
+ a very nice C interface and GObject Introspection support, and may be
+ easier to use from other languages than the standard SQLite interface
+ .
+ This package contains a library to help integrate SQLHeavy into GTK+
+ applications.

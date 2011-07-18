@@ -1,0 +1,4 @@
+usr/include/sqlheavy/sqlheavy-0.1/SQLHeavyGTK.h
+usr/lib/libsqlheavygtk0.1*.a
+usr/lib/pkgconfig/sqlheavygtk-0.1.pc
+usr/share/vala/vapi/sqlheavygtk-0.1.*
