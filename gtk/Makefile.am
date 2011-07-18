@@ -33,7 +33,7 @@ libsqlheavygtk@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	$(NULL)
 
 libsqlheavygtk@SQLHEAVY_API_VERSION@_la_CFLAGS = \
-	$(libsqlheavy@SQLHEAVY_API_VERSION@_la_CFLAGS) \
+	-I$(top_srcdir)/sqlheavy \
 	$(GTK_CFLAGS) \
 	$(NULL)
 
@@ -47,6 +47,16 @@ sqlheavyinclude_HEADERS = \
 	SQLHeavyGTK.h \
 	$(NULL)
 
+vapidir = $(datadir)/vala/vapi
+vapi_DATA = \
+	sqlheavygtk-@SQLHEAVY_API_VERSION@.vapi \
+	sqlheavygtk-@SQLHEAVY_API_VERSION@.deps \
+	$(NULL)
+
+DISTCLEANFILES = \
+	sqlheavygtk-@SQLHEAVY_API_VERSION@.deps \
+	$(NULL)
+
 MAINTAINERCLEANFILES = \
 	SQLHeavyGTK.h \
 	SQLHeavyGtk-@SQLHEAVY_API_VERSION@.gir \
@@ -55,5 +65,5 @@ MAINTAINERCLEANFILES = \
 
 EXTRA_DIST = \
 	sqlheavygtk-@SQLHEAVY_API_VERSION@.vapi \
-	sqlheavygtk-@SQLHEAVY_API_VERSION@.deps \
+	sqlheavygtk-@SQLHEAVY_API_VERSION@.deps.in \
 	$(NULL)

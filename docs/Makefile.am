@@ -62,11 +62,11 @@ gtkdoc:
 		$(NULL)
 
 clean-local:
-	rm -rf valadoc devhelp # gtkdoc
+	rm -rf valadoc devhelp gtkdoc
 
 uninstall-hook:
 	rm -rf $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy
-#	rm -rf $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
+	rm -rf $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
 
 install-data-hook: devhelp # gtkdoc
 	$(MKDIR_P) $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy/img

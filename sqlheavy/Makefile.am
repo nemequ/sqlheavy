@@ -133,6 +133,8 @@ MAINTAINERCLEANFILES = \
 EXTRA_DIST = \
 	config.vapi \
 	sqlheavy-version.vala.in \
+	SQLHeavy.h \
+	SQLHeavy-@SQLHEAVY_API_VERSION@.gir \
 	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	sqlheavy-@SQLHEAVY_API_VERSION@.deps \
 	$(NULL)

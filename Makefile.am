@@ -18,10 +18,12 @@ pkgconfig_DATA = \
 	$(NULL)
 
 DISTCLEANFILES = \
+	sqlheavy-@SQLHEAVY_API_VERSION@.pc \
 	sqlheavygtk-@SQLHEAVY_API_VERSION@.pc \
 	$(NULL)
 
 EXTRA_DIST = \
+	sqlheavy-@SQLHEAVY_API_VERSION@.pc.in \
 	sqlheavygtk-@SQLHEAVY_API_VERSION@.pc.in \
 	$(NULL)
 
