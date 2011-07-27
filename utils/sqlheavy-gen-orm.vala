@@ -25,7 +25,7 @@ namespace SQLHeavy {
       { "metadata", 'm', 0, OptionArg.FILENAME, ref metadata_location, "Load metadata from FILE", "FILE..." },
       { "vapidir", 0, 0, OptionArg.FILENAME_ARRAY, ref vapi_directories, "Look for package bindings in DIRECTORY", "DIRECTORY..." },
       { "pkg", 0, 0, OptionArg.STRING_ARRAY, ref packages, "Include binding for PACKAGE", "PACKAGE..." },
-      { "output", 'o', 0, OptionArg.FILENAME, ref output_location, "Output to FILE (default is stdout)", "FILE..." },
+      { "output", 'o', 0, OptionArg.FILENAME, ref output_location, "Output to FILE", "FILE..." },
       { "properties", 'p', 0, GLib.OptionArg.NONE, ref write_properties, "Write properties instead of methods", null },
       { "", 0, 0, OptionArg.FILENAME_ARRAY, ref sources, "SQLite databases", "DATABASE..." },
       { null }
@@ -156,7 +156,7 @@ namespace SQLHeavy {
       return name == null ? null : type_from_string (name);
     }
 
-    private void parse_field (SQLHeavy.Table table, int field, Vala.Class cl, Vala.SwitchStatement signals) throws GeneratorError, SQLHeavy.Error {
+    private void parse_field (SQLHeavy.Table table, int field, Vala.Class cl, Vala.SwitchStatement signals, Vala.SourceReference source_reference) throws GeneratorError, SQLHeavy.Error {
       var db = table.queryable.database;
       var db_symbol = GLib.Path.get_basename (db.filename).split (".", 2)[0];
       var symbol = @"@$(GLib.Path.get_basename (db_symbol))/$(table.name)/$(table.field_name (field))";
@@ -187,105 +187,105 @@ namespace SQLHeavy {
       var data_type_get = data_type.copy ();
       data_type_get.value_owned = true;
 
-      var switch_section = new Vala.SwitchSection (null);
+      var switch_section = new Vala.SwitchSection (source_reference);
       signals.add_section (switch_section);
-      switch_section.add_label (new Vala.SwitchLabel (new Vala.StringLiteral (@"\"$(name)\"")));
+      switch_section.add_label (new Vala.SwitchLabel (new Vala.StringLiteral (@"\"$(name)\"", source_reference), source_reference));
       Vala.MethodCall emit_changed_notify;
 
       if ( !write_properties ) {
-        var changed_signal = new Vala.Signal (@"$(name)_changed", new Vala.VoidType ());
+        var changed_signal = new Vala.Signal (@"$(name)_changed", new Vala.VoidType (source_reference), source_reference);
         changed_signal.access = Vala.SymbolAccessibility.PUBLIC;
         cl.add_signal (changed_signal);
-        emit_changed_notify = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"$(name)_changed"));
+        emit_changed_notify = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"$(name)_changed", source_reference), source_reference);
 
         {
-          var get_method = new Vala.Method (@"get_$(name)", data_type_get);
+          var get_method = new Vala.Method (@"get_$(name)", data_type_get, source_reference);
           cl.add_method (get_method);
           get_method.access = Vala.SymbolAccessibility.PUBLIC;
           get_method.add_error_type (type_from_string ("SQLHeavy.Error"));
 
-          var block = new Vala.Block (null);
-          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"get_$(data_type_get.to_string ())"));
-          call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\""));
-          block.add_statement (new Vala.ReturnStatement (call));
+          var block = new Vala.Block (source_reference);
+          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"get_$(data_type_get.to_string ())", source_reference), source_reference);
+          call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\"", source_reference));
+          block.add_statement (new Vala.ReturnStatement (call, source_reference));
 
           get_method.body = block;
         }
 
         {
-          var set_method = new Vala.Method (@"set_$(name)", new Vala.VoidType ());
-          set_method.add_parameter (new Vala.Parameter ("value", data_type));
+          var set_method = new Vala.Method (@"set_$(name)", new Vala.VoidType (source_reference), source_reference);
+          set_method.add_parameter (new Vala.Parameter ("value", data_type, source_reference));
           cl.add_method (set_method);
           set_method.access = Vala.SymbolAccessibility.PUBLIC;
           set_method.add_error_type (type_from_string ("SQLHeavy.Error"));
 
-          var block = new Vala.Block (null);
-          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"set_$(data_type.to_string ())"));
-          call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\""));
-          block.add_statement (new Vala.ExpressionStatement (call));
+          var block = new Vala.Block (source_reference);
+          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"set_$(data_type.to_string ())", source_reference), source_reference);
+          call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\"", source_reference));
+          block.add_statement (new Vala.ExpressionStatement (call, source_reference));
 
           set_method.body = block;
         }
       } else {
         Vala.PropertyAccessor get_accessor, set_accessor;
-        emit_changed_notify = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "notify_property"));
-        emit_changed_notify.add_argument (new Vala.StringLiteral ("\"" + name.replace ("_", "-") + "\""));
+        emit_changed_notify = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this", source_reference), "notify_property", source_reference), source_reference);
+        emit_changed_notify.add_argument (new Vala.StringLiteral ("\"" + name.replace ("_", "-") + "\"", source_reference));
         {
-          var block = new Vala.Block (null);
-          var try_block = new Vala.Block (null);
-          var catch_block = new Vala.Block (null);
-          var try_stmt = new Vala.TryStatement (try_block, null, null);
+          var block = new Vala.Block (source_reference);
+          var try_block = new Vala.Block (source_reference);
+          var catch_block = new Vala.Block (source_reference);
+          var try_stmt = new Vala.TryStatement (try_block, null, source_reference);
 
-          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"get_$(data_type_get.to_string ())"));
-          call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\""));
-          try_block.add_statement (new Vala.ReturnStatement (call));
+          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"get_$(data_type_get.to_string ())", source_reference), source_reference);
+          call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\"", source_reference));
+          try_block.add_statement (new Vala.ReturnStatement (call, source_reference));
 
-          var error_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "error"));
-          error_call.add_argument (new Vala.StringLiteral (@"\"Unable to retrieve `$(name)': %s\""));
-          error_call.add_argument (new Vala.MemberAccess (new Vala.MemberAccess (null, "e"), "message"));
-          catch_block.add_statement (new Vala.ExpressionStatement (error_call));
+          var error_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "error", source_reference), source_reference);
+          error_call.add_argument (new Vala.StringLiteral (@"\"Unable to retrieve `$(name)': %s\"", source_reference));
+          error_call.add_argument (new Vala.MemberAccess (new Vala.MemberAccess (null, "e"), "message", source_reference));
+          catch_block.add_statement (new Vala.ExpressionStatement (error_call, source_reference));
 
-          var anr = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "assert_not_reached"));
-          catch_block.add_statement (new Vala.ExpressionStatement (anr));
+          var anr = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib", source_reference), "assert_not_reached", source_reference));
+          catch_block.add_statement (new Vala.ExpressionStatement (anr, source_reference));
 
-          try_stmt.add_catch_clause (new Vala.CatchClause (type_from_string ("SQLHeavy.Error"), "e", catch_block, null));
+          try_stmt.add_catch_clause (new Vala.CatchClause (type_from_string ("SQLHeavy.Error"), "e", catch_block, source_reference));
           block.add_statement (try_stmt);
 
-          get_accessor = new Vala.PropertyAccessor (true, false, false, data_type_get, block, null);
+          get_accessor = new Vala.PropertyAccessor (true, false, false, data_type_get, block, source_reference);
         }
 
         {
-          var block = new Vala.Block (null);
-          var try_block = new Vala.Block (null);
-          var catch_block = new Vala.Block (null);
-          var try_stmt = new Vala.TryStatement (try_block, null, null);
+          var block = new Vala.Block (source_reference);
+          var try_block = new Vala.Block (source_reference);
+          var catch_block = new Vala.Block (source_reference);
+          var try_stmt = new Vala.TryStatement (try_block, null, source_reference);
 
-          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), @"set_$(data_type_get.to_string ())"));
-          call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\""));
-          call.add_argument (new Vala.MemberAccess (null, "value"));
-          try_block.add_statement (new Vala.ExpressionStatement (call));
+          var call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this", source_reference), @"set_$(data_type_get.to_string ())", source_reference), source_reference);
+          call.add_argument (new Vala.StringLiteral (@"\"$(table.field_name (field))\"", source_reference));
+          call.add_argument (new Vala.MemberAccess (null, "value", source_reference));
+          try_block.add_statement (new Vala.ExpressionStatement (call, source_reference));
 
-          var error_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "error"));
-          error_call.add_argument (new Vala.StringLiteral (@"\"Unable to set `$(name)': %s\""));
-          error_call.add_argument (new Vala.MemberAccess (new Vala.MemberAccess (null, "e"), "message"));
-          catch_block.add_statement (new Vala.ExpressionStatement (error_call));
+          var error_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "error", source_reference), source_reference);
+          error_call.add_argument (new Vala.StringLiteral (@"\"Unable to set `$(name)': %s\"", source_reference));
+          error_call.add_argument (new Vala.MemberAccess (new Vala.MemberAccess (null, "e"), "message", source_reference));
+          catch_block.add_statement (new Vala.ExpressionStatement (error_call, source_reference));
 
-          try_stmt.add_catch_clause (new Vala.CatchClause (type_from_string ("SQLHeavy.Error"), "e", catch_block, null));
+          try_stmt.add_catch_clause (new Vala.CatchClause (type_from_string ("SQLHeavy.Error"), "e", catch_block, source_reference));
           block.add_statement (try_stmt);
 
-          set_accessor = new Vala.PropertyAccessor (false, true, false, data_type, block, null);
+          set_accessor = new Vala.PropertyAccessor (false, true, false, data_type, block, source_reference);
         }
 
-        var prop = new Vala.Property (name, data_type, get_accessor, set_accessor);
+        var prop = new Vala.Property (name, data_type, get_accessor, set_accessor, source_reference);
         prop.access = Vala.SymbolAccessibility.PUBLIC;
         cl.add_property (prop);
       }
 
-      switch_section.add_statement (new Vala.ExpressionStatement (emit_changed_notify));
-      switch_section.add_statement (new Vala.BreakStatement (null));
+      switch_section.add_statement (new Vala.ExpressionStatement (emit_changed_notify, source_reference));
+      switch_section.add_statement (new Vala.BreakStatement (source_reference));
     }
 
-    private void parse_table (SQLHeavy.Table table, Vala.Namespace ns) throws GeneratorError, SQLHeavy.Error {
+    private void parse_table (SQLHeavy.Table table, Vala.Namespace ns, Vala.SourceReference source_reference) throws GeneratorError, SQLHeavy.Error {
       var db = table.queryable.database;
       var db_symbol = GLib.Path.get_basename (db.filename).split (".", 2)[0];
       var symbol = @"@$(GLib.Path.get_basename (db_symbol))/$(table.name)";
@@ -297,7 +297,7 @@ namespace SQLHeavy {
       var cl = ns.scope.lookup (symbol_name) as Vala.Class;
 
       if ( cl == null ) {
-        cl = new Vala.Class (symbol_name);
+        cl = new Vala.Class (symbol_name, source_reference);
         cl.access = Vala.SymbolAccessibility.PUBLIC;
         ns.add_class (cl);
       }
@@ -310,44 +310,44 @@ namespace SQLHeavy {
         register_notify.access = Vala.SymbolAccessibility.PRIVATE;
         register_notify.add_parameter (new Vala.Parameter ("field", type_from_string ("int")));
 
-        var block = new Vala.Block (null);
-        var try_block = new Vala.Block (null);
-        var catch_block = new Vala.Block (null);
-        var try_stmt = new Vala.TryStatement (try_block, null, null);
+        var block = new Vala.Block (source_reference);
+        var try_block = new Vala.Block (source_reference);
+        var catch_block = new Vala.Block (source_reference);
+        var try_stmt = new Vala.TryStatement (try_block, null, source_reference);
 
-        var field_name = new Vala.LocalVariable (type_from_string ("string"), "field_name", new Vala.StringLiteral ("null"));
-        block.add_statement (new Vala.DeclarationStatement (field_name, null));
+        var field_name = new Vala.LocalVariable (type_from_string ("string"), "field_name", new Vala.StringLiteral ("null"), source_reference);
+        block.add_statement (new Vala.DeclarationStatement (field_name, source_reference));
 
         block.add_statement (try_stmt);
         var get_field_name = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "field_name"));
         get_field_name.add_argument (new Vala.MemberAccess (null, "field"));
         try_block.add_statement (new Vala.ExpressionStatement (new Vala.Assignment (new Vala.StringLiteral ("field_name"), get_field_name)));
 
-        var warn_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "warning"));
-        warn_call.add_argument (new Vala.StringLiteral ("\"" + "Unknown field: %d" + "\""));
-        warn_call.add_argument (new Vala.MemberAccess (null, "field"));
-        catch_block.add_statement (new Vala.ExpressionStatement (warn_call));
-        catch_block.add_statement (new Vala.ReturnStatement ());
-        try_stmt.add_catch_clause (new Vala.CatchClause (type_from_string ("SQLHeavy.Error"), "e", catch_block, null));
+        var warn_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.StringLiteral ("GLib"), "warning"), source_reference);
+        warn_call.add_argument (new Vala.StringLiteral ("\"" + "Unknown field: %d" + "\"", source_reference));
+        warn_call.add_argument (new Vala.MemberAccess (null, "field", source_reference));
+        catch_block.add_statement (new Vala.ExpressionStatement (warn_call, source_reference));
+        catch_block.add_statement (new Vala.ReturnStatement (null, source_reference));
+        try_stmt.add_catch_clause (new Vala.CatchClause (type_from_string ("SQLHeavy.Error"), "e", catch_block, source_reference));
 
-        signals_switch = new Vala.SwitchStatement (new Vala.StringLiteral ("field_name"), null);
+        signals_switch = new Vala.SwitchStatement (new Vala.StringLiteral ("field_name"), source_reference);
         block.add_statement (signals_switch);
         register_notify.body = block;
 
         cl.add_method (register_notify);
       }
 
-      var con = new Vala.Constructor (null);
-      con.body = new Vala.Block (null);
+      var con = new Vala.Constructor (source_reference);
+      con.body = new Vala.Block (source_reference);
 
-      var conn_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "field_changed"), "connect"));
-      conn_call.add_argument (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "emit_change_notification"));
+      var conn_call = new Vala.MethodCall (new Vala.MemberAccess (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "field_changed", source_reference), "connect", source_reference), source_reference);
+      conn_call.add_argument (new Vala.MemberAccess (new Vala.StringLiteral ("this"), "emit_change_notification", source_reference));
 
-      con.body.add_statement (new Vala.ExpressionStatement (conn_call));
+      con.body.add_statement (new Vala.ExpressionStatement (conn_call, source_reference));
       cl.constructor = con;
 
       for ( var field = 0 ; field < table.field_count ; field++ ) {
-        this.parse_field (table, field, cl, signals_switch);
+        this.parse_field (table, field, cl, signals_switch, source_reference);
       }
     }
 
@@ -356,8 +356,11 @@ namespace SQLHeavy {
       var symbol_name = this.get_symbol_name (symbol);
       Vala.Namespace? ns = this.context.root.scope.lookup (symbol_name) as Vala.Namespace;
 
+      Vala.SourceFile source_file = new Vala.SourceFile (this.context, Vala.SourceFileType.NONE, db.filename);
+      Vala.SourceReference source_reference = new Vala.SourceReference (source_file);
+
       if ( ns == null ) {
-        ns = new Vala.Namespace (symbol_name, null);
+        ns = new Vala.Namespace (symbol_name, source_reference);
         this.context.root.add_namespace (ns);
       }
 
@@ -367,7 +370,7 @@ namespace SQLHeavy {
       try {
         var tables = db.get_tables ();
         foreach ( unowned SQLHeavy.Table table in tables.get_values () ) {
-          this.parse_table (table, ns);
+          this.parse_table (table, ns, source_reference);
         }
       } catch ( SQLHeavy.Error e ) {
         throw new GeneratorError.DATABASE ("Database error: %s", e.message);
@@ -375,6 +378,11 @@ namespace SQLHeavy {
     }
 
     public void run () throws GeneratorError {
+      if ( output_location == null ) {
+        GLib.stderr.printf ("You must supply an output location\n");
+        return;
+      }
+
       var parser = new Vala.Parser ();
       parser.parse (this.context);
 
@@ -394,11 +402,10 @@ namespace SQLHeavy {
       if (context.report.get_errors () > 0)
         throw new GeneratorError.SYMBOL_RESOLVER ("Error resolving symbols.");
 
-      var analyzer = new Vala.SemanticAnalyzer ();
-      analyzer.analyze (context);
+      context.analyzer.analyze (context);
 
-      var code_writer = new Vala.CodeWriter ();
-      code_writer.write_file (this.context, output_location ?? "/dev/stdout");
+      var code_writer = new Vala.CodeWriter (Vala.CodeWriterType.DUMP);
+      code_writer.write_file (this.context, output_location);
     }
 
     private static string parse_selector (string selector, out bool wildcard) throws GeneratorError {
@@ -480,7 +487,7 @@ namespace SQLHeavy {
       // Default packages
       this.context.add_external_package ("glib-2.0");
       this.context.add_external_package ("gobject-2.0");
-      this.context.add_external_package ("sqlheavy-1.0");
+      this.context.add_external_package (@"sqlheavy-$(SQLHeavy.Version.API)");
 
       foreach ( unowned string pkg in packages ) {
         this.context.add_external_package (pkg);
