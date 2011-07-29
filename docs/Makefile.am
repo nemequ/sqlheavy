@@ -53,8 +53,10 @@ devhelp:
 
 gtkdoc:
 	$(VALADOC) \
-		-X --ignore-headers -X $(top_srcdir)/sqlheavy/sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
-		-X --ignore-headers -X $(top_srcdir)/sqlheavy/config.h \
+		-X --ignore-headers \
+		-X $(top_srcdir)/sqlheavy/sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
+		-X $(top_srcdir)/sqlheavy/SQLHeavy.h \
+		-X $(top_srcdir)/sqlheavy/config.h \
 		-X -l -X $(top_srcdir)/sqlheavy/.libs/libsqlheavy@SQLHEAVY_API_VERSION@.so \
 		-o gtkdoc \
 		--doclet gtkdoc \
@@ -68,13 +70,13 @@ uninstall-hook:
 	rm -rf $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy
 	rm -rf $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
 
-install-data-hook: devhelp # gtkdoc
+install-data-hook: devhelp gtkdoc
 	$(MKDIR_P) $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy/img
 	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy devhelp/SQLHeavy/*.*
 	$(INSTALL_DATA) -t $(DESTDIR)$(datadir)/devhelp/books/SQLHeavy/img devhelp/SQLHeavy/img/*
-#	$(MKDIR_P) $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
-#	cp -R gtkdoc/html $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
+	$(MKDIR_P) $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
+	cp -R gtkdoc/html $(DESTDIR)$(datadir)/gtk-doc/html/SQLHeavy
 
-all: valadoc devhelp # gtkdoc
+all: valadoc devhelp gtkdoc
 
 endif
