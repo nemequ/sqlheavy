@@ -65,7 +65,7 @@ namespace SQLHeavy {
         var tblname = table.name;
         unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (tblname);
         if ( list == null ) {
-          this.orm_tables.insert (tblname, new GLib.Sequence<unowned SQLHeavy.Table> (null));
+          this.orm_tables.insert (tblname, new GLib.Sequence<unowned SQLHeavy.Table> ());
           list = this.orm_tables.lookup (tblname);
         }
         list.insert_sorted (table, SQLHeavy.Table.direct_compare);
@@ -180,7 +180,7 @@ namespace SQLHeavy {
     public void queue (SQLHeavy.Query query) throws SQLHeavy.Error {
       lock ( this._queue ) {
         if ( this._queue == null )
-          this._queue = new GLib.Sequence<SQLHeavy.Query> (GLib.g_object_unref);
+          this._queue = new GLib.Sequence<SQLHeavy.Query> ();
 
         this._queue.append (query);
       }
@@ -237,7 +237,7 @@ namespace SQLHeavy {
      * @see _step_lock
      */
     private GLib.Sequence<SQLHeavy.Row> needs_update_on_step_unlock =
-      new GLib.Sequence<SQLHeavy.Row> (GLib.g_object_unref);
+      new GLib.Sequence<SQLHeavy.Row> ();
 
     /**
      * Add a callback to the {@link needs_update_on_step_unlock} list.
@@ -990,7 +990,7 @@ namespace SQLHeavy {
 
         unowned GLib.Sequence<unowned SQLHeavy.Table>? list = this.orm_tables.lookup (table);
         if ( list == null ) {
-          this.orm_tables.insert (table, new GLib.Sequence<unowned SQLHeavy.Table> (null));
+          this.orm_tables.insert (table, new GLib.Sequence<unowned SQLHeavy.Table> ());
           list = this.orm_tables.lookup (table);
 
           SQLHeavy.Table res = new SQLHeavy.Table (this, table);

@@ -83,7 +83,7 @@ namespace SQLHeavyGtk {
       return this.table.field_count + 1;
     }
 
-    public Gtk.TreePath get_path (Gtk.TreeIter iter) {
+    public Gtk.TreePath? get_path (Gtk.TreeIter iter) {
       try {
         SQLHeavy.QueryResult res = this.queryable.prepare (@"SELECT COUNT(*) FROM `$(SQLHeavy.escape_string (this.table.name))` WHERE `ROWID` < :rid ORDER BY `ROWID` ASC LIMIT 1").execute (":rid", typeof (int), iter.stamp);
         return new Gtk.TreePath.from_indices (res.fetch_int ());

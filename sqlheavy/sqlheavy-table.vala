@@ -95,7 +95,7 @@ namespace SQLHeavy {
     private unowned GLib.Sequence<FieldInfo> get_field_data () throws SQLHeavy.Error {
       lock ( this._field_data ) {
         if ( this._field_data == null ) {
-          this._field_data = new GLib.Sequence<FieldInfo> (GLib.g_object_unref);
+          this._field_data = new GLib.Sequence<FieldInfo> ();
           this._field_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
           var result = new SQLHeavy.Query (this.queryable, @"PRAGMA table_info (`$(escape_string (this.name))`);").execute ();
@@ -121,7 +121,7 @@ namespace SQLHeavy {
     private unowned GLib.Sequence<ForeignKeyInfo> get_foreign_key_data () throws SQLHeavy.Error {
       lock (this._foreign_key_data) {
         if ( this._foreign_key_data == null ) {
-          this._foreign_key_data = new GLib.Sequence<ForeignKeyInfo> (GLib.g_object_unref);
+          this._foreign_key_data = new GLib.Sequence<ForeignKeyInfo> ();
           this._foreign_key_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
           var result = new SQLHeavy.Query (this.queryable, @"PRAGMA foreign_key_list (`$(escape_string (this.name))`);").execute ();
@@ -317,7 +317,7 @@ namespace SQLHeavy {
       lock ( this.child_rows ) {
         unowned GLib.Sequence<unowned SQLHeavy.Row>? list = this.child_rows.lookup (row.id);
         if ( list == null ) {
-          this.child_rows.insert (row.id, new GLib.Sequence<unowned SQLHeavy.Row> (null));
+          this.child_rows.insert (row.id, new GLib.Sequence<unowned SQLHeavy.Row> ());
           list = this.child_rows.lookup (row.id);
         }
         list.insert_sorted (row, SQLHeavy.Row.compare);

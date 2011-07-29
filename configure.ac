@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 m4_define([sqlheavy_major], [0])
-m4_define([sqlheavy_minor], [1])
+m4_define([sqlheavy_minor], [2])
 m4_define([sqlheavy_micro], [0])
 
 m4_define([sqlheavy_version], [sqlheavy_major.sqlheavy_minor.sqlheavy_micro])
-m4_define([sqlheavy_api_version], [0.1])
+m4_define([sqlheavy_api_version], [0.2])
 
 m4_define([sqlheavy_name], [sqlheavy])
 
@@ -37,7 +37,7 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 GLIB_REQUIRED=2.22.0
 SQLITE3_REQUIRED=3.6.20
 VALADOC_REQUIRED=0.2
-VALA_REQUIRED=0.12.0
+VALA_REQUIRED=0.13.1
 GTK_REQUIRED=2.24
 
 # Checks for programs.
@@ -65,8 +65,8 @@ AC_SUBST(GMODULE_LIBS)
 PKG_CHECK_MODULES(SQLITE3, sqlite3 >= $SQLITE3_REQUIRED)
 AC_SUBST(SQLITE3_CFLAGS)
 AC_SUBST(SQLITE3_LIBS)
-PKG_CHECK_MODULES(VALA, libvala-0.12 >= $VALA_REQUIRED)
-VALA_PACKAGE=libvala-0.12
+PKG_CHECK_MODULES(VALA, libvala-0.14 >= $VALA_REQUIRED)
+VALA_PACKAGE=libvala-0.14
 AC_SUBST(VALA_PACKAGE)
 AC_SUBST(VALA_CFLAGS)
 AC_SUBST(VALA_LIBS)

@@ -66,7 +66,7 @@ namespace SQLHeavy {
     public void queue (SQLHeavy.Query query) throws SQLHeavy.Error {
       lock ( this._queue ) {
         if ( this._queue == null )
-          this._queue = new GLib.Sequence<SQLHeavy.Query> (GLib.g_object_unref);
+          this._queue = new GLib.Sequence<SQLHeavy.Query> ();
 
         this._queue.append (query);
       }

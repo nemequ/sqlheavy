@@ -1,8 +1,8 @@
 /.deps
 /.libs
 /SQLHeavyGTK.h
-/sqlheavygtk-0.1.deps
-/sqlheavygtk-0.1.vapi
+/sqlheavygtk-0.2.deps
+/sqlheavygtk-0.2.vapi
 /*-internal.*
 /*.c
 /*.gir
