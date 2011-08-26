@@ -117,7 +117,7 @@ query.execute ();
 If your `Query` is a SELECT query, you want to iterate through the results. `Query.execute` returns a <tt>[http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.QueryResult.html QueryResult]</tt> class for this purpose. To iterate through each row of the result set, you could do something like this:
 
 {{{
-for ( QueryResult results = query.execute ;
+for ( QueryResult results = query.execute () ;
       !results.finished ;
       results.next () ) {
   GLib.debug ("Received a row.");
