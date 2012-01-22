@@ -28,5 +28,5 @@ EXTRA_DIST = \
 	$(NULL)
 
 DISTCHECK_CONFIGURE_FLAGS = \
-        --enable-introspection=no \
-        $(NULL)
+	--enable-valadoc=no \
+	$(NULL)

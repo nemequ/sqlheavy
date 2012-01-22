@@ -862,9 +862,9 @@ namespace SQLHeavy {
       this.unregister_function (name);
       var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, func);
       this.user_functions.insert (name, ufc);
-      this.db.create_function<UserFunction.UserFuncData> (name, argc, Sqlite.UTF8, ufc, null,
-                                                          UserFunction.on_user_function_called,
-                                                          UserFunction.on_user_finalize_called);
+      this.db.create_function (name, argc, Sqlite.UTF8, ufc, null,
+                               UserFunction.on_user_function_called,
+                               UserFunction.on_user_finalize_called);
     }
 
     /**

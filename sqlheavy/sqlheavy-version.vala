@@ -3,26 +3,23 @@ namespace SQLHeavy {
    * Version information
    */
   namespace Version {
+    [CCode (cname = "SQLHEAVY_MAJOR_VERSION", cheader_filename = "config.h")]
+    private extern const int MAJOR;
+    [CCode (cname = "SQLHEAVY_MINOR_VERSION", cheader_filename = "config.h")]
+    private extern const int MINOR;
+    [CCode (cname = "SQLHEAVY_MICRO_VERSION", cheader_filename = "config.h")]
+    private extern const int MICRO;
+    [CCode (cname = "SQLHEAVY_API_VERSION", cheader_filename = "config.h")]
+    private extern const string API;
+
     /**
-     * Major version
+     * Get the API version currently in use.
+     *
+     * @return the API version
      */
-    public const int MAJOR = @SQLHEAVY_MAJOR_VERSION@;
-    /**
-     * Minor version
-     */
-    public const int MINOR = @SQLHEAVY_MINOR_VERSION@;
-    /**
-     * Micro version
-     */
-    public const int MICRO = @SQLHEAVY_MICRO_VERSION@;
-    /**
-     * Version as a string
-     */
-    public const string STRING = "@SQLHEAVY_VERSION@";
-    /**
-     * API version
-     */
-    public const string API = "@SQLHEAVY_API_VERSION@";
+    public string api () {
+      return API;
+    }
 
     /**
      * Return an integer representation of the version currenly in
@@ -33,7 +30,7 @@ namespace SQLHeavy {
      * @return the version number of the library
      */
     public int library () {
-      return (SQLHeavy.Version.MAJOR * 1000000) + (SQLHeavy.Version.MINOR * 1000) + SQLHeavy.Version.MICRO;
+      return (MAJOR * 1000000) + (MINOR * 1000) + MICRO;
     }
 
     /**

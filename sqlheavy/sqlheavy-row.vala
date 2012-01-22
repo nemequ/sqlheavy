@@ -175,7 +175,7 @@ namespace SQLHeavy {
 
       lock ( this.values ) {
         if ( this.values == null )
-          this.values = new GLib.Value[field_count];
+          this.values = new GLib.Value?[field_count];
 
         this.values[field] = value;
       }
@@ -251,7 +251,7 @@ namespace SQLHeavy {
           fc = this.field_count;
 
           if ( this.cache == null )
-            this.cache = new GLib.Value[fc];
+            this.cache = new GLib.Value?[fc];
         }
 
         var query = new SQLHeavy.Query (this.table.queryable, @"SELECT * FROM `$(this.table.name)` WHERE `ROWID` = :id;");

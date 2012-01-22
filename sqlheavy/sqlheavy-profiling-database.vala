@@ -51,7 +51,7 @@ namespace SQLHeavy {
      */
     public ProfilingDatabase (string? filename = null) throws SQLHeavy.Error {
       var schema = GLib.Path.build_filename (SQLHeavy.Config.PATH_PACKAGE_DATA,
-                                             SQLHeavy.Version.API,
+                                             SQLHeavy.Version.api (),
                                              "schemas",
                                              "profiling");
 

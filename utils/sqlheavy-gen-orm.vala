@@ -410,7 +410,7 @@ namespace SQLHeavy {
 
     private static string parse_selector (string selector, out bool wildcard) throws GeneratorError {
       wildcard = false;
-      string?[] real_selector = new string[3];
+      string[] real_selector = new string[3];
       var segments = selector.split ("/", 3);
 
       int pos = 0;
@@ -487,7 +487,7 @@ namespace SQLHeavy {
       // Default packages
       this.context.add_external_package ("glib-2.0");
       this.context.add_external_package ("gobject-2.0");
-      this.context.add_external_package (@"sqlheavy-$(SQLHeavy.Version.API)");
+      this.context.add_external_package ("sqlheavy-%s".printf (SQLHeavy.Version.api ()));
 
       foreach ( unowned string pkg in packages ) {
         this.context.add_external_package (pkg);

@@ -63,6 +63,8 @@ libsqlheavy@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	$(NULL)
 
 libsqlheavy@SQLHEAVY_API_VERSION@_la_CFLAGS = \
+	-w \
+	-include $(srcdir)/"config.h" \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
@@ -132,9 +134,10 @@ MAINTAINERCLEANFILES = \
 
 EXTRA_DIST = \
 	config.vapi \
-	sqlheavy-version.vala.in \
 	SQLHeavy.h \
 	SQLHeavy-@SQLHEAVY_API_VERSION@.gir \
 	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	sqlheavy-@SQLHEAVY_API_VERSION@.deps \
+	sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
+	libsqlheavy@SQLHEAVY_API_VERSION@_la_vala.stamp \
 	$(NULL)
