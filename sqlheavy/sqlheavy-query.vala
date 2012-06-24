@@ -584,5 +584,13 @@ namespace SQLHeavy {
         }
       }
     }
+
+    ~ Query () {
+      unowned Sqlite.Statement owned_statement = try_to_steal_stmt ();
+      if (owned_statement != null) {
+        sqlite3_finalize (owned_statement);
+        this.stmt = null;
+      }
+    }
   }
 }
