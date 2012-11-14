@@ -4,7 +4,6 @@ SUBDIRS = \
 	sqlheavy \
 	gtk \
 	examples \
-	utils \
 	docs \
 	data \
 	$(NULL)

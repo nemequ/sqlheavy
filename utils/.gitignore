@@ -1,7 +1,0 @@
-.deps
-.libs
-*.c
-*.o
-*.stamp
-*~
-sqlheavy-gen-orm

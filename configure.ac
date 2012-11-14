@@ -69,11 +69,6 @@ AC_SUBST(GMODULE_LIBS)
 PKG_CHECK_MODULES(SQLITE3, sqlite3 >= $SQLITE3_REQUIRED)
 AC_SUBST(SQLITE3_CFLAGS)
 AC_SUBST(SQLITE3_LIBS)
-VALA_PACKAGE=libvala-0.16
-PKG_CHECK_MODULES(VALA, $VALA_PACKAGE >= $VALA_REQUIRED)
-AC_SUBST(VALA_PACKAGE)
-AC_SUBST(VALA_CFLAGS)
-AC_SUBST(VALA_LIBS)
 PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_REQUIRED)
 GTK_PACKAGE=gtk+-2.0
 AC_SUBST(GTK_PACKAGE)
@@ -114,6 +109,5 @@ AC_CONFIG_FILES([Makefile
                  gtk/sqlheavygtk-$SQLHEAVY_API_VERSION.deps
                  sqlheavy/Makefile
                  sqlheavy-$SQLHEAVY_API_VERSION.pc
-                 sqlheavygtk-$SQLHEAVY_API_VERSION.pc
-                 utils/Makefile])
+                 sqlheavygtk-$SQLHEAVY_API_VERSION.pc])
 AC_OUTPUT
