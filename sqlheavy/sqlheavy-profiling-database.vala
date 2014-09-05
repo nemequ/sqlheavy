@@ -24,7 +24,7 @@ namespace SQLHeavy {
           this.query.set_double (":clock", query_result.execution_time);
           this.query.set_int64 (":fullscan_step", query_result.full_scan_steps);
           this.query.set_int64 (":sort", query_result.sort_operations);
-          this.query.execute ();
+          this.query.execute (null);
         } catch ( SQLHeavy.Error e ) {
           GLib.warning ("Unable to insert entry into profiling database: %s", e.message);
         }

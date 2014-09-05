@@ -48,7 +48,7 @@ endif
 libsqlheavy@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 	$(GIR_SQLHEAVY_VALAFLAGS) \
 	--library sqlheavy-@SQLHEAVY_API_VERSION@ \
-	--target-glib 2.24 \
+	--target-glib 2.32 \
 	--vapi sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	-H SQLHeavy.h \
 	--use-header \

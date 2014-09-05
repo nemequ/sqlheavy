@@ -125,7 +125,7 @@ namespace SQLHeavy {
             query.set (name, value);
           }
 
-          result = query.execute ();
+          result = query.execute (null);
         }
       }
 
@@ -175,7 +175,7 @@ namespace SQLHeavy {
 
             query.set (name, value);
           }
-          query.execute ();
+          query.execute (null);
         }
       }
 
@@ -201,7 +201,7 @@ namespace SQLHeavy {
       var args = va_list ();
       query.set_list (false, null, args);
 
-      return query.execute_insert ();
+      return query.execute_insert (null);
     }
 
     /**
@@ -218,7 +218,7 @@ namespace SQLHeavy {
             (s != null) && (current_max > 0) ; ) {
         unowned char * os = (char *)s;
         {
-          new SQLHeavy.Query.full (this, (!) s, (int) current_max, out s).execute ();
+          new SQLHeavy.Query.full (this, (!) s, (int) current_max, out s).execute (null);
         }
 
         current_max -= (char *)s - os;

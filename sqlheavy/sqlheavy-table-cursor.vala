@@ -61,7 +61,7 @@ namespace SQLHeavy {
       try {
         var q = this.query;
         q.set_int64 (":offset", offset);
-        var res = q.execute ();
+        var res = q.execute (null);
         id = (res.finished) ? -1 : res.fetch_int64 (0);
       } catch ( SQLHeavy.Error e ) {
         GLib.critical ("Unable to move cursor: %s", e.message);
@@ -69,7 +69,6 @@ namespace SQLHeavy {
       }
 
       if ( id > 0 ) {
-        GLib.debug ("Offset: %lld", offset);
         this.current_id = id;
         this.offset = offset;
         return true;

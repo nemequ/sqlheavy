@@ -176,7 +176,7 @@ namespace SQLHeavy {
      */
     internal async bool next_internal_async (GLib.Cancellable? cancellable = null, int steps = 0, out int64 last_insert_id) throws SQLHeavy.Error {
       bool executing = false;
-      GLib.StaticMutex executing_lock = GLib.StaticMutex ();
+      GLib.Mutex executing_lock = GLib.Mutex ();
       SQLHeavy.Queryable queryable = this.query.queryable;
       SQLHeavy.Database database = queryable.database;
       unowned GLib.Thread<void*>? thread = null;
@@ -199,49 +199,45 @@ namespace SQLHeavy {
               error = new SQLHeavy.Error.INTERRUPTED (sqlite_errstr (Sqlite.INTERRUPT));
               idle_source.attach (thread_context);
               if ( thread != null )
-                thread.exit (null);
+                GLib.Thread.exit (null);
               this.release_locks (queryable, database);
             }
             executing_lock.unlock ();
           });
       }
 
-      try {
-        GLib.Thread.create<void*> (() => {
-            this.acquire_locks (queryable, database);
+      new GLib.Thread<void*> ("query-result-next", () => {
+          this.acquire_locks (queryable, database);
 
-            executing_lock.lock ();
-            executing = true;
-            executing_lock.unlock ();
+          executing_lock.lock ();
+          executing = true;
+          executing_lock.unlock ();
 
-            try {
-              while ( steps != 0 ) {
-                if ( (cancellable != null && cancellable.is_cancelled ()) || !(step_res = this.next_internal ()) )
-                  break;
+          try {
+            while ( steps != 0 ) {
+              if ( (cancellable != null && cancellable.is_cancelled ()) || !(step_res = this.next_internal ()) )
+                break;
 
-                if ( steps > 0 )
-                  steps--;
-              }
+              if ( steps > 0 )
+                steps--;
             }
-            catch ( SQLHeavy.Error e ) {
-              error = e;
-            }
+          }
+          catch ( SQLHeavy.Error e ) {
+            error = e;
+          }
 
-            insert_id = database.last_insert_id;
+          insert_id = database.last_insert_id;
 
-            this.release_locks (queryable, database);
+          this.release_locks (queryable, database);
 
-            if ( cancellable_sig != 0 ) {
-              cancellable.disconnect (cancellable_sig);
-            }
+          if ( cancellable_sig != 0 ) {
+            cancellable.disconnect (cancellable_sig);
+          }
 
-            idle_source.attach (thread_context);
+          idle_source.attach (thread_context);
 
-            return null;
-          }, false);
-      } catch ( GLib.ThreadError e ) {
-        throw new SQLHeavy.Error.THREAD ("Thread error: %s (%d)", e.message, e.code);
-      }
+          return null;
+        });
 
       yield;
 
@@ -430,7 +426,7 @@ namespace SQLHeavy {
 
       var q = new SQLHeavy.Query (this.query.queryable, @"SELECT `ROWID` FROM `$(foreign_table.name)` WHERE `$(foreign_column)` = :value;");
       q.bind_int64 (1, this.fetch_int64 (field));
-      return new SQLHeavy.Row (foreign_table, q.execute ().fetch_int64 (0));
+      return new SQLHeavy.Row (foreign_table, q.execute (null).fetch_int64 (0));
     }
 
     construct {

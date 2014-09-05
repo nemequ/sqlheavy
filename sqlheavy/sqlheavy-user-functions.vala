@@ -52,12 +52,12 @@ namespace SQLHeavy {
       public UserFuncData.scalar (Database db,
                                   string name,
                                   int argc,
-                                  UserFunc func) {
+                                  owned UserFunc func) {
         this.db = db;
         this.name = name;
         this.argc = argc;
         this.is_scalar = true;
-        this.func = func;
+        this.func = (owned) func;
         this.final = null;
       }
 
@@ -74,14 +74,14 @@ namespace SQLHeavy {
       public UserFuncData.aggregate (Database db,
                                      string name,
                                      int argc,
-                                     UserFunc func,
-                                     FinalizeFunc final) {
+                                     owned UserFunc func,
+                                     owned FinalizeFunc final) {
         this.db = db;
         this.name = name;
         this.argc = argc;
         this.is_scalar = false;
-        this.func = func;
-        this.final = final;
+        this.func = (owned) func;
+        this.final = (owned) final;
       }
     }
 

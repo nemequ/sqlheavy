@@ -84,7 +84,7 @@ namespace SQLHeavy {
           var iter = list.search (table, SQLHeavy.Table.direct_compare).prev ();
           unowned SQLHeavy.Table t2 = iter.get ();
           if ( (ulong)table == (ulong)t2 )
-            list.remove (iter);
+            iter.remove ();
         }
       }
     }
@@ -161,7 +161,7 @@ namespace SQLHeavy {
                   iter = iter.next () ) {
               SQLHeavy.QueryResult result = new SQLHeavy.QueryResult.no_exec (iter.get ());
               result.next_internal ();
-              this._queue.remove (iter);
+              iter.remove ();
             }
           } catch ( SQLHeavy.Error e ) {
             GLib.critical ("Unable to execute queued query: %s", e.message);
@@ -225,7 +225,7 @@ namespace SQLHeavy {
           }
           unowned GLib.SequenceIter<SQLHeavy.Row> o = i;
           i = i.next ();
-          this.needs_update_on_step_unlock.remove (o);
+          o.remove ();
         }
       }
     }
@@ -336,7 +336,7 @@ namespace SQLHeavy {
      */
     private string? pragma_get_string (string pragma) {
       try {
-        return new SQLHeavy.Query (this, "PRAGMA %s;".printf (pragma)).execute ().fetch_string (0);
+        return new SQLHeavy.Query (this, "PRAGMA %s;".printf (pragma)).execute (null).fetch_string (0);
       }
       catch ( SQLHeavy.Error e ) {
         GLib.critical ("Unable to retrieve pragma value %s: %s", pragma, e.message);
@@ -386,7 +386,7 @@ namespace SQLHeavy {
     private void pragma_set_string (string pragma, string value) {
       try {
         var stmt = new SQLHeavy.Query (this, "PRAGMA %s = %s;".printf (pragma, value));
-        stmt.execute ();
+        stmt.execute (null);
       }
       catch ( SQLHeavy.Error e ) {
         GLib.critical ("Unable to retrieve pragma value: %s", e.message);
@@ -860,7 +860,7 @@ namespace SQLHeavy {
                                              owned UserFunction.UserFunc func,
                                              owned UserFunction.FinalizeFunc final) {
       this.unregister_function (name);
-      var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, func);
+      var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, (owned) func);
       this.user_functions.insert (name, ufc);
       this.db.create_function (name, argc, Sqlite.UTF8, ufc, null,
                                UserFunction.on_user_function_called,
@@ -878,7 +878,7 @@ namespace SQLHeavy {
                                           int argc,
                                           owned UserFunction.UserFunc func) {
       this.unregister_function (name);
-      var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, func);
+      var ufc = new UserFunction.UserFuncData.scalar (this, name, argc, (owned) func);
       this.user_functions.insert (name, ufc);
       this.db.create_function (name, argc, Sqlite.UTF8, ufc, UserFunction.on_user_function_called, null, null);
     }
@@ -1013,7 +1013,7 @@ namespace SQLHeavy {
     public GLib.HashTable<string, SQLHeavy.Table> get_tables () throws SQLHeavy.Error {
       var ht = new GLib.HashTable<string, SQLHeavy.Table>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
 
-      var result = this.prepare ("SELECT `name` FROM `SQLITE_MASTER` WHERE `type` = 'table';").execute ();
+      var result = this.prepare ("SELECT `name` FROM `SQLITE_MASTER` WHERE `type` = 'table';").execute (null);
       while ( !result.finished ) {
         var table_name = result.fetch_string (0);
         if ( !table_name.has_prefix ("sqlite_") )
