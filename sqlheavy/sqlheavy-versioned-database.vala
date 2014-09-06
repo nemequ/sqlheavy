@@ -31,13 +31,14 @@ namespace SQLHeavy {
       string script_name;
 
       if ( version == 0 ) {
-        script_name = GLib.Path.build_filename (this.schema, "Create.sql");
         try {
-          this.run_script (script_name);
+          script_name = this.schema + "/Create.sql";
+          this.run_file (GLib.File.new_for_uri (script_name));
         }
         catch ( SQLHeavy.Error e ) {
           GLib.critical ("Unable to run creation script `%s' (%s: %d).", script_name, e.message, e.code);
         }
+
         if ( (version = this.user_version) == 0 )
           this.user_version = version = 1;
       }
@@ -46,14 +47,13 @@ namespace SQLHeavy {
         SQLHeavy.Transaction? trans = null;
 
         while ( true ) {
-          script_name = GLib.Path.build_filename(this.schema, "Update-to-%d.sql".printf (version + 1));
-          if ( !GLib.FileUtils.test (script_name, GLib.FileTest.EXISTS) )
-            break;
+          script_name = "%s/Update-to-%d.sql".printf (this.schema, version + 1);
+          GLib.File script = GLib.File.new_for_uri (script_name);
 
           if ( trans == null )
             trans = this.begin_transaction ();
 
-          trans.run_script (script_name);
+          trans.run_file (script);
 
           this.user_version = ++version;
         }

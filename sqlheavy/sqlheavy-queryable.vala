@@ -244,7 +244,35 @@ namespace SQLHeavy {
      *
      * @param filename the location of the script
      */
-    public virtual void run_script (string filename) throws Error {
+    public virtual void run_file (GLib.File file) throws Error {
+      try {
+        GLib.StringBuilder script = new GLib.StringBuilder.sized (4096);
+
+        {
+          GLib.InputStream input = file.read ();
+          uint8[] data = new uint8[4096];
+          ssize_t bytes_read = 0;
+
+          while ((bytes_read = input.read (data)) > 0) {
+            script.append_len ((string) data, bytes_read);
+          }
+        }
+
+        SQLHeavy.Transaction trans = this.begin_transaction ();
+        trans.run_internal ((string) script.data, script.len);
+        trans.commit ();
+      }
+      catch ( GLib.Error e ) {
+        throw new SQLHeavy.Error.IO ("Unable to open script: %s (%d).", e.message, e.code);
+      }
+    }
+
+    /**
+     * Runs an SQL script located in a file
+     *
+     * @param filename the location of the script
+     */
+    public void run_script (string filename) throws Error {
       try {
         GLib.MappedFile file = new GLib.MappedFile (filename, false);
 
