@@ -20,6 +20,7 @@ libsqlheavy@SQLHEAVY_API_VERSION@_la_SOURCES = \
 	sqlheavy-query-result.vala \
 	sqlheavy-record.vala \
 	sqlheavy-record-set.vala \
+	sqlheavy-resources.c \
 	sqlheavy-row.vala \
 	sqlheavy-table.vala \
 	sqlheavy-table-cursor.vala \
@@ -87,6 +88,14 @@ vapidir = $(datadir)/vala/vapi
 vapi_DATA = \
 	sqlheavy-@SQLHEAVY_API_VERSION@.vapi \
 	sqlheavy-@SQLHEAVY_API_VERSION@.deps \
+	$(NULL)
+
+sqlheavy-resources.c sqlheavy-resources.h: resources/resources.xml
+	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target $@ --sourcedir $(srcdir)/resources --generate $^
+
+BUILT_SOURCES = \
+	sqlheavy-resources.c \
+	sqlheavy-resources.h \
 	$(NULL)
 
 if HAVE_INTROSPECTION

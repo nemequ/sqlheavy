@@ -1,5 +1,0 @@
-NULL =
-
-SUBDIRS = \
-	schemas \
-	$(NULL)

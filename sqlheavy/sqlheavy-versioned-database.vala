@@ -50,6 +50,9 @@ namespace SQLHeavy {
           script_name = "%s/Update-to-%d.sql".printf (this.schema, version + 1);
           GLib.File script = GLib.File.new_for_uri (script_name);
 
+          if (!script.query_exists ())
+            break;
+
           if ( trans == null )
             trans = this.begin_transaction ();
 

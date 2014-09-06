@@ -2,10 +2,8 @@ NULL =
 
 SUBDIRS = \
 	sqlheavy \
-	gtk \
 	examples \
 	docs \
-	data \
 	$(NULL)
 
 ACLOCAL_AMFLAGS=-I m4

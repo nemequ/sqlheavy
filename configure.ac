@@ -39,7 +39,7 @@ AX_DEFINE_DIR([SQL_HEAVY_CONFIG_PATH_PACKAGE_DATA], [datadir]/[sqlheavy_name], [
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-GLIB_REQUIRED=2.22.0
+GLIB_REQUIRED=2.32
 SQLITE3_REQUIRED=3.6.20
 VALADOC_REQUIRED=0.2
 VALA_REQUIRED=0.15
@@ -53,6 +53,9 @@ AC_PROG_LIBTOOL
 AM_PROG_VALAC($VALA_REQUIRED)
 
 GOBJECT_INTROSPECTION_CHECK([0.10])
+
+AC_PATH_PROG(GLIB_COMPILE_RESOURCES, glib-compile-resources)
+AC_SUBST(GLIB_COMPILE_RESOURCES)
 
 # Checks for libraries.
 PKG_CHECK_MODULES(GIO, gio-2.0 >= $GLIB_REQUIRED)
@@ -100,9 +103,6 @@ AC_CHECK_HEADERS([stdlib.h string.h])
 # Checks for library functions.
 
 AC_CONFIG_FILES([Makefile
-                 data/Makefile
-                 data/schemas/Makefile
-                 data/schemas/profiling/Makefile
                  docs/Makefile
                  examples/Makefile
                  gtk/Makefile

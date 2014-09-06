@@ -4,6 +4,7 @@
 /config.h.in
 /SQLHeavy.h
 /sqlheavy-0.2.vapi
+/sqlheavy-resources.h
 /sqlheavy-version.vala
 /stamp-h1
 /*-internal.*
@@ -14,4 +15,3 @@
 /*.o
 /*.stamp
 /*.typelib
-
