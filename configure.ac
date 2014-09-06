@@ -43,7 +43,6 @@ GLIB_REQUIRED=2.32
 SQLITE3_REQUIRED=3.6.20
 VALADOC_REQUIRED=0.2
 VALA_REQUIRED=0.15
-GTK_REQUIRED=2.24
 
 # Checks for programs.
 AC_PROG_CC
@@ -72,11 +71,6 @@ AC_SUBST(GMODULE_LIBS)
 PKG_CHECK_MODULES(SQLITE3, sqlite3 >= $SQLITE3_REQUIRED)
 AC_SUBST(SQLITE3_CFLAGS)
 AC_SUBST(SQLITE3_LIBS)
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_REQUIRED)
-GTK_PACKAGE=gtk+-2.0
-AC_SUBST(GTK_PACKAGE)
-AC_SUBST(GTK_CFLAGS)
-AC_SUBST(GTK_LIBS)
 
 AC_ARG_ENABLE(valadoc,
   AS_HELP_STRING([--enable-valadoc[=@<:@no/auto/yes@:>@]], [Enable valadoc support]),,
@@ -105,9 +99,6 @@ AC_CHECK_HEADERS([stdlib.h string.h])
 AC_CONFIG_FILES([Makefile
                  docs/Makefile
                  examples/Makefile
-                 gtk/Makefile
-                 gtk/sqlheavygtk-$SQLHEAVY_API_VERSION.deps
                  sqlheavy/Makefile
-                 sqlheavy-$SQLHEAVY_API_VERSION.pc
-                 sqlheavygtk-$SQLHEAVY_API_VERSION.pc])
+                 sqlheavy-$SQLHEAVY_API_VERSION.pc])
 AC_OUTPUT

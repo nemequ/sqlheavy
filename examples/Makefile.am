@@ -8,15 +8,9 @@ LDADD = \
 	$(SQLITE3_LIBS) \
 	$(NULL)
 
-GTK_LDFLAGS = \
-	$(top_builddir)/gtk/libsqlheavygtk$(SQLHEAVY_API_VERSION).la \
-	$(GTK_LIBS) \
-	$(NULL)
-
 noinst_PROGRAMS = \
 	async \
 	backup \
-	browser \
 	common-functions \
 	orm \
 	$(NULL)
@@ -24,11 +18,6 @@ noinst_PROGRAMS = \
 VALAFLAGS = \
 	--vapidir $(top_srcdir)/sqlheavy \
 	--pkg sqlheavy-$(SQLHEAVY_API_VERSION) \
-	$(NULL)
-
-SQLHEAVYGTK_VALAFLAGS = \
-	--vapidir $(top_srcdir)/gtk \
-	--pkg sqlheavygtk-$(SQLHEAVY_API_VERSION) \
 	$(NULL)
 
 INCLUDES = \
@@ -39,33 +28,12 @@ INCLUDES = \
 	$(SQLITE3_CFLAGS) \
 	$(NULL)
 
-SQLHEAVYGTK_CFLAGS = \
-	-I$(top_srcdir)/gtk \
-	$(NULL)
-
 async_SOURCES = \
 	async.vala \
 	$(NULL)
 
 backup_SOURCES = \
 	backup.vala \
-	$(NULL)
-
-browser_SOURCES = \
-	browser.vala \
-	$(NULL)
-
-browser_CFLAGS = \
-	$(GTK_CFLAGS) \
-	$(SQLHEAVYGTK_CFLAGS) \
-	$(NULL)
-
-browser_LDFLAGS = \
-	$(GTK_LDFLAGS) \
-	$(NULL)
-
-browser_VALAFLAGS = \
-	$(SQLHEAVYGTK_VALAFLAGS) \
 	$(NULL)
 
 common_functions_SOURCES = \
