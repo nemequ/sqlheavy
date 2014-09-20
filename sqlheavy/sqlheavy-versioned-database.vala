@@ -20,6 +20,20 @@ namespace SQLHeavy {
      */
     public string schema { get; construct; }
 
+    /**
+     * Invoked after the database has been upgraded to a new version.
+     *
+     * This method allows subclasses to hook in and discover when a
+     * database is updated, prompt the user to ask permission to
+     * update, back-up the database first, etc.
+     *
+     * Note that this function may be invoked multiple times (if the
+     * database needs to be upgraded by multiple versions.
+     *
+     * @param new_version the version number to update to
+     */
+    protected virtual void pre_upgrade (int new_version) { }
+
     construct {
       try {
         init();
@@ -32,6 +46,7 @@ namespace SQLHeavy {
 
       if ( version == 0 ) {
         try {
+          this.pre_upgrade (1);
           script_name = this.schema + "/Create.sql";
           this.run_file (GLib.File.new_for_uri (script_name));
         }
@@ -53,12 +68,14 @@ namespace SQLHeavy {
           if (!script.query_exists ())
             break;
 
+          this.pre_upgrade (++version);
+
           if ( trans == null )
             trans = this.begin_transaction ();
 
           trans.run_file (script);
 
-          this.user_version = ++version;
+          this.user_version = version;
         }
 
         if ( trans != null )
