@@ -1,0 +1,453 @@
+
+
+# Introduction #
+
+SQLHeavy provides developers with easy to use yet powerful tools for interfacing with SQLite databases. This document is intended to give an overview of how to use these interfaces without delving into too much detail (that is what the ReferenceManuals are for).
+
+This document is written with Vala in mind, but it should still be helpful for those wishing to develop in another language, such as C, `JavaScript`, or Python.
+
+# Asynchronous Variants #
+
+Several methods which are likely to be fairly long running include asynchronous variants. For information on using these methods from Vala, please see the [Asynchronous Methods section in the Vala Tutorial](http://live.gnome.org/Vala/Tutorial#Asynchronous_Methods). Their API is otherwise equivalent to the synchronous versions, so they will not be dealt with separately in this document.
+
+# Handling Errors #
+
+The vast majority of methods exposed by SQLHeavy throw an <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Error.html'>SQLHeavy.Error</a></tt>. For information on properly handling errors in Vala, see the [Error Handling section in the Vala Tutorial](http://live.gnome.org/Vala/Tutorial#Error_Handling)
+
+# Opening a Database #
+
+Opening a database is as simple as instantiating the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Database.html'>Database</a></tt> class:
+
+```
+var db = new SQLHeavy.Database ("foobar.db",
+                                 SQLHeavy.FileMode.READ | SQLHeavy.FileMode.WRITE | SQLHeavy.FileMode.CREATE);
+```
+
+The first argument is the location of the database file to open, the second is a bitmask, using the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.FileMode.html'>SQLHeavy.FileMode</a></tt> enum, representing the mode to open it with. By passing null for the first argument, the database will be opened in memory instead of on disk. Both arguments have default values (null, READ | WRITE | CREATE), meaning that you can specify zero, one, or two of the arguments.
+
+## Versioned Databases ##
+
+A versioned database can be a very useful tool for real world usage. The basic idea is that when you open the database you also specify a directory to look for schema information, which provides the application developer with an easy to use way to automatically update a database when the application is updated. If you are in need of more comprehensive documentation, please see the ReferenceManuals.
+
+The schema directory should contain a Create.sql script which will be run when the database is created in order to create the structure, and a series of scripts named "Update-to-%d.sql", where "%d" is a version number, which will be run in order to update the schema to the relevant version ("%d").
+
+For a simple example of the implementation of a simple <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.VersionedDatabase.html'>VersionedDatabase</a></tt>, see the [ProfilingDatabase](http://gitorious.org/sqlheavy/sqlheavy/blobs/master/sqlheavy/sqlheavy-versioned-database.vala) class and the [data/schemas/profiling](http://gitorious.org/sqlheavy/sqlheavy/trees/master/data/schemas/profiling) directory.
+
+Opening a versioned database is straightforward:
+
+```
+var db = new SQLHeavy.VersionedDatabase ("foobar.db", "/usr/share/foobar/schema");
+```
+
+From that point you can simply use the returned `VersionedDatabase` just like a regular `Database`.
+
+`VersionedDatabase`s are implemented using SQLite's [PRAGMA user\_version](http://www.sqlite.org/pragma.html#pragma_schema_version).
+
+# Running Queries #
+
+Like SQLite, SQLHeavy uses prepared statements to run all queries and provides an API for automatically preparing and executing them from within a single function call if the user so chooses. In fact, you may recognize some of the interfaces if you've used SQLite before. SQLHeavy does provide some distinctive features, however, such as asynchronous queries and an interface for automatically handling transactions, both of which will be explained later in this section.
+
+## Prepared Statements ##
+
+Prepared statements, which are represented by the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.html'>Query</a></tt> class, form the basis of much of SQLHeavy, and the interface is fairly similar to that available from SQLite. To create a prepared statement, simply invoke the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Queryable.prepare.html'>prepare</a></tt> method on any object implementing the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Queryable.html'>Queryable</a></tt> interface (`Database`, `ProfilingDatabase`, `Transaction`, `VersionedDatabase`):
+
+```
+SQLHeavy.Query query = queryable.prepare ("SELECT `foo` FROM `bar` WHERE `baz` = :value;");
+```
+
+For information on the format that goes inside of the argument passed to the prepare method, see [SQLite's documentation on Binding Values to Prepared Statements](http://sqlite.org/c3ref/bind_blob.html).
+
+Once you have a prepared statement, there are a large number of methods to help you bind values either by name or numeric index.
+
+### Binding By Name ###
+
+Binding values by name is accomplished through the `Query.set*` methods:
+
+```
+// Bind an int
+query.set_int (":value", 1729);
+// Bind a string
+query.set_string (":value", "foobar");
+// Bind a double
+query.set_double (":value", 3.141592654);
+```
+
+Other data types, such as int64, blob, and null, are also available--see the ReferenceManuals. Additionally, the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.set.html'>Query.set</a></tt> has the following signature:
+
+```
+public new void set (string name, GLib.Value? value) throws SQLHeavy.Error;
+```
+
+Coupled with Vala's support for automatic conversion to and from `GLib.Value` and mapping `set` methods to the `[]` operator, the above snippet is functionally equivalent to the following:
+
+```
+query[":value"] = 1729;
+query[":value"] = "foobar";
+query[":value"] = 3.141592654;
+```
+
+### Binding By Index ###
+
+Binding values by index is accomplished through the `Query.bind*` methods:
+
+```
+query.bind_int64 (1, 1729);
+query.bind_string (1, "foobar");
+query.bind_double (1, 3.141592654);
+```
+
+The <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.bind.html'>Query.bind</a></tt> method, which compliments the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.set.html'>Query.set</a></tt> method, accepts a GLib.Value, allowing you to do things like:
+
+```
+query.bind (1, 1729);
+query.bind (1, "foobar");
+query.bind (1, 3.141592654);
+```
+
+### Executing ###
+
+Once you have bound all the relevant parameters, you can execute a <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.html'>Query</a></tt> by calling <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.execute.html'>Query.execute</a></tt>.
+
+```
+query.execute ();
+```
+
+If your `Query` is a SELECT query, you want to iterate through the results. `Query.execute` returns a <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.QueryResult.html'>QueryResult</a></tt> class for this purpose. To iterate through each row of the result set, you could do something like this:
+
+```
+for ( QueryResult results = query.execute () ;
+      !results.finished ;
+      results.next () ) {
+  GLib.debug ("Received a row.");
+}
+```
+
+You can also bind parameters at the same time as you execute by passing them in groups of three arguments; the first argument is the parameter name, the second the GLib.Type, and the third is the value. For example:
+
+```
+query.execute (":foo", typeof (string), "foo",
+               ":bar", typeof (int64), 1729);
+```
+
+is equivalent to writing:
+
+```
+query.set_string (":foo", "foo");
+query.set_int64 (":bar", 1729);
+query.execute ();
+```
+
+### Retrieving Results ###
+
+After calling the `Query.execute` method, you will probably want to actually read some fields from the result set. This can be accomplished using the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Record.html'>Record</a></tt> interface (implemented by the `QueryResult` object. Specifically, `Record.fetch*` and `Record.get*` methods, which are analagous to SQLite's `sqlite3_column_*` methods, and similar to the `SQLHeavy.set*` and `SQLHeavy.bind*` methods.
+
+```
+for ( int record = 1 ; !results.finished ; record++, results.next () ) {
+  for ( int field = 1 ; field < results.field_count ; field++ ) {
+    GLib.debug ("Record %d, Field %d: %s", record, field, results.fetch_string (field));
+  }
+}
+```
+
+The `Record.fetch*` methods take an integer offset, while the `Record.get*` take a string name, much like `Query.bind*` and `Query.set*`. Also like `Query.bind` and `Query.set`, the `Record.fetch` and `Record.get` methods work with `GLib.Value`s, which makes them very convenient to work with using Vala's automatic conversion feature.
+
+## Execution Convenience Methods ##
+
+Often you just want to run a query quickly. The <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.execute.html'>Query.execute</a></tt> method allows you to execute a single statement easily, and will return a `QueryResult`:
+
+```
+db.execute ("DELETE FROM `bar`;");
+```
+
+You can even use named parameters (helpful for avoiding SQL injection vulnerabilities):
+
+```
+db.execute ("DELETE FROM `foo` WHERE `bar` = :bar;",
+            ":bar", typeof (int64), 42);
+```
+
+If you need to get the row ID from an insert query, you can use the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.execute_insert.html'>Query.execute_insert</a></tt> method:
+
+```
+int64 id = db.execute_insert ("INSERT INTO `foo` (`bar`) VALUES (:bar);",
+                              ":bar", typeof (int64), 42);
+```
+
+If you want to execute multiple queries at once, you can use the <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Query.run.html'>Query.run</a></tt> method. You can still use named parameters, and it will even wrap your statements in a transaction, only committing once all statements have succeeded:
+
+```
+db.run ("""DELETE FROM `foo` WHERE `bar` = :bar;
+           DELETE FROM `bar` WHERE `foo` = :foo;""",
+        ":bar", typeof (int64), 42,
+        ":foo", typeof (int64), 1729);
+```
+
+There is also a <tt><a href='http://code.coeusgroup.com/sqlheavy/valadoc/SQLHeavy/SQLHeavy.Queryable.run_script.html'>Queryable.run_script</a></tt> method which makes it easy to run SQL directly from a file on disk. The file is memory mapped so it is a good way to run large scripts:
+
+```
+db.run_script ("script.sql");
+```
+
+## Transactions ##
+
+With SQLite, transactions are very important not only for data integrity purposes, but for performance as well. If you are interested in using transactions in SQL, the [SQLite Transaction documentation](http://sqlite.org/lang_transaction.html) is a good place to start, and it is pefectly acceptable to use SQLHeavy's interfaces to run the relevant queries.
+
+That said, SQLHeavy also provides another way of using transactions which may be better suited to your particular application. The gist of it is that there is a `Transaction` class, which implements the `Queryable` interface, but will block if there is another currently active `Transaction` object. A transaction can be created by invoking the `Queryable.begin_transaction` method, and will end when either `Transaction.commit` or `Transaction.rollback` is called, and they can be nested (i.e., you can call the `begin_transaction` method on a transaction). An example:
+
+```
+var trans = db.begin_transaction ();
+trans.execute ("DELETE FROM `bar`;");
+trans.commit ();
+```
+
+Internally, something like this is what is happening in SQL:
+
+```
+SAVEPOINT 'SQLHeavy-0xDEADBEEF';
+DELETE FROM `bar`;
+RELEASE SAVEPOINT 'SQLHeavy-0xDEADBEEF';
+```
+
+If you are doing a large number of INSERT statements, putting them inside of a transaction can easily speed up the process by an order of magnitude since if you do not create one, SQLite will create one internally for each query that is executed.
+
+The following snippet, however, will block:
+
+```
+var trans = db.begin_transaction ();
+db.execute ("DELETE FROM `bar`;");
+```
+
+Obviously, this is useful mainly for applications which are multi-threaded or use the asynchronous APIs.
+
+If you unref a transaction that has not been committed it will automatically be rolled back. For instance:
+
+```
+try {
+  SQLHeavy.Transaction trans = db.begin_transaction ();
+  trans.execute ("CREATE TABLE `numbers` (`id` INTEGER PRIMARY KEY, `name` TEXT);");
+  trans.execute ("CREATE TABLE `values` (`number` REFERENCES `numbers`(`id`), `value` DOUBLE);");
+  int64 id = trans.execute_insert ("INSERT INTO `numbers` (`name`) VALUES (:pi);",
+                                   ":pi", typeof (string), "pi");
+  trans.execute ("XINSERT INTO `values` (`number`, `value`) VALUES (:id, 3.141592654);",
+                 ":id", typeof (int64), id);
+
+  trans.commit ();
+} catch ( SQLHeavy.Error e ) {
+  GLib.error ("Failed: %s", e.message);
+}
+```
+
+Would result in the entire transaction being rolled back (notice the error in the fourth SQL query, which says "XINSERT" instead of "INSERT"), with no changes to the database.
+
+# Object Relational Mapping #
+
+SQLHeavy includes interfaces for ORM which use the [Active record pattern](http://en.wikipedia.org/wiki/Active_record_pattern), and a code generator ([sqlheavy-gen-orm](ORMGenerator.md)) which is capable of creating classes specialized to a particular database at compile time.
+
+## Tables ##
+
+The `Table` class is used to represent a table in the database. To instantiate it one needs only provide a `Queryable` and table name:
+
+```
+var table = new SQLHeavy.Table (db, "bar");
+```
+
+The `Table` class will emit the row-inserted signal whenever a row is inserted. It is also useful for introspecting the database schema, and can be used to easily access a specific row (given its ROWID).
+
+## Rows ##
+
+The `Row` class is a bit more meaty than `Table`. It implements `Record` and `MutableRecord`, and can be used to modify data, you can use one of the methods of the `MutableRecord` interface:
+
+```
+var row = table[1729];
+row["baz"] = "foobar";
+row.save ();
+```
+
+Deleting a row is done through `MutableRecord.delete`
+
+```
+row.delete ();
+```
+
+And inserting a new row can be done simply by creating a `Row` without a ROWID then saving it:
+
+```
+var row = new SQLHeavy.Row (table);
+row["baz"] = 3.141592654;
+row.save ();
+```
+
+The `Row` class will also provide change notifications at the row level (via the `Row.changed` signal) and the field level (via the `Row.field-changed` signal).
+
+
+For a basic example of using the `Table` and `Row` classes, see the [ORM example](http://gitorious.org/sqlheavy/sqlheavy/blobs/master/examples/orm.vala).
+
+## ORM Generator ##
+
+The ORM generator provides a compile time binding to a specific database, with classes extending the `Row` class named after tables in the database. For information on how to use sqlheavy-gen-orm, see the man page distributed with SQLHeavy, or the [ORMGenerator](ORMGenerator.md) wiki page.
+
+The following is a class generated from a Liferea database:
+
+```
+public class AttentionStats : SQLHeavy.Row {
+  private void emit_change_notification (int field) {
+    string? field_name = null;
+    try {
+      field_name = this.field_name (field);
+    } catch (SQLHeavy.Error e) {
+      GLib.warning ("Unknown field: %d", field);
+      return;
+    }
+
+    switch (field_name) {
+      case "category_id":
+        {
+          this.notify_property ("category-id");
+          break;
+        }
+      case "category_name":
+        {
+          this.notify_property ("category-name");
+          break;
+        }
+      case "count":
+        {
+          this.notify_property ("count");
+          break;
+        }
+    }
+  }
+
+  public string category_id {
+    owned get {
+      try {
+        return this.get_string ("category_id");
+      } catch (SQLHeavy.Error e) {
+        GLib.error ("Unable to retrieve `category_id': %s", e.message);
+        GLib.assert_not_reached ();
+      }
+    }
+
+    set {
+      try {
+        this.set_string ("category_id", value);
+      } catch (SQLHeavy.Error e) {
+        GLib.error ("Unable to set `category_id': %s", e.message);
+      }
+    }
+  }
+
+  public string category_name {
+    owned get {
+      try {
+        return this.get_string ("category_name");
+      } catch (SQLHeavy.Error e) {
+        GLib.error ("Unable to retrieve `category_name': %s", e.message);
+        GLib.assert_not_reached ();
+      }
+    }
+
+    set {
+      try {
+        this.set_string ("category_name", value);
+      } catch (SQLHeavy.Error e) {
+        GLib.error ("Unable to set `category_name': %s", e.message);
+      }
+    }
+  }
+
+  public int count {
+    get {
+      try {
+        return this.get_int ("count");
+      } catch (SQLHeavy.Error e) {
+        GLib.error ("Unable to retrieve `count': %s", e.message);
+        GLib.assert_not_reached ();
+      }
+    }
+
+    set {
+      try {
+        this.set_int ("count", value);
+      } catch (SQLHeavy.Error e) {
+        GLib.error ("Unable to set `count': %s", e.message);
+      }
+    }
+  }
+
+  construct {
+    this.field_changed.connect (this.emit_change_notification);
+  }
+}
+```
+
+# Backups #
+
+The online backup API is based on [SQLite's Backup API](http://sqlite.org/backup.html), and doesn't really add any features other than the asynchronous API and a few convenience methods. Using it only requires a single call:
+
+```
+db.backup ("dest.db");
+```
+
+To backup to a `Database` instead of a filename:
+
+```
+var backup = new SQLHeavy.Backup (db, dest_db);
+backup.execute ();
+```
+
+# Profiling #
+
+SQLHeavy provides detailed profiling information to help you know when and what to optimize. The core of this functionality is the `ProfilingDatabase`, which is a subclass of `VersionedDatabase`, which itself is a subclass of `Database`.
+
+Each time a query is executed through SQLHeavy, information can be inserted into a `queries` table in a profiling database. The table currently looks like this, although it may change from version to version:
+
+```
+CREATE TABLE IF NOT EXISTS `queries` (
+  `sql` TEXT UNIQUE NOT NULL,
+  `executions` INTEGER UNSIGNED DEFAULT 1,
+  `clock` FLOAT UNSIGNED NOT NULL,
+  `fullscan_step` INTEGER UNSIGNED,
+  `sort` INTEGER UNSIGNED
+);
+```
+
+`sql` is the text of the query. `executions` is the number of times the query has been executed. `clock` is the total number of seconds (wall-clock) the query has taken to execute in its `executions` iterations. For documenation on `fullscan_step` and `sort`, see the [SQLite Status Parameters for prepared statements](http://sqlite.org/c3ref/c_stmtstatus_autoindex.html) documentation.
+
+Enabling profiling can be done by simply setting the `Database.enable_profiling` property to true, though in this case the database will be stored in memory and will not persist. If you would like to regularly keep track of your application's usage, you will probably want to create a persistant `ProfilingDatabase` to use instead:
+
+```
+db.profiling_data = new SQLHeavy.ProfilingDatabse ("prof.db");
+db.enable_profiling = true;
+```
+
+# User Defined Functions #
+
+The user defined function API allows you to create your own functions which can be invoked from within a query. There are several examples in the [sqlheavy/sqlheavy-common-function.vala](http://gitorious.org/sqlheavy/sqlheavy/blobs/master/sqlheavy/sqlheavy-common-function.vala) file which can be enabled by calling `Database.register_common_functions`.
+
+To register a user defined function, you can use `Database.register_aggregate_function` or `Database.register_scalar_function`. Here is an example of a simple scalar function which takes a single argument and returns "Foobar":
+
+```
+db.register_scalar_function ("FOOBAR", 1, (ctx, args) => {
+      return "Foobar";
+    }
+  );
+```
+
+That function can then be invoked from SQL:
+
+```
+SELECT FOOBAR(1);
+```
+
+Which would return the string "Foobar".
+
+# Running SQLHeavy Applications #
+
+SQLHeavy uses several environment variables which allow certain settings' defaults to be overridden at run-time:
+
+  * SQLHEAVY\_PROFILING\_DATA. This is used to save profiling data to the specified filename.
+  * SQLHEAVY\_SYNCHRONOUS\_MODE. Sets the default value of Database.synchronous.
+  * SQLHEAVY\_JOURNAL\_MODE. Sets the default value of Database.joural\_mode
+
+Other potentially useful variables may be added in the future.

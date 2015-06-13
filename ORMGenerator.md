@@ -1,0 +1,52 @@
+# Synopsis #
+` sqlheavy-gen-orm [OPTION...] SOURCE... `
+
+# Description #
+This tool will generate a Vala file which provides an object for each table in the specified database(s), each of which extends the SQLHeavyRecord class.
+
+You should pass at least one SQLite database file, which it will examine to produce the output. Additionally,  you  can  specifiy  metadata  files (which is a key file), as well as vala files to provide custom code in the output.
+
+# Options #
+  * -o, --output=_FILE_
+> Write output to _FILE_ (defaults to stdout)
+  * -m, --metadata=FILE
+> Load metadata from FILE
+  * --vapidir=DIRECTORY
+> Look for package bindings in DIRECTORY
+  * --pkg=PACKAGE
+> Include binding for PACKAGE
+  * -o, --output=FILE
+> Output to FILE (default is stdout)
+  * -p, --properties
+> Write properties instead of methods.
+
+# Metadata Format #
+The concept of the metadata files is similar to that of vapigen (in fact, the entire sqlheavy-gen-orm tool is largely inspired by vapigen), but it uses the key file format so that it can use the [GLib Key-Value file parser](http://library.gnome.org/devel/glib/unstable/glib-Key-value-file-parser.html). Databases, tables, and columns are all represented by groups, each of which may have any number of properties (the key value pairs).
+
+## Selectors ##
+The format for the selectors is relatively straightforward. A forward slash ("/") is used as the separator character, and prepending an @ to a token means that token refers to a database, and prepending a % means that token refers to a table. The database name is the name of the database file, not including the last dot character and anything following it (i.e., the extension). An asterisk can be used as a wildcard. Several examples, as well as an explanation of each:
+
+  * @foo/bar/baz
+> The _baz_ symbol in the _bar_ table in the _foo_ database.
+  * @foo
+> The _foo_ database
+  * %bar/baz
+> The _baz_ column in the _bar_ table in any database
+  * baz
+> The _baz_ column in any table in any database
+  * @foo/`*`/baz
+> The _baz_ column in any table in the foo database
+  * `*`/%bar
+> The _bar_ table in any database
+
+## Properties ##
+Properties are represented by key-value pairs. The following is a table of currently implemented properties:
+
+| **Name** | **Type** | **Usable For database/table/column** | **Purpose** |
+|:---------|:---------|:-------------------------------------|:------------|
+| name     | string   | Y/Y/Y                                | Rename the symbol |
+| type     | string   | N/N/Y                                | Set the Vala type of the column |
+| hidden   | bool     | Y/Y/Y                                | Do create a binding for the specified symbol |
+
+## Custom Vala ##
+In addition to providing one or more SQLite database as a basis for code generation, you can provide an existing `*`.vala file. Theoretically, this will allow you to place custom code in a separate file, so that you can use sqlheavy-gen-orm to update the generated code without losing whenever the database schema changes, and you will not lose any enhancements you made. The generated code will be merged into the custom vala file in order to generate the output.
