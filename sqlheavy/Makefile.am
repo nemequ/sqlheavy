@@ -65,7 +65,7 @@ libsqlheavy@SQLHEAVY_API_VERSION@_la_VALAFLAGS = \
 
 libsqlheavy@SQLHEAVY_API_VERSION@_la_CFLAGS = \
 	-w \
-	-include $(srcdir)/"config.h" \
+	-include $(builddir)/"config.h" \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
