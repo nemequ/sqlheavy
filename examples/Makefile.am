@@ -1,4 +1,4 @@
-NULL = 
+NULL =
 
 LDADD = \
 	$(top_builddir)/sqlheavy/libsqlheavy$(SQLHEAVY_API_VERSION).la \
@@ -15,12 +15,12 @@ noinst_PROGRAMS = \
 	orm \
 	$(NULL)
 
-VALAFLAGS = \
+AM_VALAFLAGS = \
 	--vapidir $(top_srcdir)/sqlheavy \
 	--pkg sqlheavy-$(SQLHEAVY_API_VERSION) \
 	$(NULL)
 
-INCLUDES = \
+AM_CFLAGS = \
 	-I$(top_srcdir)/sqlheavy \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \

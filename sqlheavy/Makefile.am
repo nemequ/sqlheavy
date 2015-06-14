@@ -1,4 +1,4 @@
-NULL = 
+NULL =
 
 CLEANFILES =
 
@@ -98,6 +98,7 @@ BUILT_SOURCES = \
 	sqlheavy-resources.h \
 	$(NULL)
 
+-include $(INTROSPECTION_MAKEFILE)
 if HAVE_INTROSPECTION
 
 # Install the GIR and typelib files to the correct
