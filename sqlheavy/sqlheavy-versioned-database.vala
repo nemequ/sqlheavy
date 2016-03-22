@@ -74,8 +74,7 @@ namespace SQLHeavy {
             trans = this.begin_transaction ();
 
           trans.run_file (script);
-
-          this.user_version = version;
+          trans.run ("PRAGMA user_version = %d;".printf (version));
         }
 
         if ( trans != null )
