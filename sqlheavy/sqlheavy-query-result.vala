@@ -148,10 +148,11 @@ namespace SQLHeavy {
       SQLHeavy.Database db = queryable.database;
 
       this.acquire_locks (queryable, db);
-      var res = this.next_internal ();
-      this.release_locks (queryable, db);
-
-      return res;
+      try {
+        return this.next_internal ();
+      } finally {
+        this.release_locks (queryable, db);
+      }
     }
 
     /**
