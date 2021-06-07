@@ -459,7 +459,7 @@ namespace SQLHeavy {
     public GLib.GenericArray<GLib.GenericArray<GLib.Value?>> get_table () throws SQLHeavy.Error {
       var values = new GLib.GenericArray<GLib.GenericArray<GLib.Value?>> ();
 
-      for ( var results = this.execute () ; !results.finished ; results.next () ) {
+      for ( var results = this.execute (null) ; !results.finished ; results.next () ) {
         var column_l = results.field_count;
 
         var row = new GLib.GenericArray<GLib.Value?> ();
@@ -481,7 +481,7 @@ namespace SQLHeavy {
      * @see Queryable.print_table
      */
     public void print_table (GLib.FileStream? fd = null) throws SQLHeavy.Error {
-      var result = this.execute ();
+      var result = this.execute (null);
 
       var field_names = result.field_names ();
       var field_lengths = new long[field_names.length];
@@ -575,13 +575,11 @@ namespace SQLHeavy {
       this.queryable = queryable;
       this.init ();
 
-      if ( &tail != null ) {
-        if ( this._sql != null )
-          tail = (string) ((size_t) sql + this._sql.length);
-        else {
-          tail = (string) ((size_t) sql + sql.length);
-          throw new SQLHeavy.Error.NO_SQL ("No SQL was provided");
-        }
+      if ( this._sql != null )
+        tail = (string) ((size_t) sql + this._sql.length);
+      else {
+        tail = (string) ((size_t) sql + sql.length);
+        throw new SQLHeavy.Error.NO_SQL ("No SQL was provided");
       }
     }
 

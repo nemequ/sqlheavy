@@ -1,8 +1,0 @@
-*.log
-*.substvars
-*.debhelper
-libsqlheavy-dev
-libsqlheavy-doc
-libsqlheavy0
-sqlheavy-utils
-tmp

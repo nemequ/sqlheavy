@@ -38,7 +38,12 @@ libsqlheavygtk@SQLHEAVY_API_VERSION@_la_CFLAGS = \
 	$(NULL)
 
 libsqlheavygtk@SQLHEAVY_API_VERSION@_la_LDFLAGS = \
-	$libsqlheavy@SQLHEAVY_API_VERSION@_la_LDFLAGS \
+	-no-undefined \
+	$(top_builddir)/sqlheavy/libsqlheavy$(SQLHEAVY_API_VERSION).la \
+	$(GIO_LIBS) \
+	$(GLIB_LIBS) \
+	$(GMODULE_LIBS) \
+	$(SQLITE3_LIBS) \
 	$(GTK_LIBS) \
 	$(NULL)
 

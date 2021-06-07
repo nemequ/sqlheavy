@@ -148,10 +148,11 @@ namespace SQLHeavy {
       SQLHeavy.Database db = queryable.database;
 
       this.acquire_locks (queryable, db);
-      var res = this.next_internal ();
-      this.release_locks (queryable, db);
-
-      return res;
+      try {
+        return this.next_internal ();
+      } finally {
+        this.release_locks (queryable, db);
+      }
     }
 
     /**
@@ -176,7 +177,7 @@ namespace SQLHeavy {
      */
     internal async bool next_internal_async (GLib.Cancellable? cancellable = null, int steps = 0, out int64 last_insert_id) throws SQLHeavy.Error {
       bool executing = false;
-      GLib.StaticMutex executing_lock = GLib.StaticMutex ();
+      GLib.Mutex executing_lock = GLib.Mutex ();
       SQLHeavy.Queryable queryable = this.query.queryable;
       SQLHeavy.Database database = queryable.database;
       unowned GLib.Thread<void*>? thread = null;
@@ -199,16 +200,15 @@ namespace SQLHeavy {
               error = new SQLHeavy.Error.INTERRUPTED (sqlite_errstr (Sqlite.INTERRUPT));
               idle_source.attach (thread_context);
               if ( thread != null )
-                thread.exit (null);
+                GLib.Thread.exit (null);
               this.release_locks (queryable, database);
             }
             executing_lock.unlock ();
           });
       }
 
-      try {
-        GLib.Thread.create<void*> (() => {
-            this.acquire_locks (queryable, database);
+      new GLib.Thread<void*> ("query-result-next", () => {
+          this.acquire_locks (queryable, database);
 
             executing_lock.lock ();
             executing = true;
@@ -237,11 +237,8 @@ namespace SQLHeavy {
 
             idle_source.attach (thread_context);
 
-            return null;
-          }, false);
-      } catch ( GLib.ThreadError e ) {
-        throw new SQLHeavy.Error.THREAD ("Thread error: %s (%d)", e.message, e.code);
-      }
+          return null;
+        });
 
       yield;
 
@@ -430,7 +427,7 @@ namespace SQLHeavy {
 
       var q = new SQLHeavy.Query (this.query.queryable, @"SELECT `ROWID` FROM `$(foreign_table.name)` WHERE `$(foreign_column)` = :value;");
       q.bind_int64 (1, this.fetch_int64 (field));
-      return new SQLHeavy.Row (foreign_table, q.execute ().fetch_int64 (0));
+      return new SQLHeavy.Row (foreign_table, q.execute (null).fetch_int64 (0));
     }
 
     construct {

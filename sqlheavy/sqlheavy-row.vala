@@ -131,10 +131,10 @@ namespace SQLHeavy {
 
         if ( this._id > 0 ) {
           query.set_int64 (":ROWID", this._id);
-          query.execute ();
+          query.execute (null);
         }
         else {
-          this._id = query.execute_insert ();
+          this._id = query.execute_insert (null);
           this.table.register_row (this);
           this.update_cache ();
         }
@@ -195,7 +195,7 @@ namespace SQLHeavy {
       if ( this._id > 0 ) {
         var query = this.table.queryable.prepare (@"DELETE FROM `$(this.table.name)` WHERE `ROWID` = :id;");
         query.set_int64 (":id", this._id);
-        query.execute ();
+        query.execute (null);
       }
     }
 
@@ -215,7 +215,7 @@ namespace SQLHeavy {
 
       var query = new SQLHeavy.Query (this.table.queryable, @"SELECT `$(field_name)` FROM `$(this.table.name)` WHERE `ROWID` = :id;");
       query.set_int64 (":id", this._id);
-      return query.execute ().fetch (0);
+      return query.execute (null).fetch (0);
     }
 
     /**

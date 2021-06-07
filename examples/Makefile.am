@@ -8,11 +8,6 @@ LDADD = \
 	$(SQLITE3_LIBS) \
 	$(NULL)
 
-GTK_LDFLAGS = \
-	$(top_builddir)/gtk/libsqlheavygtk$(SQLHEAVY_API_VERSION).la \
-	$(GTK_LIBS) \
-	$(NULL)
-
 noinst_PROGRAMS = \
 	async \
 	backup \
@@ -21,7 +16,7 @@ noinst_PROGRAMS = \
 	orm \
 	$(NULL)
 
-VALAFLAGS = \
+AM_VALAFLAGS = \
 	--vapidir $(top_srcdir)/sqlheavy \
 	--pkg sqlheavy-$(SQLHEAVY_API_VERSION) \
 	$(NULL)
@@ -31,7 +26,7 @@ SQLHEAVYGTK_VALAFLAGS = \
 	--pkg sqlheavygtk-$(SQLHEAVY_API_VERSION) \
 	$(NULL)
 
-INCLUDES = \
+AM_CFLAGS = \
 	-I$(top_srcdir)/sqlheavy \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
@@ -61,7 +56,8 @@ browser_CFLAGS = \
 	$(NULL)
 
 browser_LDFLAGS = \
-	$(GTK_LDFLAGS) \
+	$(top_builddir)/gtk/libsqlheavygtk$(SQLHEAVY_API_VERSION).la \
+	$(GTK_LIBS) \
 	$(NULL)
 
 browser_VALAFLAGS = \

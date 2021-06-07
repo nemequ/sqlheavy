@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 m4_define([sqlheavy_major], [0])
-m4_define([sqlheavy_minor], [2])
-m4_define([sqlheavy_micro], [0])
+m4_define([sqlheavy_minor], [1])
+m4_define([sqlheavy_micro], [2])
 
 m4_define([sqlheavy_version], [sqlheavy_major.sqlheavy_minor.sqlheavy_micro])
-m4_define([sqlheavy_api_version], [0.2])
+m4_define([sqlheavy_api_version], [0.1])
 
 m4_define([sqlheavy_name], [sqlheavy])
 
@@ -39,7 +39,7 @@ AX_DEFINE_DIR([SQL_HEAVY_CONFIG_PATH_PACKAGE_DATA], [datadir]/[sqlheavy_name], [
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-GLIB_REQUIRED=2.22.0
+GLIB_REQUIRED=2.32
 SQLITE3_REQUIRED=3.6.20
 VALADOC_REQUIRED=0.2
 VALA_REQUIRED=0.15
@@ -49,7 +49,7 @@ GTK_REQUIRED=2.24
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
+LT_INIT
 AM_PROG_VALAC($VALA_REQUIRED)
 
 GOBJECT_INTROSPECTION_CHECK([0.10])
@@ -69,7 +69,7 @@ AC_SUBST(GMODULE_LIBS)
 PKG_CHECK_MODULES(SQLITE3, sqlite3 >= $SQLITE3_REQUIRED)
 AC_SUBST(SQLITE3_CFLAGS)
 AC_SUBST(SQLITE3_LIBS)
-VALA_PACKAGE=libvala-0.16
+VALA_PACKAGE=libvala-0.52
 PKG_CHECK_MODULES(VALA, $VALA_PACKAGE >= $VALA_REQUIRED)
 AC_SUBST(VALA_PACKAGE)
 AC_SUBST(VALA_CFLAGS)
@@ -108,12 +108,10 @@ AC_CONFIG_FILES([Makefile
                  data/Makefile
                  data/schemas/Makefile
                  data/schemas/profiling/Makefile
-                 docs/Makefile
                  examples/Makefile
                  gtk/Makefile
                  gtk/sqlheavygtk-$SQLHEAVY_API_VERSION.deps
                  sqlheavy/Makefile
                  sqlheavy-$SQLHEAVY_API_VERSION.pc
-                 sqlheavygtk-$SQLHEAVY_API_VERSION.pc
-                 utils/Makefile])
+                 sqlheavygtk-$SQLHEAVY_API_VERSION.pc])
 AC_OUTPUT

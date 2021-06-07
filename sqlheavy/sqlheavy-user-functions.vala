@@ -52,12 +52,12 @@ namespace SQLHeavy {
       public UserFuncData.scalar (Database db,
                                   string name,
                                   int argc,
-                                  UserFunc func) {
+                                  owned UserFunc func) {
         this.db = db;
         this.name = name;
         this.argc = argc;
         this.is_scalar = true;
-        this.func = func;
+        this.func = (owned) func;
         this.final = null;
       }
 
@@ -74,14 +74,14 @@ namespace SQLHeavy {
       public UserFuncData.aggregate (Database db,
                                      string name,
                                      int argc,
-                                     UserFunc func,
-                                     FinalizeFunc final) {
+                                     owned UserFunc func,
+                                     owned FinalizeFunc final) {
         this.db = db;
         this.name = name;
         this.argc = argc;
         this.is_scalar = false;
-        this.func = func;
-        this.final = final;
+        this.func = (owned) func;
+        this.final = (owned) final;
       }
     }
 
@@ -137,7 +137,7 @@ namespace SQLHeavy {
             else {
               GLib.Memory.copy (&this._data, this.ctx.aggregate ((int)sizeof (GLib.HashTable)), sizeof (GLib.HashTable));
               if ( this._data == null )
-                this._data = g_hash_table_ref (new GLib.HashTable<string, GLib.Value?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref));
+                this._data = g_hash_table_ref (new GLib.HashTable<string, GLib.Value?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_variant_unref));
             }
           }
 

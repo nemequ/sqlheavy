@@ -116,7 +116,7 @@ namespace SQLHeavy {
 
           var cr = converter.convert (in_data[in_offset:end],
                                       outbuf,
-                                      end >= in_data.length ? GLib.ConverterFlags.INPUT_AT_END : GLib.ConverterFlags.NO_FLAGS,
+                                      end >= in_data.length ? GLib.ConverterFlags.INPUT_AT_END : GLib.ConverterFlags.NONE,
                                       out bytes_read,
                                       out bytes_written);
 

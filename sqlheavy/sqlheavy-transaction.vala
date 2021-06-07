@@ -47,7 +47,7 @@ namespace SQLHeavy {
                   iter = iter.next () ) {
               SQLHeavy.QueryResult result = new SQLHeavy.QueryResult.no_exec (iter.get ());
               result.next_internal ();
-              this._queue.remove (iter);
+              iter.remove ();
             }
           } catch ( SQLHeavy.Error e ) {
             GLib.critical ("Unable to execute queued query: %s", e.message);
@@ -153,7 +153,7 @@ namespace SQLHeavy {
       this.parent.@lock ();
 
       try {
-        this.prepare ("SAVEPOINT 'SQLHeavy-0x%x';".printf ((uint)this)).execute ();
+        this.prepare ("SAVEPOINT 'SQLHeavy-0x%x';".printf ((uint)this)).execute (null);
       }
       catch ( SQLHeavy.Error e ) {
         this.err = e;

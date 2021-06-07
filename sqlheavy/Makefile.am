@@ -72,6 +72,7 @@ libsqlheavy@SQLHEAVY_API_VERSION@_la_CFLAGS = \
 	$(NULL)
 
 libsqlheavy@SQLHEAVY_API_VERSION@_la_LDFLAGS = \
+	-no-undefined \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS) \
 	$(GMODULE_LIBS) \

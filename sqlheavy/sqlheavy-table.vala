@@ -98,7 +98,7 @@ namespace SQLHeavy {
           this._field_data = new GLib.Sequence<FieldInfo> ();
           this._field_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
-          var result = new SQLHeavy.Query (this.queryable, @"PRAGMA table_info (`$(escape_string (this.name))`);").execute ();
+          var result = new SQLHeavy.Query (this.queryable, @"PRAGMA table_info (`$(escape_string (this.name))`);").execute (null);
 
           while ( !result.finished ) {
             var row = new FieldInfo.from_query_result (result);
@@ -124,7 +124,7 @@ namespace SQLHeavy {
           this._foreign_key_data = new GLib.Sequence<ForeignKeyInfo> ();
           this._foreign_key_names = new GLib.HashTable<string, int?>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_free);
 
-          var result = new SQLHeavy.Query (this.queryable, @"PRAGMA foreign_key_list (`$(escape_string (this.name))`);").execute ();
+          var result = new SQLHeavy.Query (this.queryable, @"PRAGMA foreign_key_list (`$(escape_string (this.name))`);").execute (null);
 
           while ( !result.finished ) {
             var row = new ForeignKeyInfo.from_query_result (result);
@@ -331,7 +331,7 @@ namespace SQLHeavy {
           var iter = list.search (row, SQLHeavy.Row.direct_compare).prev ();
           unowned SQLHeavy.Row r2 = iter.get ();
           if ( (uint)row == (uint)r2 )
-            list.remove (iter);
+            iter.remove ();
         }
       }
     }
