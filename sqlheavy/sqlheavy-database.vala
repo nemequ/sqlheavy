@@ -17,7 +17,7 @@ namespace SQLHeavy {
      * List of registered user functions and their respective user data
      */
     private GLib.HashTable <string, UserFunction.UserFuncData> user_functions =
-      new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
+      new GLib.HashTable <string, UserFunction.UserFuncData>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.Object.unref);
 
     /**
      * List of all SQLHeavy.Table objects, used for change notification
@@ -1011,7 +1011,7 @@ namespace SQLHeavy {
      * @return a hash table of tables, with the key being the table name
      */
     public GLib.HashTable<string, SQLHeavy.Table> get_tables () throws SQLHeavy.Error {
-      var ht = new GLib.HashTable<string, SQLHeavy.Table>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.g_object_unref);
+      var ht = new GLib.HashTable<string, SQLHeavy.Table>.full (GLib.str_hash, GLib.str_equal, GLib.g_free, GLib.Object.unref);
 
       var result = this.prepare ("SELECT `name` FROM `SQLITE_MASTER` WHERE `type` = 'table';").execute (null);
       while ( !result.finished ) {
