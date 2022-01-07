@@ -16,12 +16,13 @@ noinst_PROGRAMS = \
 	$(NULL)
 
 AM_VALAFLAGS = \
-	--vapidir $(top_srcdir)/sqlheavy \
+	--vapidir $(top_builddir)/sqlheavy \
 	--pkg sqlheavy-$(SQLHEAVY_API_VERSION) \
+	--pkg gio-2.0 \
 	$(NULL)
 
 AM_CFLAGS = \
-	-I$(top_srcdir)/sqlheavy \
+	-I$(top_builddir)/sqlheavy \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GMODULE_CFLAGS) \
