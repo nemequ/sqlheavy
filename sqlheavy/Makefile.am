@@ -150,4 +150,5 @@ EXTRA_DIST = \
 	sqlheavy-@SQLHEAVY_API_VERSION@.deps \
 	sqlheavy-@SQLHEAVY_API_VERSION@-internal.h \
 	libsqlheavy@SQLHEAVY_API_VERSION@_la_vala.stamp \
+	resources \
 	$(NULL)
